@@ -8,6 +8,10 @@ O Primeiro Frame da captura será a Referência(background).
 
 1. Mexeu um pouco a posição da câmera, o código já muda o estado como ocupado.
 
-2. Mudança
+2. Mudança de iluminação também mudam o estado para ocupado.
+
+### Possível Solução
+
+1. Ficar atualizando a imagem de Referência
 
 ![img](https://www.pyimagesearch.com/wp-content/uploads/2015/05/animated_motion_02.gif)
