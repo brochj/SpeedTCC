@@ -7,10 +7,7 @@ Created on Mon Sep 17 13:24:34 2018
 
 import cv2
 import numpy as np
-#import os
-#import time
-#import uuid
-#import math
+
 
 cap = cv2.VideoCapture("video01.avi")
 width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))      # Retorna a largura do video
@@ -37,6 +34,7 @@ while(True):
         dilatedmask = cv2.dilate(erodedmask, kernel2 ,iterations=1) # usa para evidenciar o objeto em movimento
         erodedmask = cv2.erode(fgmask, kernel3 ,iterations=1) # usa pra tirar os pixels isolados (ruídos)
         # Fim da máscara
+        
         _, contours, hierarchy = cv2.findContours(dilatedmask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         
         frame1 = cv2.drawContours(frame, contours, -1, (0,255,0),3)
