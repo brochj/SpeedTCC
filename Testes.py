@@ -40,16 +40,13 @@ while(True):
 #    ret , frame = cap.read()
     ret, frame = get_frame()
     frameGray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-#    frameGray = cv2.bilateralFilter(frameGray, 11, 17, 17)
 #    edged = cv2.Canny(frameGray, 30, 200)
     
     if ret == True:
         # Cria a máscara
         fgmask = bgsMOG.apply(frameGray, None, -1)
         erodedmask = cv2.erode(fgmask, kernel1 ,iterations=1) # usa pra tirar os pixels isolados (ruídos)
-        edged = cv2.Canny(erodedmask, 30, 200)
         dilatedmask = cv2.dilate(erodedmask, kernel2 ,iterations=1) # usa para evidenciar o objeto em movimento
-
 #        erodedmask = cv2.erode(fgmask, kernel3 ,iterations=1) # usa pra tirar os pixels isolados (ruídos)
         # Fim da máscara
         _, contours, hierarchy = cv2.findContours(dilatedmask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -57,26 +54,26 @@ while(True):
 #        frame1 = cv2.drawContours(frame, contours, -1, (0,255,0),3)
         
         
-#        try: hierarchy = hierarchy[0]
-#        except: hierarchy = []
-#        a = []
-#        for contour, hier in zip(contours, hierarchy):
-#            (x, y, w, h) = cv2.boundingRect(contour)
-#
-#            if w < 10 and h < 10:
-#                continue
-#
-#            center = (int(x + w/2), int(y + h/2))
-#
-#            if center[1] > 320 or center[1] < 150:
-#                continue
-#
-#				# Optionally draw the rectangle around the blob on the frame that we'll show in a UI later
-#            frame1 = cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+        try: hierarchy = hierarchy[0]
+        except: hierarchy = []
+        a = []
+        for contour, hier in zip(contours, hierarchy):
+            (x, y, w, h) = cv2.boundingRect(contour)
+
+            if w < 10 and h < 10:
+                continue
+
+            center = (int(x + w/2), int(y + h/2))
+
+            if center[1] > 320 or center[1] < 150:
+                continue
+
+				# Optionally draw the rectangle around the blob on the frame that we'll show in a UI later
+            frame1 = cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
         
         
         cv2.imshow('frame1', dilatedmask)
-        cv2.imshow('frame', frame)
+        cv2.imshow('frame', frame1)
         
         frameCount = frameCount + 1    # Conta a quantidade de Frames
         
