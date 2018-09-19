@@ -8,7 +8,7 @@
 
 ![dilatedmask](https://github.com/Brockzera/SpeedTCC/blob/master/1-maskContours/erodedmask.jpg)
 
-## Evidencia o cv2.dilate()
+## Evidencia os veículos com o cv2.dilate()
 
 ![dilatedmask](https://github.com/Brockzera/SpeedTCC/blob/master/1-maskContours/dilatedmask.jpg)
 
