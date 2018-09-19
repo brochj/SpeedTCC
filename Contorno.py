@@ -10,7 +10,7 @@ import numpy as np
 #import os
 #import time
 import uuid
-#import math
+import math
 
 cap = cv2.VideoCapture("video01.avi")
 width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))      # Retorna a largura do video
