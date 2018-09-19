@@ -77,7 +77,7 @@ while(True):
         #Salva imagens
         if frameCount == 68:
             cv2.imwrite('fgmask.jpg',fgmask)
-            cv2.imwrite('erodedmask1.jpg',erodedmask)            
+            cv2.imwrite('erodedmask.jpg',erodedmask)            
             cv2.imwrite('edgedmask.jpg',edgedmask)
             cv2.imwrite('dilatedmask.jpg',dilatedmask)
             cv2.imwrite('outputFrame.jpg',outputFrame)
