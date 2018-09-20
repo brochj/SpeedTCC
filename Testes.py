@@ -13,9 +13,9 @@ import numpy as np
 #import math
 
 cap = cv2.VideoCapture("../video01.avi")
-width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))      # Retorna a largura do video
-height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))    # Retorna a altura do video
-length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))     # Retorna a quantidade de frames
+#width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))      # Retorna a largura do video
+#height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))    # Retorna a altura do video
+#length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))     # Retorna a quantidade de frames
 
 kernel1 = np.ones((3,3), np.uint8) # Matriz (3,3) com 1 em seus valores -- Usa na funcao de erode
 kernel2 = np.ones((8,8), np.uint8) # # Matriz (8,8) com 1 em seus valores -- Usa na funcao de dilate
@@ -27,6 +27,7 @@ RESIZE_RATIO = 0.35 #
 bgsMOG = cv2.createBackgroundSubtractorMOG2(history=10, varThreshold = 50, detectShadows=0)
 
 frameCount = 0
+rectCount = 0
 
 def get_frame():
 	" Grabs a frame from the video vcture and resizes it. "
@@ -62,7 +63,10 @@ while(True):
 
             if w < 60 and h < 60:
                 continue
-            if h < 2*w:
+            if w > 400 and h > 280:
+                continue
+            area = h * w
+            if area > 10000 :
                 continue
 
             center = (int(x + w/2), int(y + h/2))
@@ -72,19 +76,21 @@ while(True):
 
 				# Optionally draw the rectangle around the blob on the frame that we'll show in a UI later
             outputFrame = cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+            rectCount += 1
         
-        outputFrame=  cv2.putText(frame, 'frame: {}'.format(frameCount), (5,375), cv2.FONT_HERSHEY_SIMPLEX, .5, (255,255,255), 2)
+        outputFrame = cv2.putText(frame, 'frame: {}'.format(frameCount), (5,375), cv2.FONT_HERSHEY_SIMPLEX, .5, (255,255,255), 2)
+        outputFrame = cv2.putText(frame, 'Retangulos: {}'.format(rectCount), (200,375), cv2.FONT_HERSHEY_SIMPLEX, .5, (255,255,255), 2)
         
         if frameCount >= 71 and frameCount <= 111:
             outputFrame=  cv2.putText(frame, '56.65', (100,375), cv2.FONT_HERSHEY_SIMPLEX, .5, (255,255,255), 2)
 
-        if frameCount == 600: #fecha o video
+        if frameCount == 400: #fecha o video
             break
         
         
         
-        cv2.imshow('erodedmask',erodedmask)
-        cv2.imshow('dilatedmask', dilatedmask)
+#        cv2.imshow('erodedmask',erodedmask)
+#        cv2.imshow('dilatedmask', dilatedmask)
         cv2.imshow('outputFrame', outputFrame)
         
         frameCount = frameCount + 1    # Conta a quantidade de Frames
