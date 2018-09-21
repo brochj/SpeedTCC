@@ -14,8 +14,8 @@ Created on Mon Sep 17 13:24:34 2018
 
 import cv2
 #import numpy as np
-#import os
-#import time
+import os
+import time
 import uuid
 #import math
 
