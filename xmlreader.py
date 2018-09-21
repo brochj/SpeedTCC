@@ -16,7 +16,7 @@ import cv2
 #import numpy as np
 #import os
 #import time
-#import uuid
+import uuid
 #import math
 
 cap = cv2.VideoCapture("../video01.avi")
