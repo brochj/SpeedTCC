@@ -55,7 +55,7 @@ if __name__ == '__main__':
 #            else:
 #                cv2.imwrite('negatives/cars{}.jpg'.format(frameCount),img)
 
-                cv2.imshow('edge', img)
+            cv2.imshow('edge', img)
             
             
             frameCount += 1
