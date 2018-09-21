@@ -51,7 +51,8 @@ if __name__ == '__main__':
 
             for (x,y,w,h) in cars:
                 cv2.rectangle(img,(x,y),(x+w,y+h),(0,0,255),2)
-#                cv2.imwrite('positives/cars{}.jpg'.format(frameCount),img)
+#                crop_img = img[y:y+h , x:x+w]
+#                cv2.imwrite('positives/cars{}.jpg'.format(frameCount),crop_img)
 #            else:
 #                cv2.imwrite('negatives/cars{}.jpg'.format(frameCount),img)
 

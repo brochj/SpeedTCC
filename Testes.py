@@ -15,8 +15,8 @@ import math
 cap = cv2.VideoCapture("../video01.avi")
 fps = cap.get(cv2.CAP_PROP_FPS)
 width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))      # Retorna a largura do video
-#height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))    # Retorna a altura do video
-#length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))     # Retorna a quantidade de frames
+# height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))    # Retorna a altura do video
+# length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))     # Retorna a quantidade de frames
 
 kernel1 = np.ones((3,3), np.uint8) # Matriz (3,3) com 1 em seus valores -- Usa na funcao de erode
 kernel2 = np.ones((15,15), np.uint8) # # Matriz (8,8) com 1 em seus valores -- Usa na funcao de dilate
@@ -42,7 +42,7 @@ BLOB_TRACK_TIMEOUT = 0.7
 
 
 def get_frame():
-	" Grabs a frame from the video vcture and resizes it. "
+	#" Grabs a frame from the video vcture and resizes it. "
 	ret, frame = cap.read()
 	if ret:
 		(h, w) = frame.shape[:2]
@@ -50,7 +50,7 @@ def get_frame():
 	return ret, frame
 
 def calculate_speed (trails, fps):
-	# distance: distance on the frame
+    # distance: distance on the frame
 	# location: x, y coordinates on the frame
 	# fps: framerate
 	# mmp: meter per pixel
@@ -65,8 +65,10 @@ def calculate_speed (trails, fps):
 	return real_dist * fps * 250 / 3.6
 
 from itertools import *
+
+
 def pairwise(iterable):
-	"s -> (s0,s1), (s1,s2), (s2, s3), ..."
+	r"s -> (s0,s1), (s1,s2), (s2, s3), ..."
 	a, b = tee(iterable)
 	next(b, None)
 	return zip(a, b)
@@ -110,7 +112,11 @@ while(True):
                 continue
 
 				# Optionally draw the rectangle around the blob on the frame that we'll show in a UI later
-            outputFrame = cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+#            outputFrame = cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+            
+            crop_img = frame[y:y+h , x:x+w]
+            cv2.imwrite('imagens/frame{}.jpg'.format(frameCount),crop_img)
+            
             rectCount += 1
             
 
