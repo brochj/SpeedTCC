@@ -18,8 +18,8 @@ width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))      # Retorna a largura do video
 # height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))    # Retorna a altura do video
 # length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))     # Retorna a quantidade de frames
 
-kernel1 = np.ones((3,3), np.uint8) # Matriz (3,3) com 1 em seus valores -- Usa na funcao de erode
-kernel2 = np.ones((15,15), np.uint8) # # Matriz (8,8) com 1 em seus valores -- Usa na funcao de dilate
+kernel1 = np.ones((3, 3), np.uint8) # Matriz (3,3) com 1 em seus valores -- Usa na funcao de erode
+kernel2 = np.ones((15, 15), np.uint8) # # Matriz (8,8) com 1 em seus valores -- Usa na funcao de dilate
 kernel3 = np.ones((3,3), np.uint8) # # Matriz (8,8) com 1 em seus valores -- Usa na funcao de dilate
 
 RESIZE_RATIO = 0.35 # 
@@ -116,7 +116,7 @@ while(True):
             
             crop_img = frame[y:y+h , x:x+w]
             cv2.imwrite('imagens/frame{}.jpg'.format(frameCount),crop_img)
-            
+
             rectCount += 1
             
 
@@ -188,13 +188,13 @@ while(True):
                     print ("Removing expired track {}".format(tracked_blobs[i]['id']))
                     del tracked_blobs[i]
 
-		# Draw information about the blobs on the screen
+        # Draw information about the blobs on the screen
         print ('tracked_blobs', tracked_blobs)
         for blob in tracked_blobs:
             for (a, b) in pairwise(blob['trail']):
                 cv2.circle(frame, a, 3, (255, 0, 0), LINE_THICKNESS)
 
-				# print ('blob', blob)
+                # print ('blob', blob)
                 if blob['dir'] == 'left':
                     pass
                     cv2.line(frame, a, b, (255, 255, 0), LINE_THICKNESS)
@@ -204,7 +204,7 @@ while(True):
 # FIM PRINTA OS BLOBS
                 
             if blob['speed'] and blob['speed'][0] != 0:
-				# remove zero elements on the speed list
+                # remove zero elements on the speed list
                 blob['speed'] = [item for item in blob['speed'] if item != 0.0]
                 print ('========= speed list =========', blob['speed'])
                 ave_speed = np.mean(blob['speed'])
@@ -219,7 +219,7 @@ while(True):
         if frameCount >= 71 and frameCount <= 111:
             outputFrame=  cv2.putText(frame, '56.65', (100,375), cv2.FONT_HERSHEY_SIMPLEX, .5, (255,255,255), 2)
 
-        if frameCount == 400: #fecha o video
+        if frameCount == 400: # fecha o video
             break
         
         

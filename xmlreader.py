@@ -5,20 +5,13 @@ Created on Wed Sep 19 21:03:24 2018
 @author: broch
 """
 
-# -*- coding: utf-8 -*-
-"""
-Created on Mon Sep 17 13:24:34 2018
-
-@author: broch
-"""
-
 import cv2
 import numpy as np
 import os
 import time
 import uuid
-
-# import math
+import math
+import xml.dom
 
 cap = cv2.VideoCapture("../video01.avi")
 width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))      # Retorna a largura do video
@@ -37,30 +30,24 @@ def get_frame():
 	return ret, frame
 
 while(True):
-    ret , frame = get_frame()
+    ret, frame = get_frame()
     
     if ret == True:
-#        Coloca o codigo AQUI 
-        
-        
-        
-        
-        frame =  cv2.putText(frame, 'frame: {}'.format(frameCount), (5,375), cv2.FONT_HERSHEY_SIMPLEX, .5, (255,255,255), 2)
+        # Coloca o codigo AQUI watchh
 
-        
-        
+        frame = cv2.putText(frame, 'frame: {}'.format(frameCount), (5, 375), cv2.FONT_HERSHEY_SIMPLEX, .5, (255, 255, 255), 2)
+
         if frameCount >= 71 and frameCount <= 111:
-            outputFrame=  cv2.putText(frame, '56.65', (100,375), cv2.FONT_HERSHEY_SIMPLEX, .5, (255,255,255), 2)
+            outputFrame = cv2.putText(frame, '56.65', (100, 375), cv2.FONT_HERSHEY_SIMPLEX, .5, (255, 255, 255), 2)
         
-        if frameCount == 600: #fecha o video
+        if frameCount == 600: # fecha o video
             break
         
         cv2.imshow('frame', frame)
         
         frameCount += 1    # Conta a quantidade de Frames
-        
-         
-        if cv2.waitKey(1) & 0xFF == ord('q'): #Pressiona a tecla Q para fechar o video
+
+        if cv2.waitKey(1) & 0xFF == ord('q'): # Pressiona a tecla Q para fechar o video
             break
     else:
         break

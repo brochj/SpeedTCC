@@ -31,7 +31,7 @@ if __name__ == '__main__':
         print("No video source supplied.")
         exit()
     args = dict(args)
-    cascade_fn = args.get('--cascade', "cascade_dir/cascade.xml")
+    cascade_fn = args.get('--cascade', "cascade_dir/cascade-cars-10stages-BROCH.xml")
 
     car_cascade = cv2.CascadeClassifier(cascade_fn)
     cap = cv2.VideoCapture('../../../video01.avi')
@@ -47,7 +47,8 @@ if __name__ == '__main__':
 
             height, width, c = img.shape
             gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-            cars = car_cascade.detectMultiScale(gray, 1.5, 10)
+            # cars = car_cascade.detectMultiScale(gray, 1.5, 10) # Default
+            cars = car_cascade.detectMultiScale(gray, 30, 30)
 
             for (x,y,w,h) in cars:
                 cv2.rectangle(img,(x,y),(x+w,y+h),(0,0,255),2)
