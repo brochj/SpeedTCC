@@ -50,6 +50,7 @@ if __name__ == '__main__':
             # cars = car_cascade.detectMultiScale(gray, 1.5, 10) # Default
             cars = car_cascade.detectMultiScale(gray, 30, 30)
 
+
             for (x,y,w,h) in cars:
                 cv2.rectangle(img,(x,y),(x+w,y+h),(0,0,255),2)
 #                crop_img = img[y:y+h , x:x+w]
