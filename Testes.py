@@ -12,7 +12,7 @@ import time
 import uuid
 import math
 
-cap = cv2.VideoCapture("../video01.avi")
+cap = cv2.VideoCapture("../Dataset/kit.mp4")
 fps = cap.get(cv2.CAP_PROP_FPS)
 width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))      # Retorna a largura do video
 # height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))    # Retorna a altura do video
@@ -22,7 +22,7 @@ kernel1 = np.ones((3, 3), np.uint8) # Matriz (3,3) com 1 em seus valores -- Usa 
 kernel2 = np.ones((15, 15), np.uint8) # # Matriz (8,8) com 1 em seus valores -- Usa na funcao de dilate
 kernel3 = np.ones((3,3), np.uint8) # # Matriz (8,8) com 1 em seus valores -- Usa na funcao de dilate
 
-RESIZE_RATIO = 0.35 # 
+RESIZE_RATIO = 0.55 #
 
 
 bgsMOG = cv2.createBackgroundSubtractorMOG2(history=10, varThreshold = 50, detectShadows=0)
@@ -112,10 +112,10 @@ while(True):
                 continue
 
 				# Optionally draw the rectangle around the blob on the frame that we'll show in a UI later
-#            outputFrame = cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+            # outputFrame = cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
             
             crop_img = frame[y:y+h , x:x+w]
-            cv2.imwrite('imagens/frame{}.jpg'.format(frameCount),crop_img)
+            cv2.imwrite('imagens/negatives/negativesframe{}.jpg'.format(frameCount),frame)
 
             rectCount += 1
             
@@ -219,14 +219,15 @@ while(True):
         if frameCount >= 71 and frameCount <= 111:
             outputFrame=  cv2.putText(frame, '56.65', (100,375), cv2.FONT_HERSHEY_SIMPLEX, .5, (255,255,255), 2)
 
-        if frameCount == 400: # fecha o video
+
+        if frameCount == 3000: # fecha o video
             break
         
         
         
-#        cv2.imshow('erodedmask',erodedmask)
-#        cv2.imshow('dilatedmask', dilatedmask)
-        cv2.imshow('outputFrame', outputFrame)
+        # cv2.imshow('erodedmask',erodedmask)
+        # cv2.imshow('dilatedmask', dilatedmask)
+        # cv2.imshow('outputFrame', outputFrame)
         
         frameCount = frameCount + 1    # Conta a quantidade de Frames
         

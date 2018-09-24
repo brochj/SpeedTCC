@@ -7,7 +7,7 @@ import numpy as np
 import cv2
 
 
-RESIZE_RATIO = 0.35
+RESIZE_RATIO = 0.99
 frameCount = 0
 
 
@@ -31,10 +31,12 @@ if __name__ == '__main__':
         print("No video source supplied.")
         exit()
     args = dict(args)
-    cascade_fn = args.get('--cascade', "cascade_dir/cascade-cars-10stages-BROCH.xml")
+    cascade_fn = args.get('--cascade', "cascade_dir/cascade_fotos1.xml")
 
     car_cascade = cv2.CascadeClassifier(cascade_fn)
-    cap = cv2.VideoCapture('../../../video01.avi')
+    # cap = cv2.VideoCapture('../../../Dataset/video1.avi')
+    cap = cv2.VideoCapture(0)  # WebCam
+
     
     
     paused = False
@@ -46,9 +48,9 @@ if __name__ == '__main__':
             #if img == None: break
 
             height, width, c = img.shape
-            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            # gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
             # cars = car_cascade.detectMultiScale(gray, 1.5, 10) # Default
-            cars = car_cascade.detectMultiScale(gray, 30, 30)
+            cars = car_cascade.detectMultiScale(img, 1.5, 10)
 
 
             for (x,y,w,h) in cars:
@@ -57,6 +59,12 @@ if __name__ == '__main__':
 #                cv2.imwrite('positives/cars{}.jpg'.format(frameCount),crop_img)
 #            else:
 #                cv2.imwrite('negatives/cars{}.jpg'.format(frameCount),img)
+            outputFrame = cv2.putText(img, 'frame: {}'.format(frameCount), (5, 375), cv2.FONT_HERSHEY_SIMPLEX, .5, (255, 255, 255), 2)
+
+
+            if frameCount == 3000:  # fecha o video
+                break
+
 
             cv2.imshow('edge', img)
             
