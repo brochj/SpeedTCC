@@ -47,11 +47,15 @@ for i in range(len(contours)):
 
 #OR
 drawing2 = np.zeros((thresh.shape[0], thresh.shape[1], 3), np.uint8)
-cont = cv2.drawContours(drawing2, contours, -1, (0, 255, 0), 0, 8, hierarchy)
+out2 = cv2.drawContours(drawing2, contours, -1, (0, 255, 0), 0, 8, hierarchy)
+out2 = cv2.drawContours(drawing2, hull, -1, (255, 255, 255), 0, 8)
 
     # draw ith convex hull object
 drawing3 = np.zeros((thresh.shape[0], thresh.shape[1], 3), np.uint8)
-out2 = cv2.drawContours(drawing3, hull, -1, (255, 255, 255), -1, 8)
+drawing4 = np.zeros((thresh.shape[0], thresh.shape[1], 3), np.uint8)
+cont = cv2.drawContours(drawing4, contours, -1, (0, 255, 0), 0, 8, hierarchy)
+
+out3 = cv2.drawContours(drawing3, hull, -1, (255, 255, 255), -1, 8)
 
 #area = cv2.contourArea(contours[1])
 
@@ -60,12 +64,13 @@ out2 = cv2.drawContours(drawing3, hull, -1, (255, 255, 255), -1, 8)
 
 
 
-cv2.imwrite('out.jpg', out)
+#cv2.imwrite('out.jpg', out)
+cv2.imshow('Parte 1 -  Mask', thresh)
+cv2.imshow('Parte 2 : Desenhando os Contornos', cont)
+cv2.imshow('Parte 3 : ConvexHull(linha branca) engloba os contornos (linha verde)', out2)
+cv2.imshow('Parte 4 : Preenchendo a area do ConvexHull', out3)
+cv2.imshow('Parte 5 : Definindo limites de area a serem mostrados', out)
 
-cv2.imshow('out', out)
-cv2.imshow('out2', out2)
-cv2.imshow('cont', cont)
-cv2.imshow('thresh', thresh)
 
 cv2.waitKey(0)
 cv2.destroyAllWindows()
