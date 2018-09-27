@@ -7,7 +7,7 @@ import numpy as np
 import cv2
 
 
-RESIZE_RATIO = 0.99
+RESIZE_RATIO = 0.40
 frameCount = 0
 
 
@@ -31,11 +31,11 @@ if __name__ == '__main__':
         print("No video source supplied.")
         exit()
     args = dict(args)
-    cascade_fn = args.get('--cascade', "cascade_dir/cascade_fotos1.xml")
+    cascade_fn = args.get('--cascade', "cascade_dir/cascade.xml")
 
     car_cascade = cv2.CascadeClassifier(cascade_fn)
-    # cap = cv2.VideoCapture('../../../Dataset/video1.avi')
-    cap = cv2.VideoCapture(0)  # WebCam
+    cap = cv2.VideoCapture('../../../Dataset/video1.avi')
+#    cap = cv2.VideoCapture(0)  # WebCam
 
     
     

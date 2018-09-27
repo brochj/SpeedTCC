@@ -1,3 +1,10 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Sep 27 12:36:20 2018
+
+@author: broch
+"""
+
 
 """
 Created on Mon Sep 17 13:24:34 2018
@@ -111,134 +118,129 @@ while(True):
         #draw contours and hull points
         rectCount2 = 0
         for i in range(len(contours)):
-            if cv2.contourArea(contours[i]) > 30000:
-                rectCount += 1
-                continue
-            if cv2.contourArea(contours[i]) < 2000:
-                rectCount += 1
-                continue
-            
-            if rectCount2 < 2:
-                if cv2.contourArea(contours[i]) > 4000:
-                    color_contours = (0, 255, 0) # green - color for contours
-                    color = (255, 255, 255) # blue - color for convex hull
-                    # draw ith contour
-                    cv2.drawContours(drawing, contours, i, color_contours, 0, 8, hierarchy)
-                    # draw ith convex hull object
-                    out = cv2.drawContours(drawing, hull, i, color, -1, 8)
-                    area.append(cv2.contourArea(contours[i]))
-                    areahull.append(cv2.contourArea(hull[i]))
-                    (x, y, w, h) = cv2.boundingRect(hull[i])
-    #                out = cv2.rectangle(out, (x, y), (x + w, y + h), (0, 255, 255), 2) # printa na mask
-                    cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 255), 2) # printa na mask
-    
-                    rectCount2 += 1
-                    
-                    
-                    
-                    
-                    if w < 60 and h < 60:
-                        continue
-                    center = (int(x + w/2), int(y + h/2))
-                    
-                    if center[1] > 320 or center[1] < 150:
-                        continue
-            
-            
-            
-            
-            
-    #        outputFrame = cv2.drawContours(frame, contours, -1, (0,255,0),-1)
-            
-            
-    #        try: hierarchy = hierarchy[0]
-    #        except: hierarchy = []
-    #        a = []
-    #        for contour, hier in zip(contours, hierarchy):
-    #            (x, y, w, h) = cv2.boundingRect(contour)
-    #
-    #            if w < 60 and h < 60:
-    #                continue
-    ##            if w > 400 and h > 280:
-    ##                continue
-    ##            area = h * w
-    ##            if area > 10000 :
-    ##                continue
-    #
-    #            center = (int(x + w/2), int(y + h/2))
-    #
-    #            if center[1] > 320 or center[1] < 150:
-    #                continue
-    #
-    #				# Optionally draw the rectangle around the blob on the frame that we'll show in a UI later
-    #            outputFrame = cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 2)
-    #            
-    #            crop_img = frame[y:y+h , x:x+w]
-    #            cv2.imwrite('imagens/negatives/negativesframe{}.jpg'.format(frameCount),frame)
-    #
-    #            rectCount += 1
+#            if cv2.contourArea(contours[i]) > 30000: # Descarta qund a area é muito grande
+#                rectCount += 1
+#                break        
+            if cv2.contourArea(contours[i]) > 4000:
+                color_contours = (0, 255, 0) # green - color for contours
+                color = (255, 255, 255) # blue - color for convex hull
+                # draw ith contour
+                cv2.drawContours(drawing, contours, i, color_contours, 0, 8, hierarchy)
+                # draw ith convex hull object
+                out = cv2.drawContours(drawing, hull, i, color, -1, 8)
+                area.append(cv2.contourArea(contours[i]))
+                areahull.append(cv2.contourArea(hull[i]))
+                (x, y, w, h) = cv2.boundingRect(hull[i])
+#                out = cv2.rectangle(out, (x, y), (x + w, y + h), (0, 255, 255), 2) # printa na mask
+                cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 255), 2) # printa na mask
+
+                rectCount2 += 1
                 
-    
-    
-    			# Look for existing blobs that match this one
-                    closest_blob = None
-                    if tracked_blobs:
-                        # Sort the blobs we have seen in previous frames by pixel distance from this one
-                        closest_blobs = sorted(tracked_blobs, key=lambda b: cv2.norm(b['trail'][0], center))
+                
+                
+                
+                if w < 60 and h < 60:
+                    continue
+                center = (int(x + w/2), int(y + h/2))
+                
+                if center[1] > 320 or center[1] < 150:
+                    continue
         
-                        # Starting from the closest blob, make sure the blob in question is in the expected direction
-                        distance = 0.0
-                        distance_five = 0.0
-                        for close_blob in closest_blobs:
-                            distance = cv2.norm(center, close_blob['trail'][0])
-                            if len(close_blob['trail']) > 10:
-                                distance_five = cv2.norm(center, close_blob['trail'][10])
-        					
-                            # Check if the distance is close enough to "lock on"
-                            if distance < BLOB_LOCKON_DISTANCE_PX:
-                                # If it's close enough, make sure the blob was moving in the expected direction
-                                expected_dir = close_blob['dir']
-                                if expected_dir == 'left' and close_blob['trail'][0][0] < center[0]:
-                                    continue
-                                elif expected_dir == 'right' and close_blob['trail'][0][0] > center[0]:
-                                    continue
-                                else:
-                                    closest_blob = close_blob
-                                    break
         
-                        if closest_blob:
-                            # If we found a blob to attach this blob to, we should
-                            # do some math to help us with speed detection
-                            prev_center = closest_blob['trail'][0]
-                            if center[0] < prev_center[0]:
-                                # It's moving left
-                                closest_blob['dir'] = 'left'
-                                closest_blob['bumper_x'] = x
+        
+        
+        
+#        outputFrame = cv2.drawContours(frame, contours, -1, (0,255,0),-1)
+        
+        
+#        try: hierarchy = hierarchy[0]
+#        except: hierarchy = []
+#        a = []
+#        for contour, hier in zip(contours, hierarchy):
+#            (x, y, w, h) = cv2.boundingRect(contour)
+#
+#            if w < 60 and h < 60:
+#                continue
+##            if w > 400 and h > 280:
+##                continue
+##            area = h * w
+##            if area > 10000 :
+##                continue
+#
+#            center = (int(x + w/2), int(y + h/2))
+#
+#            if center[1] > 320 or center[1] < 150:
+#                continue
+#
+#				# Optionally draw the rectangle around the blob on the frame that we'll show in a UI later
+#            outputFrame = cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 2)
+#            
+#            crop_img = frame[y:y+h , x:x+w]
+#            cv2.imwrite('imagens/negatives/negativesframe{}.jpg'.format(frameCount),frame)
+#
+#            rectCount += 1
+            
+
+
+			# Look for existing blobs that match this one
+                closest_blob = None
+                if tracked_blobs:
+                    # Sort the blobs we have seen in previous frames by pixel distance from this one
+                    closest_blobs = sorted(tracked_blobs, key=lambda b: cv2.norm(b['trail'][0], center))
+    
+                    # Starting from the closest blob, make sure the blob in question is in the expected direction
+                    distance = 0.0
+                    distance_five = 0.0
+                    for close_blob in closest_blobs:
+                        distance = cv2.norm(center, close_blob['trail'][0])
+                        if len(close_blob['trail']) > 10:
+                            distance_five = cv2.norm(center, close_blob['trail'][10])
+    					
+                        # Check if the distance is close enough to "lock on"
+                        if distance < BLOB_LOCKON_DISTANCE_PX:
+                            # If it's close enough, make sure the blob was moving in the expected direction
+                            expected_dir = close_blob['dir']
+                            if expected_dir == 'left' and close_blob['trail'][0][0] < center[0]:
+                                continue
+                            elif expected_dir == 'right' and close_blob['trail'][0][0] > center[0]:
+                                continue
                             else:
-        						# It's moving right
-                                closest_blob['dir'] = 'right'
-                                closest_blob['bumper_x'] = x + w
-        
-        					# ...and we should add this centroid to the trail of
-        					# points that make up this blob's history.
-                            closest_blob['trail'].insert(0, center)
-                            closest_blob['last_seen'] = frame_time
-                            if len(closest_blob['trail']) > 10:
-                                closest_blob['speed'].insert(0, calculate_speed (closest_blob['trail'], fps))
-        
-                    if not closest_blob:
-        				# If we didn't find a blob, let's make a new one and add it to the list
-                        b = dict(
-        					id=str(uuid.uuid4())[:8],
-        					first_seen=frame_time,
-        					last_seen=frame_time,
-        					dir=None,
-        					bumper_x=None,
-        					trail=[center],
-        					speed=[0],
-        					size=[0, 0],
-        				)
-                        tracked_blobs.append(b)        
+                                closest_blob = close_blob
+                                break
+    
+                    if closest_blob:
+                        # If we found a blob to attach this blob to, we should
+                        # do some math to help us with speed detection
+                        prev_center = closest_blob['trail'][0]
+                        if center[0] < prev_center[0]:
+                            # It's moving left
+                            closest_blob['dir'] = 'left'
+                            closest_blob['bumper_x'] = x
+                        else:
+    						# It's moving right
+                            closest_blob['dir'] = 'right'
+                            closest_blob['bumper_x'] = x + w
+    
+    					# ...and we should add this centroid to the trail of
+    					# points that make up this blob's history.
+                        closest_blob['trail'].insert(0, center)
+                        closest_blob['last_seen'] = frame_time
+                        if len(closest_blob['trail']) > 10:
+                            closest_blob['speed'].insert(0, calculate_speed (closest_blob['trail'], fps))
+    
+                if not closest_blob:
+    				# If we didn't find a blob, let's make a new one and add it to the list
+                    b = dict(
+    					id=str(uuid.uuid4())[:8],
+    					first_seen=frame_time,
+    					last_seen=frame_time,
+    					dir=None,
+    					bumper_x=None,
+    					trail=[center],
+    					speed=[0],
+    					size=[0, 0],
+    				)
+                    tracked_blobs.append(b)        
 # PRINTA OS BLOBS
         if tracked_blobs:
 			# Prune out the blobs that haven't been seen in some amount of time
