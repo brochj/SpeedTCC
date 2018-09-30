@@ -13,7 +13,12 @@ import uuid
 import math
 import xml.etree.ElementTree as ET
 
-cap = cv2.VideoCapture("../Dataset/video1.avi")
+VIDEO_FILE = '../../Dataset/video1.avi' # Local do video a ser analisado
+XML_FILE = '../../Dataset/video1.xml'
+#XML_FILE = '3-xmlreader/video1.xml' # Igor Use essa linha
+
+
+cap = cv2.VideoCapture(VIDEO_FILE)
 fps = cap.get(cv2.CAP_PROP_FPS)
 width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))      # Retorna a largura do video
 # height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))    # Retorna a altura do video
@@ -49,11 +54,8 @@ BLOB_TRACK_TIMEOUT = 0.7 # Default 0.7
 
 
 # Constant Values
-VIDEO_FILE = '../../Dataset/video1.avi' # Local do video a ser analisado
-XML_FILE = '../Dataset/video1.xml'
-#XML_FILE = '3-xmlreader/video1.xml' # Igor
 RESIZE_RATIO = 0.35  # Resize, valores entre 0 e 1 | 1=Tamanho original do video
-CLOSE_VIDEO = 600  # Fecha o video no frame 400
+CLOSE_VIDEO = 2000  # Fecha o video no frame 400
 
 # Variant Values
 frameCount = 0  # Armazena a contagem de frames processados do video
