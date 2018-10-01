@@ -1,11 +1,11 @@
 <GroundTruthRoot name="3232">
 	<!--<gtruth> -->
 		<vehicle iframe="58" lane="1" moto="True" plate="True" radar="False" sema="False">
-		<region h="41" w="52" x="493" y="696"/>
+			<region h="41" w="52" x="493" y="696"/>
 		</vehicle>
 		<vehicle iframe="71" lane="3" moto="False" plate="True" radar="True" sema="False">
-		<region h="35" w="106" x="1632" y="930"/>
-		<radar frame_end="111" frame_start="71" speed="56.65"/>
+			<region h="35" w="106" x="1632" y="930"/>
+			<radar frame_end="111" frame_start="71" speed="56.65"/>
 		</vehicle>
 		<vehicle iframe="107" lane="3" moto="False" plate="True" radar="True" sema="False">
 		<region h="27" w="103" x="1563" y="896"/>

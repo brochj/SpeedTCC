@@ -18,7 +18,7 @@ XML_FILE = '../Dataset/video1.xml'
 #XML_FILE = '3-xmlreader/video1.xml' # Igor
 
 KERNEL_ERODE = np.ones((3, 3), np.uint8)  # Matriz (3,3) com 1 em seus valores -- Usa na funcao de erode
-KERNEL_DILATE = np.ones((15, 15), np.uint8)  # Matriz (8,8) com 1 em seus valores -- Usa na funcao de dilate
+KERNEL_DILATE = np.ones((15, 15), np.uint8)  # Matriz (15,15) com 1 em seus valores -- Usa na funcao de dilate
 # KERNEL_ERODE_SCND = np.ones((3,3), np.uint8)  # Matriz (8,8) com 1 em seus valores -- Usa na 2nd funcao de erode
 RESIZE_RATIO = 0.35 # Resize, valores entre 0 e 1 | 1=Tamanho original do video
 CLOSE_VIDEO = 2000  # Fecha o video no frame 400
@@ -180,6 +180,7 @@ while(True):
 #        erodedmask = cv2.erode(fgmask, KERNEL_ERODE_SCND ,iterations=1) # usa pra tirar os pixels isolados (ruídos)
         # Fim da máscara
         _, contours, hierarchy = cv2.findContours(dilatedmask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+#        contornos =  cv2.drawContours(frame, contours, -1, (255,0,0), 2, 8, hierarchy) # IGOR
         
         # create hull array for convex hull points
         hull = []
@@ -214,7 +215,7 @@ while(True):
                 areahull.append(cv2.contourArea(hull[i]))
                 (x, y, w, h) = cv2.boundingRect(hull[i])
 #                    out = cv2.rectangle(out, (x, y), (x + w, y + h), (0, 255, 255), 2) # printa na mask
-                cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 255), 2) # printa na mask
+                cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 255), 2) # printa na frame
                 
                 rectCount2 += 1
                 
@@ -224,11 +225,11 @@ while(True):
 ##                    cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 255, 255), 4) # printa na mask
 #                    pass
                 
-                if w < 60 and h < 60:
+                if w < 60 and h < 60:  # ponto que da pra mudar
                     continue
                 center = (int(x + w/2), int(y + h/2))
                 
-                if center[1] > 320 or center[1] < 150:
+                if center[1] > 320 or center[1] < 150:  # ponto que da pra mudar
                     continue
 
 #        outputFrame = cv2.drawContours(frame, contours, -1, (0,255,0),-1)
@@ -260,7 +261,7 @@ while(True):
 #            cv2.imwrite('imagens/negatives/negativesframe{}.jpg'.format(frameCount),frame)
 #
 #            rectCount += 1
-#%%            
+#          
 #################### TRACKING ################################################
 
 			# Look for existing blobs that match this one
@@ -370,7 +371,7 @@ while(True):
 #        cv2.line(outputFrame,(0,70),(672,70),(255,0,0),3) #Linha Horz de Cima
 #        cv2.line(outputFrame,(0,320),(672,320),(255,0,0),3) #Linha Horz de Baixo
 #        cv2.line(outputFrame,(570,0),(570,378),(255,0,0),3) #Linha Vertc da direita
-        
+#        
 #        cv2.line(outputFrame,(0,140),(640,140),(255,255,0),5)#Linha Horz de Cima
 #        cv2.line(outputFrame,(0,320),(640,320),(255,255,0),5)#Linha Horz de Baixo
 #        cv2.rectangle(outputFrame, (0,70), (640,320), (255,255,255) , 2)
@@ -379,9 +380,11 @@ while(True):
         
         # ########## MOSTRA OS VIDEOS  ################################################
         # cv2.imshow('crop_img', crop_img)
-        # cv2.imshow('out',out)
-        # cv2.imshow('erodedmask',erodedmask)
-        # cv2.imshow('dilatedmask', dilatedmask)
+#        cv2.imshow('fgmask', fgmask)
+#        cv2.imshow('out',out)
+#        cv2.imshow('erodedmask',erodedmask)
+#        cv2.imshow('dilatedmask', dilatedmask)
+#        cv2.imshow('contornos',contornos)        
         cv2.imshow('outputFrame', outputFrame)
         
         frameCount = frameCount + 1    # Conta a quantidade de Frames

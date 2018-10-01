@@ -18,7 +18,7 @@ import xml.etree.ElementTree as ET
 # Constant Values
 VIDEO_FILE = '../../Dataset/video1.avi' # Local do video a ser analisado
 XML_FILE = 'video1.xml'
-RESIZE_RATIO = 0.35  # Resize, valores entre 0 e 1 | 1=Tamanho original do video
+RESIZE_RATIO = 0.70  # Resize, valores entre 0 e 1 | 1=Tamanho original do video
 CLOSE_VIDEO = 600  # Fecha o video no frame 400
 
 # Variant Values
