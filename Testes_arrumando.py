@@ -7,32 +7,23 @@ Created on Mon Sep 17 13:24:34 2018
 #
 import cv2
 import numpy as np
+#import os
 import time
 import uuid
 import math
 import xml.etree.ElementTree as ET
 
-##########  CONSTANT VALUES ##################################################
-VIDEO_FILE = '../../Dataset/video1.avi' # Local do video a ser analisado
-XML_FILE = '../../Dataset/video1.xml'
+# Constant Values
+VIDEO_FILE = '../Dataset/video1.avi' # Local do video a ser analisado
+XML_FILE = '../Dataset/video1.xml'
 #XML_FILE = '3-xmlreader/video1.xml' # Igor
 
 KERNEL_ERODE = np.ones((3, 3), np.uint8)  # Matriz (3,3) com 1 em seus valores -- Usa na funcao de erode
 KERNEL_DILATE = np.ones((15, 15), np.uint8)  # Matriz (8,8) com 1 em seus valores -- Usa na funcao de dilate
 # KERNEL_ERODE_SCND = np.ones((3,3), np.uint8)  # Matriz (8,8) com 1 em seus valores -- Usa na 2nd funcao de erode
+
 RESIZE_RATIO = 0.35 # Resize, valores entre 0 e 1 | 1=Tamanho original do video
 CLOSE_VIDEO = 2000  # Fecha o video no frame 400
-
-
-
-
-# The maximum distance a blob centroid is allowed to move in order to
-# consider it a match to a previous scene's blob.
-BLOB_LOCKON_DISTANCE_PX = 50 # default = 80 # Aqui pode ser um limitador da veloc máx
-LINE_THICKNESS = 1
-# The number of seconds a blob is allowed to sit around without having
-# any new blobs matching it.
-BLOB_TRACK_TIMEOUT = 0.7 # Default 0.7
 
 cap = cv2.VideoCapture(VIDEO_FILE)
 fps = cap.get(cv2.CAP_PROP_FPS)
@@ -41,16 +32,34 @@ width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))  # Retorna a largura do video
 
 bgsMOG = cv2.createBackgroundSubtractorMOG2(history=10, varThreshold = 50, detectShadows=0)
 
-# Variant Values
-dict_lane1 = {}  # Dict que armazena os valores de "speed, frame_start, frame_end" da FAIXA 1
-dict_lane2 = {}  # Dict que armazena os valores de "speed, frame_start, frame_end" da FAIXA 2
-dict_lane3 = {}  # Dict que armazena os valores de "speed, frame_start, frame_end" da FAIXA 3
-tracked_blobs = []  # Lista que salva os dicionários dos tracked_blobs
-
-frameCount = 0  # Armazena a contagem de frames processados do video
-rectCount  = 0
+frameCount = 0
+rectCount = 0
 rectCount2 = 0
-out = 0  # Armazena o frame com os contornos desenhados
+out = 0
+
+# A list of "tracked blobs".
+tracked_blobs = []
+# The maximum distance a blob centroid is allowed to move in order to
+# consider it a match to a previous scene's blob.
+BLOB_LOCKON_DISTANCE_PX = 50 # default = 80 # aqui pode ser um limitador da veloc máx
+LINE_THICKNESS = 1
+# The number of seconds a blob is allowed to sit around without having
+# any new blobs matching it.
+BLOB_TRACK_TIMEOUT = 0.7 # Default 0.7
+
+
+
+# Constant Values
+RESIZE_RATIO = 0.35  # Resize, valores entre 0 e 1 | 1=Tamanho original do video
+CLOSE_VIDEO = 600  # Fecha o video no frame 400
+
+# Variant Values
+frameCount = 0  # Armazena a contagem de frames processados do video
+dict_lane1 = {}  # Buffer que armazena os valores de "speed, frame_start, frame_end" da FAIXA 1
+dict_lane2 = {}  # Buffer que armazena os valores de "speed, frame_start, frame_end" da FAIXA 2
+dict_lane3 = {}  # Buffer que armazena os valores de "speed, frame_start, frame_end" da FAIXA 3
+
+vehicle = read_xml(XML_FILE)  # Dicionário que armazena todas as informações do xml
 
 # ##############  FUNÇÕES ####################################################################
 def res(numero):  # Faz o ajuste de escala das posições de textos e retangulos
@@ -97,10 +106,10 @@ def calculate_speed (trails, fps):
 	dist_x = trails[0][0] - trails[10][0]
 	dist_y = trails[0][1] - trails[10][1]
 
-	mmp_y = 0.125 / (3 * (1 + (3.22 / 432)) * trails[0][1])
-#    mmp_y = 0.2 / (3 * (1 + (3.22 / 432)) * trails[0][1])  # Default
-	mmp_x = 0.125 / (5 * (1 + (1.5 / 773)) * (width - trails[0][1]))  
-#    mmp_x = 0.2 / (5 * (1 + (1.5 / 773)) * (width - trails[0][1]))  # Default
+	mmp_y = 0.125 / (3 * (1 + (3.22 / 432)) * trails[0][1]) # Default
+#    mmp_y = 0.2 / (3 * (1 + (3.22 / 432)) * trails[0][1])
+	mmp_x = 0.125 / (5 * (1 + (1.5 / 773)) * (width - trails[0][1])) #  
+#    mmp_x = 0.2 / (5 * (1 + (1.5 / 773)) * (width - trails[0][1]))
 	real_dist = math.sqrt(dist_x * mmp_x * dist_x * mmp_x + dist_y * mmp_y * dist_y * mmp_y)
 
 	return real_dist * fps * 250 / 3.6
@@ -163,7 +172,6 @@ def print_xml_values():
             pass
 # ########## FIM  FUNÇÕES ####################################################################
 
-vehicle = read_xml(XML_FILE)  # Dicionário que armazena todas as informações do xml
 
 while(True):
 #    ret , frame = cap.read()
@@ -201,7 +209,8 @@ while(True):
 #            if cv2.contourArea(contours[i]) < 1500:
 #                rectCount += 1
 #                break
-
+#           
+        
 #            if rectCount2 < 2:
             if cv2.contourArea(contours[i]) > 14000: # Default if cv2.contourArea(contours[i]) > 14000:
                 color_contours = (0, 255, 0) # green - color for contours
@@ -309,7 +318,7 @@ while(True):
                         if len(closest_blob['trail']) > 10:
                             closest_blob['speed'].insert(0, calculate_speed (closest_blob['trail'], fps))
     
-                if not closest_blob: # Cria as variaves
+                if not closest_blob: # Zera as variaves
     				# If we didn't find a blob, let's make a new one and add it to the list
                     b = dict(
     					id=str(uuid.uuid4())[:8],
@@ -360,10 +369,11 @@ while(True):
         
         print_xml_values()
         
-        # Mostra a qntd de frames processados e a % do video
+        
         outputFrame = cv2.putText(frame, 'frame: {} {}%'.format(frameCount, 
                                     str(int((100*frameCount)/vehicle['videoframes']))), 
                                     (res(14), res(1071)), 0, .65, (255, 255, 255), 2)
+#        outputFrame = cv2.putText(frame, 'frame: {}'.format(frameCount), (5,375), cv2.FONT_HERSHEY_SIMPLEX, .5, (255,255,255), 2)
         outputFrame = cv2.putText(frame, 'Retangulos descartados: {}'.format(rectCount), 
                                     (200,375), cv2.FONT_HERSHEY_SIMPLEX, .5, (255,255,255), 2)
         
@@ -379,9 +389,9 @@ while(True):
         
         # ########## MOSTRA OS VIDEOS  ################################################
         # cv2.imshow('crop_img', crop_img)
-        # cv2.imshow('out',out)
+        cv2.imshow('out',out)
         # cv2.imshow('erodedmask',erodedmask)
-        # cv2.imshow('dilatedmask', dilatedmask)
+        cv2.imshow('dilatedmask', dilatedmask)
         cv2.imshow('outputFrame', outputFrame)
         
         frameCount = frameCount + 1    # Conta a quantidade de Frames
