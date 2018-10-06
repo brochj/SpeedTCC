@@ -1,9 +1,10 @@
 
 """
-Created on Mon Sep 17 13:24:34 2018
+Created on Tue Oct  2 21:15:05 2018
 
 @author: broch
 """
+
 #
 import cv2
 import numpy as np
@@ -11,6 +12,7 @@ import time
 import uuid
 import math
 import xml.etree.ElementTree as ET
+import csv
 
 ##########  CONSTANT VALUES ##################################################
 VIDEO_FILE = '../Dataset/video1.avi' # Local do video a ser analisado
@@ -22,6 +24,9 @@ KERNEL_DILATE = np.ones((15, 15), np.uint8)  # Matriz (15,15) com 1 em seus valo
 # KERNEL_ERODE_SCND = np.ones((3,3), np.uint8)  # Matriz (8,8) com 1 em seus valores -- Usa na 2nd funcao de erode
 RESIZE_RATIO = 0.35 # Resize, valores entre 0 e 1 | 1=Tamanho original do video
 CLOSE_VIDEO = 2000  # Fecha o video no frame 400
+
+
+
 
 # The maximum distance a blob centroid is allowed to move in order to
 # consider it a match to a previous scene's blob.
@@ -44,6 +49,11 @@ dict_lane1 = {}  # Dict que armazena os valores de "speed, frame_start, frame_en
 dict_lane2 = {}  # Dict que armazena os valores de "speed, frame_start, frame_end" da FAIXA 2
 dict_lane3 = {}  # Dict que armazena os valores de "speed, frame_start, frame_end" da FAIXA 3
 tracked_blobs = []  # Lista que salva os dicionários dos tracked_blobs
+average_speed = [1]
+real_speed_lane1 = [1]
+real_speed_lane2 = [1]
+real_speed_lane3 = [1]
+speeed = 1.0
 
 frameCount = 0  # Armazena a contagem de frames processados do video
 rectCount  = 0
@@ -332,6 +342,7 @@ while(True):
             for i in range(len(tracked_blobs) - 1, -1, -1): 
                 if frame_time - tracked_blobs[i]['last_seen'] > BLOB_TRACK_TIMEOUT: # Deleta caso de timeout
                     print ("Removing expired track {}".format(tracked_blobs[i]['id']))
+                    speed = np.mean(tracked_blobs[0]['speed'])
                     del tracked_blobs[i]
 
         # Draw information about the blobs on the screen
@@ -353,8 +364,74 @@ while(True):
                 print ('========= speed list =========', blob['speed'])
                 ave_speed = np.mean(blob['speed'])
                 print ('========= ave_speed =========', ave_speed)
-                cv2.putText(frame, str(int(ave_speed)) + 'km/h', (blob['trail'][0][0] - 10, blob['trail'][0][1] + 50), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (0, 255, 0), thickness=1, lineType=2)
+#                cv2.putText(frame, str(int(ave_speed)) + 'km/h', (blob['trail'][0][0] - 10, blob['trail'][0][1] + 50), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (0, 255, 0), thickness=1, lineType=2)
 
+                if blob['trail'][0][0] < 200: # entao ta na faixa 1
+                    cv2.putText(frame, str(int(ave_speed)) + 'km/h', (blob['trail'][0][0] - 10, blob['trail'][0][1] + 50), 
+                                cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (0, 255, 0), thickness=1, lineType=2)
+                    cv2.putText(frame, 'Faixa 1', (blob['trail'][0][0] - 10, blob['trail'][0][1] + 70), 
+                                cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (255, 255, 255), thickness=1, lineType=2)
+                    lane = 1
+                elif blob['trail'][0][0] >= 200 and blob['trail'][0][0] < 400:  # entao ta na faixa 2
+                    cv2.putText(frame, str(int(ave_speed)) + 'km/h', (blob['trail'][0][0] - 10, blob['trail'][0][1] + 50),
+                                cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (0, 255, 0), thickness=1, lineType=2)
+                    cv2.putText(frame, 'Faixa 2', (blob['trail'][0][0] - 10, blob['trail'][0][1] + 70), 
+                                cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (255, 255, 255), thickness=1, lineType=2)
+                    lane = 2
+                elif blob['trail'][0][0] >= 400 and blob['trail'][0][0] < 670:  # entao ta na faixa 3
+                    lane = 3
+                    cv2.putText(frame, str(int(ave_speed)) + 'km/h', (blob['trail'][0][0] - 10, blob['trail'][0][1] + 50),
+                                cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (0, 255, 0), thickness=1, lineType=2)
+                    cv2.putText(frame, 'Faixa 3', (blob['trail'][0][0] - 10, blob['trail'][0][1] + 70), 
+                                cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (255, 255, 255), thickness=1, lineType=2)
+                    
+                # CSV PART
+#                if float("{0:.2f}".format(speed)) == average_speed[0] or len(blob['speed']) == 2:
+#                    pass
+#                elif lane == 3:
+#                    average_speed.insert(0, float("{0:.2f}".format(speed)))
+                
+                
+                
+                # Parte que coloca as velocidades medidas pelo algoritmo
+                # separados por faixas
+                try:
+                    if dict_lane1['speed'] == real_speed_lane1[0]:
+                        pass
+                    else:
+                        real_speed_lane1.insert(0, dict_lane1['speed'])
+                except:
+                    pass
+                try:
+                    if dict_lane2['speed'] == real_speed_lane2[0]:
+                        pass
+                    else:
+                        real_speed_lane2.insert(0, dict_lane2['speed'])
+                except:
+                    pass
+                try:
+                    if dict_lane3['speed'] == real_speed_lane3[0]:
+                        pass
+                    else:
+                        real_speed_lane3.insert(0, dict_lane3['speed'])
+                except:
+                    pass
+#                
+#                with open('velocidades.csv', 'w') as csvfile:
+#                    fieldnames = ['Valor Real', 'Valor Estimado']
+#                    writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+#                    
+#                    writer.writeheader()
+#                    writer.writerow({'Valor Real': int(ave_speed), 'Valor Estimado': int(ave_speed)})
+#                    writer.writerow({'Valor Real': 1234, 'Valor Estimado': 'Spam'})
+#                    writer.writerow({'Valor Real': 'Wonderful', 'Valor Estimado': 'Spam'})
+                
+#                with open('eggs.csv', 'w', newline='') as csvfile:
+#                    spamwriter = csv.writer(csvfile, delimiter=' ',
+#                                            quotechar=',', quoting=csv.QUOTE_MINIMAL)
+#                    spamwriter.writerow(['Spam'] * 5 + ['Baked Beans'])
+#                    spamwriter.writerow(['Spam', 'Lovely Spam', 'Wonderful Spam'])
+                
         print ('*********************************************************************')
         
         print_xml_values()
@@ -374,14 +451,14 @@ while(True):
 #        cv2.line(outputFrame,(0,320),(640,320),(255,255,0),5)#Linha Horz de Baixo
 #        cv2.rectangle(outputFrame, (0,70), (640,320), (255,255,255) , 2)
         
-        crop_img = outputFrame[70:320, 0:640]
+#        crop_img = outputFrame[70:320, 0:640]
         
         # ########## MOSTRA OS VIDEOS  ################################################
 #        cv2.imshow('crop_img', crop_img)
 #        cv2.imshow('fgmask', fgmask)
-        cv2.imshow('out',out)
+#        cv2.imshow('out',out)
 #        cv2.imshow('erodedmask',erodedmask)
-        cv2.imshow('dilatedmask', dilatedmask)
+#        cv2.imshow('dilatedmask', dilatedmask)
 #        cv2.imshow('contornos',contornos)        
         cv2.imshow('outputFrame', outputFrame)
 #        
