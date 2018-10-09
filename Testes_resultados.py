@@ -12,7 +12,7 @@ import time
 import uuid
 import math
 import xml.etree.ElementTree as ET
-import csv
+#import csv
 import os
 
 ##########  CONSTANT VALUES ##################################################
@@ -24,7 +24,7 @@ KERNEL_ERODE = np.ones((3, 3), np.uint8)  # Matriz (3,3) com 1 em seus valores -
 KERNEL_DILATE = np.ones((15, 15), np.uint8)  # Matriz (15,15) com 1 em seus valores -- Usa na funcao de dilate
 # KERNEL_ERODE_SCND = np.ones((3,3), np.uint8)  # Matriz (8,8) com 1 em seus valores -- Usa na 2nd funcao de erode
 RESIZE_RATIO = 0.35 # Resize, valores entre 0 e 1 | 1=Tamanho original do video
-CLOSE_VIDEO = 278  # Fecha o video no frame 400
+CLOSE_VIDEO = 283  # Fecha o video no frame 400
 
 
 
@@ -51,12 +51,12 @@ dict_lane2 = {}  # Dict que armazena os valores de "speed, frame_start, frame_en
 dict_lane3 = {}  # Dict que armazena os valores de "speed, frame_start, frame_end" da FAIXA 3
 tracked_blobs = []  # Lista que salva os dicionários dos tracked_blobs
 average_speed = [1]
-meas_speed_lane1 = [1]
-meas_speed_lane2 = [1]
-meas_speed_lane3 = [1]
-real_speed_lane1 = [1]
-real_speed_lane2 = [1]
-real_speed_lane3 = [1]
+meas_speed_lane1 = ['init']
+meas_speed_lane2 = ['init']
+meas_speed_lane3 = ['init']
+real_speed_lane1 = ['init']
+real_speed_lane2 = ['init']
+real_speed_lane3 = ['init']
 
 prev_len_speed = []
 
@@ -394,11 +394,11 @@ while(True):
                 
             if blob['speed'] and blob['speed'][0] != 0:
                 prev_len_speed.insert(0, len(blob['speed']))
-                #limpa prev_len_speed se estiver muito grande
-                # deixa no má 20 valores
-#                if len(prev_len_speed) > 20:
-#                    while len(prev_len_speed) > 20:
-#                        del prev_len_speed[19]
+                # limpa prev_len_speed se estiver muito grande
+                # deixa no máx 20 valores
+                if len(prev_len_speed) > 20:
+                    while len(prev_len_speed) > 20:
+                        del prev_len_speed[19]
                 # remove zero elements on the speed list
                 blob['speed'] = [item for item in blob['speed'] if item != 0.0]
                 print ('========= speed list =========', blob['speed'])
@@ -459,7 +459,7 @@ while(True):
                         real_speed_lane3.insert(0, dict_lane3['speed'])
                         total_cars['lane_3'] += 1
                         file = open('results/real_speed_lane3.csv', 'a')
-                        file.write('Carro {},{} \n'.format(total_cars['lane_3'], dict_lane3['speed']))
+                        file.write('Carro {},{},{} \n'.format(total_cars['lane_3'], dict_lane3['speed'], meas_speed_lane3[0] ))
                         file.close()
                 except:
                     pass
@@ -467,7 +467,7 @@ while(True):
                 
                  # CSV PART
                 try:
-                    if float("{0:.2f}".format(ave_speed)) == average_speed[0] or len(blob['speed']) >= 4:
+                    if float("{0:.2f}".format(ave_speed)) == average_speed[0] or len(blob['speed']) >= 2:
                         pass
                     elif lane == 1 and prev_len_speed[0] == prev_len_speed[1]:
                         meas_speed_lane1.insert(0, float("{0:.2f}".format(ave_speed)))
@@ -475,7 +475,7 @@ while(True):
                     pass
                 
                 try:
-                    if float("{0:.2f}".format(ave_speed)) == meas_speed_lane2[0] or len(blob['speed']) == 2:
+                    if float("{0:.2f}".format(ave_speed)) == meas_speed_lane2[0] or len(blob['speed']) >= 2:
                         pass    
                     elif lane == 2 and prev_len_speed[0] == prev_len_speed[1]:
                         meas_speed_lane2.insert(0, float("{0:.2f}".format(ave_speed)))
@@ -483,12 +483,15 @@ while(True):
                     pass
                 
                 try:
-                    if float("{0:.2f}".format(ave_speed)) == meas_speed_lane3[0] or len(blob['speed']) == 2:
+                    if float("{0:.2f}".format(ave_speed)) == meas_speed_lane3[0] or len(blob['speed']) >= 2:
                         pass       
                     elif lane == 3 and prev_len_speed[0] == prev_len_speed[1]:
                         meas_speed_lane3.insert(0, float("{0:.2f}".format(ave_speed)))
                 except:
                     pass
+                
+                
+                
                 
 #                with open('velocidades.csv', 'w') as csvfile:
 #                    fieldnames = ['Valor Real', 'Valor Estimado']
