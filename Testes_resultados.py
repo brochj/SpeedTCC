@@ -13,6 +13,7 @@ import uuid
 import math
 import xml.etree.ElementTree as ET
 import csv
+import os
 
 ##########  CONSTANT VALUES ##################################################
 VIDEO_FILE = '../Dataset/video1.avi' # Local do video a ser analisado
@@ -23,7 +24,7 @@ KERNEL_ERODE = np.ones((3, 3), np.uint8)  # Matriz (3,3) com 1 em seus valores -
 KERNEL_DILATE = np.ones((15, 15), np.uint8)  # Matriz (15,15) com 1 em seus valores -- Usa na funcao de dilate
 # KERNEL_ERODE_SCND = np.ones((3,3), np.uint8)  # Matriz (8,8) com 1 em seus valores -- Usa na 2nd funcao de erode
 RESIZE_RATIO = 0.35 # Resize, valores entre 0 e 1 | 1=Tamanho original do video
-CLOSE_VIDEO = 2000  # Fecha o video no frame 400
+CLOSE_VIDEO = 278  # Fecha o video no frame 400
 
 
 
@@ -50,10 +51,17 @@ dict_lane2 = {}  # Dict que armazena os valores de "speed, frame_start, frame_en
 dict_lane3 = {}  # Dict que armazena os valores de "speed, frame_start, frame_end" da FAIXA 3
 tracked_blobs = []  # Lista que salva os dicionários dos tracked_blobs
 average_speed = [1]
+meas_speed_lane1 = [1]
+meas_speed_lane2 = [1]
+meas_speed_lane3 = [1]
 real_speed_lane1 = [1]
 real_speed_lane2 = [1]
 real_speed_lane3 = [1]
-speeed = 1.0
+
+prev_len_speed = []
+
+total_cars = {'lane_1':0, 'lane_2':0, 'lane_3':0}
+speed = 1.0
 
 frameCount = 0  # Armazena a contagem de frames processados do video
 rectCount  = 0
@@ -61,6 +69,23 @@ rectCount2 = 0
 out = 0  # Armazena o frame com os contornos desenhados
 
 # ##############  FUNÇÕES ####################################################################
+def save_csv(ave_speed,average_speed):
+#    if float("{0:.2f}".format(ave_speed)) == average_speed[0] or len(blob['speed']) >= 4:
+#        pass
+#    elif lane == 1:
+#        meas_speed_lane1.insert(0, float("{0:.2f}".format(ave_speed)))
+#        
+#    if float("{0:.2f}".format(ave_speed)) == meas_speed_lane2[0] or len(blob['speed']) == 2:
+#        pass    
+#    elif lane == 2:
+#        meas_speed_lane2.insert(0, float("{0:.2f}".format(ave_speed)))
+#        
+    if float("{0:.2f}".format(ave_speed)) == meas_speed_lane3[0] or float("{0:.2f}".format(speed)) < 5 or len(blob['speed']) == 3:
+        pass       
+    elif lane == 3:
+        meas_speed_lane3.insert(0, float("{0:.2f}".format(ave_speed)))
+        
+                    
 def res(numero):  # Faz o ajuste de escala das posições de textos e retangulos
     return int(numero*RESIZE_RATIO)
 
@@ -172,6 +197,14 @@ def print_xml_values():
 # ########## FIM  FUNÇÕES ####################################################################
 
 vehicle = read_xml(XML_FILE)  # Dicionário que armazena todas as informações do xml
+
+# Deleta os arquivos dos resultados, caso existam
+if os.path.exists("results/real_speed_lane1.csv"):
+  os.remove("results/real_speed_lane1.csv")
+if os.path.exists("results/real_speed_lane2.csv"):
+  os.remove("results/real_speed_lane2.csv")
+if os.path.exists("results/real_speed_lane3.csv"):
+  os.remove("results/real_speed_lane3.csv")
 
 while(True):
 #    ret , frame = cap.read()
@@ -342,11 +375,12 @@ while(True):
             for i in range(len(tracked_blobs) - 1, -1, -1): 
                 if frame_time - tracked_blobs[i]['last_seen'] > BLOB_TRACK_TIMEOUT: # Deleta caso de timeout
                     print ("Removing expired track {}".format(tracked_blobs[i]['id']))
-                    speed = np.mean(tracked_blobs[0]['speed'])
+#                    save_csv()
+                    speed = np.mean(tracked_blobs[i]['speed'])
                     del tracked_blobs[i]
 
         # Draw information about the blobs on the screen
-        print ('tracked_blobs', tracked_blobs)
+        #print ('tracked_blobs', tracked_blobs)
         for blob in tracked_blobs:
             for (a, b) in pairwise(blob['trail']):
                 cv2.circle(frame, a, 5, (255, 0, 0), LINE_THICKNESS)
@@ -359,64 +393,103 @@ while(True):
 ################# FIM PRINTA OS BLOBS  ##########################################
                 
             if blob['speed'] and blob['speed'][0] != 0:
+                prev_len_speed.insert(0, len(blob['speed']))
+                #limpa prev_len_speed se estiver muito grande
+                # deixa no má 20 valores
+#                if len(prev_len_speed) > 20:
+#                    while len(prev_len_speed) > 20:
+#                        del prev_len_speed[19]
                 # remove zero elements on the speed list
                 blob['speed'] = [item for item in blob['speed'] if item != 0.0]
                 print ('========= speed list =========', blob['speed'])
                 ave_speed = np.mean(blob['speed'])
-                print ('========= ave_speed =========', ave_speed)
+                print ('========= ave_speed =========', float("{0:.2f}".format(ave_speed)))
 #                cv2.putText(frame, str(int(ave_speed)) + 'km/h', (blob['trail'][0][0] - 10, blob['trail'][0][1] + 50), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (0, 255, 0), thickness=1, lineType=2)
 
                 if blob['trail'][0][0] < 200: # entao ta na faixa 1
-                    cv2.putText(frame, str(int(ave_speed)) + 'km/h', (blob['trail'][0][0] - 10, blob['trail'][0][1] + 50), 
+                    cv2.putText(frame, str(float("{0:.2f}".format(ave_speed))) + 'km/h', (blob['trail'][0][0] + 20, blob['trail'][0][1] + 50), 
                                 cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (0, 255, 0), thickness=1, lineType=2)
                     cv2.putText(frame, 'Faixa 1', (blob['trail'][0][0] - 10, blob['trail'][0][1] + 70), 
                                 cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (255, 255, 255), thickness=1, lineType=2)
                     lane = 1
                 elif blob['trail'][0][0] >= 200 and blob['trail'][0][0] < 400:  # entao ta na faixa 2
-                    cv2.putText(frame, str(int(ave_speed)) + 'km/h', (blob['trail'][0][0] - 10, blob['trail'][0][1] + 50),
+                    cv2.putText(frame, str(float("{0:.2f}".format(ave_speed))) + 'km/h', (blob['trail'][0][0] + 20, blob['trail'][0][1] + 50),
                                 cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (0, 255, 0), thickness=1, lineType=2)
                     cv2.putText(frame, 'Faixa 2', (blob['trail'][0][0] - 10, blob['trail'][0][1] + 70), 
                                 cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (255, 255, 255), thickness=1, lineType=2)
                     lane = 2
                 elif blob['trail'][0][0] >= 400 and blob['trail'][0][0] < 670:  # entao ta na faixa 3
                     lane = 3
-                    cv2.putText(frame, str(int(ave_speed)) + 'km/h', (blob['trail'][0][0] - 10, blob['trail'][0][1] + 50),
+                    cv2.putText(frame, str(float("{0:.2f}".format(ave_speed))) + 'km/h', (blob['trail'][0][0] + 20, blob['trail'][0][1] + 50),
                                 cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (0, 255, 0), thickness=1, lineType=2)
                     cv2.putText(frame, 'Faixa 3', (blob['trail'][0][0] - 10, blob['trail'][0][1] + 70), 
                                 cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (255, 255, 255), thickness=1, lineType=2)
                     
-                # CSV PART
-#                if float("{0:.2f}".format(speed)) == average_speed[0] or len(blob['speed']) == 2:
-#                    pass
-#                elif lane == 3:
-#                    average_speed.insert(0, float("{0:.2f}".format(speed)))
-                
-                
-                
-                # Parte que coloca as velocidades medidas pelo algoritmo
+     
+                # Parte que coloca as velocidades reais no arquivo CSV
                 # separados por faixas
-                try:
+                try:  # FAIXA 1
                     if dict_lane1['speed'] == real_speed_lane1[0]:
                         pass
                     else:
                         real_speed_lane1.insert(0, dict_lane1['speed'])
+                        total_cars['lane_1'] += 1
+                        file = open('results/real_speed_lane1.csv', 'a')
+                        file.write('Carro {},{} \n'.format(total_cars['lane_1'], dict_lane1['speed']))
+                        file.close()
                 except:
                     pass
-                try:
+                
+                try:  # FAIXA 2
                     if dict_lane2['speed'] == real_speed_lane2[0]:
                         pass
                     else:
                         real_speed_lane2.insert(0, dict_lane2['speed'])
+                        total_cars['lane_2'] += 1
+                        file = open('results/real_speed_lane2.csv', 'a')
+                        file.write('Carro {},{} \n'.format(total_cars['lane_2'], dict_lane2['speed']))
+                        file.close()
                 except:
                     pass
-                try:
+                
+                try:  # FAIXA 3
                     if dict_lane3['speed'] == real_speed_lane3[0]:
                         pass
                     else:
                         real_speed_lane3.insert(0, dict_lane3['speed'])
+                        total_cars['lane_3'] += 1
+                        file = open('results/real_speed_lane3.csv', 'a')
+                        file.write('Carro {},{} \n'.format(total_cars['lane_3'], dict_lane3['speed']))
+                        file.close()
                 except:
                     pass
-#                
+                
+                
+                 # CSV PART
+                try:
+                    if float("{0:.2f}".format(ave_speed)) == average_speed[0] or len(blob['speed']) >= 4:
+                        pass
+                    elif lane == 1 and prev_len_speed[0] == prev_len_speed[1]:
+                        meas_speed_lane1.insert(0, float("{0:.2f}".format(ave_speed)))
+                except:
+                    pass
+                
+                try:
+                    if float("{0:.2f}".format(ave_speed)) == meas_speed_lane2[0] or len(blob['speed']) == 2:
+                        pass    
+                    elif lane == 2 and prev_len_speed[0] == prev_len_speed[1]:
+                        meas_speed_lane2.insert(0, float("{0:.2f}".format(ave_speed)))
+                except:
+                    pass
+                
+                try:
+                    if float("{0:.2f}".format(ave_speed)) == meas_speed_lane3[0] or len(blob['speed']) == 2:
+                        pass       
+                    elif lane == 3 and prev_len_speed[0] == prev_len_speed[1]:
+                        meas_speed_lane3.insert(0, float("{0:.2f}".format(ave_speed)))
+                except:
+                    pass
+                
 #                with open('velocidades.csv', 'w') as csvfile:
 #                    fieldnames = ['Valor Real', 'Valor Estimado']
 #                    writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
