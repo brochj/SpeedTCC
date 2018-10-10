@@ -24,7 +24,7 @@ KERNEL_ERODE = np.ones((3, 3), np.uint8)  # Matriz (3,3) com 1 em seus valores -
 KERNEL_DILATE = np.ones((15, 15), np.uint8)  # Matriz (15,15) com 1 em seus valores -- Usa na funcao de dilate
 # KERNEL_ERODE_SCND = np.ones((3,3), np.uint8)  # Matriz (8,8) com 1 em seus valores -- Usa na 2nd funcao de erode
 RESIZE_RATIO = 0.35 # Resize, valores entre 0 e 1 | 1=Tamanho original do video
-CLOSE_VIDEO = 295  # Fecha o video no frame 400
+CLOSE_VIDEO = 6917#295  # Fecha o video no frame 400
 
 
 
@@ -198,6 +198,22 @@ def print_xml_values():
 
 vehicle = read_xml(XML_FILE)  # Dicionário que armazena todas as informações do xml
 
+qntd_faixa1 = 0
+qntd_faixa2 = 0
+qntd_faixa3 = 0
+for vehicles in vehicle:
+    if vehicle[vehicles] == 6918:
+        break
+    if vehicle[vehicles]['lane'] == str(1):
+        qntd_faixa1 += 1
+    if vehicle[vehicles]['lane'] == str(2):
+        qntd_faixa2 += 1
+    if vehicle[vehicles]['lane'] == str(3):
+        qntd_faixa3 += 1
+
+
+            
+
 # Deleta os arquivos dos resultados, caso existam
 if os.path.exists("results/real_speed_lane1.csv"):
   os.remove("results/real_speed_lane1.csv")
@@ -205,8 +221,16 @@ if os.path.exists("results/real_speed_lane2.csv"):
   os.remove("results/real_speed_lane2.csv")
 if os.path.exists("results/real_speed_lane3.csv"):
   os.remove("results/real_speed_lane3.csv")
+
+if os.path.exists("results/mea_speed_lane1.csv"):
+  os.remove("results/mea_speed_lane1.csv")
+if os.path.exists("results/mea_speed_lane2.csv"):
+  os.remove("results/mea_speed_lane2.csv")  
 if os.path.exists("results/mea_speed_lane3.csv"):
   os.remove("results/mea_speed_lane3.csv")
+  
+if os.path.exists("results/real_speed.csv"):
+  os.remove("results/real_speed.csv")
 
 while(True):
 #    ret , frame = cap.read()
@@ -465,7 +489,7 @@ while(True):
                         file.close()
                 except:
                     pass
-                
+
                 
                  # CSV PART
                 try:
@@ -473,6 +497,9 @@ while(True):
                         pass
                     elif lane == 1 and prev_len_speed[0] == prev_len_speed[1]:
                         meas_speed_lane1.insert(0, float("{0:.3f}".format(ave_speed)))
+                        file = open('results/mea_speed_lane1.csv', 'a')
+                        file.write('Carro {},{} \n'.format(total_cars['lane_1'], dict_lane1['speed']))
+                        file.close()
                 except:
                     pass
                 
@@ -481,14 +508,20 @@ while(True):
                         pass    
                     elif lane == 2 and prev_len_speed[0] == prev_len_speed[1]:
                         meas_speed_lane2.insert(0, float("{0:.3f}".format(ave_speed)))
+                        file = open('results/mea_speed_lane2.csv', 'a')
+                        file.write('Carro {},{} \n'.format(total_cars['lane_2'], dict_lane2['speed']))
+                        file.close()
                 except:
                     pass
                 
                 try:
-                    if float("{0:.3f}".format(ave_speed)) == meas_speed_lane3[0] or len(blob['speed']) <= 2:
+                    if float("{0:.3f}".format(ave_speed)) == meas_speed_lane3[0] or len(blob['speed']) <3:
                         pass       
                     elif lane == 3 and prev_len_speed[0] == prev_len_speed[1]:
                         meas_speed_lane3.insert(0, float("{0:.3f}".format(ave_speed)))
+                        file = open('results/mea_speed_lane3.csv', 'a')
+                        file.write('Carro {},{},{} \n'.format(total_cars['lane_3'], dict_lane3['speed'], meas_speed_lane3[0]))
+                        file.close()
                 except:
                     pass
                 
