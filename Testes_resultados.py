@@ -12,12 +12,13 @@ import time
 import uuid
 import math
 import xml.etree.ElementTree as ET
-#import csv
 import os
+from tccfunctions import *
+from itertools import *
 
 ##########  CONSTANT VALUES ##################################################
-VIDEO_FILE = '../Dataset/video1.avi' # Local do video a ser analisado
-XML_FILE = '../Dataset/video1.xml'
+VIDEO_FILE = '../Dataset/video5.avi' # Local do video a ser analisado
+XML_FILE = '../Dataset/video5.xml'
 #XML_FILE = '3-xmlreader/video1.xml' # Igor
 
 KERNEL_ERODE = np.ones((3, 3), np.uint8)  # Matriz (3,3) com 1 em seus valores -- Usa na funcao de erode
@@ -37,6 +38,17 @@ LINE_THICKNESS = 1
 # any new blobs matching it.
 BLOB_TRACK_TIMEOUT = 0.7 # Default 0.7
 
+# Colors
+WHITE  = (255, 255, 255)
+BLACK  = (0  , 0  ,  0 )
+BLUE   = (255, 0  ,  0 )
+GREEN  = (0  , 255,  0 )
+RED    = (0  , 0  , 255)
+YELLOW = (0  , 255, 255)
+CIAN   = (255, 255,  0 )
+PINK   = (255, 0  , 255)
+
+###############################################################
 cap = cv2.VideoCapture(VIDEO_FILE)
 fps = cap.get(cv2.CAP_PROP_FPS)
 width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))  # Retorna a largura do video
@@ -69,56 +81,9 @@ rectCount2 = 0
 out = 0  # Armazena o frame com os contornos desenhados
 
 # ##############  FUNÇÕES ####################################################################
-def save_csv(ave_speed,average_speed):
-#    if float("{0:.2f}".format(ave_speed)) == average_speed[0] or len(blob['speed']) >= 4:
-#        pass
-#    elif lane == 1:
-#        meas_speed_lane1.insert(0, float("{0:.2f}".format(ave_speed)))
-#        
-#    if float("{0:.2f}".format(ave_speed)) == meas_speed_lane2[0] or len(blob['speed']) == 2:
-#        pass    
-#    elif lane == 2:
-#        meas_speed_lane2.insert(0, float("{0:.2f}".format(ave_speed)))
-#        
-    if float("{0:.2f}".format(ave_speed)) == meas_speed_lane3[0] or float("{0:.2f}".format(speed)) < 5 or len(blob['speed']) == 3:
-        pass       
-    elif lane == 3:
-        meas_speed_lane3.insert(0, float("{0:.2f}".format(ave_speed)))
-        
-                    
-def res(numero):  # Faz o ajuste de escala das posições de textos e retangulos
+                     
+def r(numero):  # Faz o ajuste de escala das posições de textos e retangulos
     return int(numero*RESIZE_RATIO)
-
-
-def read_xml(xml_file):
-# Funcão que lê o .xml e guarda as informações em um dicionário "iframe"
-    tree = ET.parse(xml_file)
-    root = tree.getroot()
-    iframe = {}
-    for child in root:
-        if child.get('radar') == 'True':
-            for subchild in child:
-#                print('subchild {}'.format(subchild.attrib))                
-                if subchild.tag == 'radar':
-                    iframe[child.get('iframe')] = subchild.attrib # salva frame_end, frame_start, speed
-                    iframe[child.get('iframe')]['lane'] = child.get('lane')
-                    iframe[child.get('iframe')]['radar'] = child.get('radar')
-                    iframe[child.get('iframe')]['moto'] = child.get('moto')
-#                    iframe[child.get('iframe')]['plate'] = child.get('plate')  # Desnecessário
-#                    iframe[child.get('iframe')]['sema'] = child.get('sema')  # Desnecessário
-        if child.tag == 'videoframes':
-            iframe[child.tag] = int(child.get('total'))
-    print('Arquivo {} foi armazenado com sucesso !!'.format(xml_file))
-    return iframe
-
-
-def get_frame():
-	#" Grabs a frame from the video vcture and resizes it. "
-	ret, frame = cap.read()
-	if ret:
-		(h, w) = frame.shape[:2]
-		frame = cv2.resize(frame, (int(w * RESIZE_RATIO), int(h * RESIZE_RATIO)), interpolation=cv2.INTER_CUBIC)
-	return ret, frame
 
 
 def calculate_speed (trails, fps):
@@ -138,62 +103,28 @@ def calculate_speed (trails, fps):
 
 	return real_dist * fps * 250 / 3.6
 
-
-from itertools import *
-def pairwise(iterable):
-    r"s -> (s0,s1), (s1,s2), (s2, s3), ..."
-    a, b = tee(iterable)
-    next(b, None)
-    return zip(a, b)
-
-def update_info_xml():
-    try:
-        # Verifica se naquele frame tem uma chave correspondente no dicionário "vehicle"
-        if vehicle[str(frameCount)]['frame_start'] == str(frameCount):  
-            lane_state = vehicle[str(frameCount)]['lane']
-            
-            if lane_state == '1':  # Se for na faixa 1, armazena as seguintes infos
-                # print('Faixa 1')
-                dict_lane1['speed'] = vehicle[str(frameCount)]['speed']
-                dict_lane1['frame_start'] = vehicle[str(frameCount)]['frame_start']
-                dict_lane1['frame_end'] = vehicle[str(frameCount)]['frame_end']
-            elif lane_state == '2':
-                #print('Faixa 2')
-                dict_lane2['speed'] = vehicle[str(frameCount)]['speed']
-                dict_lane2['frame_start'] = vehicle[str(frameCount)]['frame_start']
-                dict_lane2['frame_end'] = vehicle[str(frameCount)]['frame_end']
-            elif lane_state == '3':
-                #print('Faixa 3')
-                dict_lane3['speed'] = vehicle[str(frameCount)]['speed']
-                dict_lane3['frame_start'] = vehicle[str(frameCount)]['frame_start']
-                dict_lane3['frame_end'] = vehicle[str(frameCount)]['frame_end']
-    except KeyError:
-#            print('KeyError: Key Não encotrada no dicionário')
-        pass
-
-
-def print_xml_values():
-    # Mostra no video os valores das velocidades das 3 Faixas.
-    try:  # Posição do texto da FAIXA 1
-        text_pos = (res(143), res(43))
-        cv2.rectangle(frame, (text_pos[0] - 10, text_pos[1] - 20), (text_pos[0] + 135, text_pos[1] + 10), (0, 0, 0), -1)
-        cv2.putText(frame, 'speed: {}'.format(dict_lane1['speed']), text_pos, 2, .6, (255, 255, 0), 1)
-    except:
-        pass
-    
-    try:  # Posição do texto da FAIXA 2
-        text_pos = (res(628), res(43))
-        cv2.rectangle(frame, (text_pos[0] - 10, text_pos[1] - 20), (text_pos[0] + 135, text_pos[1] + 10), (0, 0, 0), -1)
-        cv2.putText(frame, 'speed: {}'.format(str(dict_lane2['speed'])), text_pos, 2, .6, (255, 255, 0), 1)
-    except:
-        pass
-    
-    try:  # Posição do texto da FAIXA 3
-        text_pos = (res(1143), res(43))
-        cv2.rectangle(frame, (text_pos[0] - 10, text_pos[1] - 20), (text_pos[0] + 135, text_pos[1] + 10), (0, 0, 0), -1)
-        cv2.putText(frame, 'speed: {}'.format(dict_lane3['speed']), text_pos, 2, .6, (255, 255, 0), 1)
-    except:
-            pass
+#def print_xml_values(frame, dict_lane1, dict_lane2, dict_lane3):
+#    # Mostra no video os valores das velocidades das 3 Faixas.
+#    try:  # Posição do texto da FAIXA 1
+#        text_pos = (r(143), r(43))
+#        cv2.rectangle(frame, (text_pos[0] - 10, text_pos[1] - 20), (text_pos[0] + 135, text_pos[1] + 10), (0, 0, 0), -1)
+#        cv2.putText(frame, 'speed: {}'.format(dict_lane1['speed']), text_pos, 2, .6, (255, 255, 0), 1)
+#    except:
+#        pass
+#    
+#    try:  # Posição do texto da FAIXA 2
+#        text_pos = (r(628), r(43))
+#        cv2.rectangle(frame, (text_pos[0] - 10, text_pos[1] - 20), (text_pos[0] + 135, text_pos[1] + 10), (0, 0, 0), -1)
+#        cv2.putText(frame, 'speed: {}'.format(str(dict_lane2['speed'])), text_pos, 2, .6, (255, 255, 0), 1)
+#    except:
+#        pass
+#    
+#    try:  # Posição do texto da FAIXA 3
+#        text_pos = (r(1143), r(43))
+#        cv2.rectangle(frame, (text_pos[0] - 10, text_pos[1] - 20), (text_pos[0] + 135, text_pos[1] + 10), (0, 0, 0), -1)
+#        cv2.putText(frame, 'speed: {}'.format(dict_lane3['speed']), text_pos, 2, .6, (255, 255, 0), 1)
+#    except:
+#        pass
 # ########## FIM  FUNÇÕES ####################################################################
 
 vehicle = read_xml(XML_FILE)  # Dicionário que armazena todas as informações do xml
@@ -201,46 +132,53 @@ vehicle = read_xml(XML_FILE)  # Dicionário que armazena todas as informações 
 qntd_faixa1 = 0
 qntd_faixa2 = 0
 qntd_faixa3 = 0
-for vehicles in vehicle:
-    if vehicle[vehicles] == 6918:
-        break
-    if vehicle[vehicles]['lane'] == str(1):
-        qntd_faixa1 += 1
-    if vehicle[vehicles]['lane'] == str(2):
-        qntd_faixa2 += 1
-    if vehicle[vehicles]['lane'] == str(3):
-        qntd_faixa3 += 1
+#for vehicles in vehicle:
+#    if vehicle[vehicles] == 6918:
+#        break
+#    if vehicle[vehicles]['lane'] == str(1):
+#        qntd_faixa1 += 1
+#    if vehicle[vehicles]['lane'] == str(2):
+#        qntd_faixa2 += 1
+#    if vehicle[vehicles]['lane'] == str(3):
+#        qntd_faixa3 += 1
 
-
-            
 
 # Deleta os arquivos dos resultados, caso existam
-if os.path.exists("results/real_speed_lane1.csv"):
-  os.remove("results/real_speed_lane1.csv")
-if os.path.exists("results/real_speed_lane2.csv"):
-  os.remove("results/real_speed_lane2.csv")
-if os.path.exists("results/real_speed_lane3.csv"):
-  os.remove("results/real_speed_lane3.csv")
-
-if os.path.exists("results/mea_speed_lane1.csv"):
-  os.remove("results/mea_speed_lane1.csv")
-if os.path.exists("results/mea_speed_lane2.csv"):
-  os.remove("results/mea_speed_lane2.csv")  
-if os.path.exists("results/mea_speed_lane3.csv"):
-  os.remove("results/mea_speed_lane3.csv")
-  
-if os.path.exists("results/real_speed.csv"):
-  os.remove("results/real_speed.csv")
+#if os.path.exists("results/real_speed_lane1.csv"):
+#  os.remove("results/real_speed_lane1.csv")
+#if os.path.exists("results/real_speed_lane2.csv"):
+#  os.remove("results/real_speed_lane2.csv")
+#if os.path.exists("results/real_speed_lane3.csv"):
+#  os.remove("results/real_speed_lane3.csv")
+#
+#if os.path.exists("results/mea_speed_lane1.csv"):
+#  os.remove("results/mea_speed_lane1.csv")
+#if os.path.exists("results/mea_speed_lane2.csv"):
+#  os.remove("results/mea_speed_lane2.csv")  
+#if os.path.exists("results/mea_speed_lane3.csv"):
+#  os.remove("results/mea_speed_lane3.csv")
+#  
+#if os.path.exists("results/real_speed.csv"):
+#  os.remove("results/real_speed.csv")
 
 while(True):
 #    ret , frame = cap.read()
-    ret, frame = get_frame()
+    ret, frame = get_frame(cap, RESIZE_RATIO)
     frame_time = time.time()
     frameGray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+#    crop_img = frameGray[0:250, 0:640]
+#    crop_img = frameGray[0:320, 0:640]
+#    crop_img = rotate_bound(crop_img, -5)
+    
+#    pts = np.array([[671,216],[500,0],[671,0]], np.int32)
+#    poly_img = cv2.fillPoly(frameGray,[pts], (0,255,255))
+#    crop_img = poly_img
+
     
     if ret == True:
-        update_info_xml()
+        update_info_xml(frameCount, vehicle, dict_lane1, dict_lane2, dict_lane3)
         # Cria a máscara
+#        fgmask = bgsMOG.apply(crop_img, None, 0.01)
         fgmask = bgsMOG.apply(frameGray, None, 0.01)
         erodedmask = cv2.erode(fgmask, KERNEL_ERODE , iterations=1) # usa pra tirar os pixels isolados (ruídos)
         dilatedmask = cv2.dilate(erodedmask, KERNEL_DILATE , iterations=1) # usa para evidenciar o objeto em movimento
@@ -515,7 +453,7 @@ while(True):
                     pass
                 
                 try:
-                    if float("{0:.3f}".format(ave_speed)) == meas_speed_lane3[0] or len(blob['speed']) <3:
+                    if float("{0:.3f}".format(ave_speed)) == meas_speed_lane3[0] or len(blob['speed']) < 2:
                         pass       
                     elif lane == 3 and prev_len_speed[0] == prev_len_speed[1]:
                         meas_speed_lane3.insert(0, float("{0:.3f}".format(ave_speed)))
@@ -545,14 +483,14 @@ while(True):
                 print('lane {}'.format(lane))        
         print ('*********************************************************************')
         
-        print_xml_values()
+        print_xml_values(frame, dict_lane1, dict_lane2, dict_lane3)
         
         # Mostra a qntd de frames processados e a % do video
         outputFrame = cv2.putText(frame, 'frame: {} {}%'.format(frameCount, 
                                     str(int((100*frameCount)/vehicle['videoframes']))), 
-                                    (res(14), res(1071)), 0, .65, (255, 255, 255), 2)
+                                    (r(14), r(1071)), 0, .65, (255, 255, 255), 2)
         outputFrame = cv2.putText(frame, 'Retangulos descartados: {}'.format(rectCount), 
-                                    (200,375), cv2.FONT_HERSHEY_SIMPLEX, .5, (255,255,255), 2)
+                                    (r(571),r(1071)), cv2.FONT_HERSHEY_SIMPLEX, .5, (255,255,255), 2)
         
 #        cv2.line(outputFrame,(0,70),(672,70),(255,0,0),3) #Linha Horz de Cima
 #        cv2.line(outputFrame,(0,320),(672,320),(255,0,0),3) #Linha Horz de Baixo
@@ -562,15 +500,44 @@ while(True):
 #        cv2.line(outputFrame,(0,320),(640,320),(255,255,0),5)#Linha Horz de Baixo
 #        cv2.rectangle(outputFrame, (0,70), (640,320), (255,255,255) , 2)
         
+###########  Region of Interest ###############################################
+        # Retângulo superior
+        cv2.rectangle(outputFrame, (0,0), (r(1920), r(80)), YELLOW , -1)
+        # triângulo lado direito
+        pts = np.array([[r(1920), r(700)], [r(1350),0], [r(1920),0]], np.int32)
+        cv2.fillPoly(outputFrame,[pts], BLUE)
+        # triângulo lado esquerdo
+        pts3 = np.array([[0, r(620)], [r(270),0], [0,0]], np.int32)
+        cv2.fillPoly(outputFrame,[pts3], BLUE)
+        # Linha entre faixas 1 e 2
+        pts1 = np.array([[r(510), r(1080)], [r(570),r(250)], 
+                         [r(600),r(250)], [r(550),r(1080)]], np.int32)
+        cv2.fillPoly(outputFrame,[pts1], PINK)
+        # Linha entre faixas 2 e 3 SUPERIOR
+        pts5 = np.array([[r(570), r(250)], [r(600),r(250)], 
+                         [r(615),r(0)], [r(590),r(0)]], np.int32)
+        cv2.fillPoly(outputFrame,[pts5], BLACK)
+        
+        # Linha entre faixas 2 e 3
+        pts2 = np.array([[r(1340), r(1080)], [r(1030),r(250)], 
+                         [r(1060),r(250)], [r(1390),r(1080)]], np.int32)
+        cv2.fillPoly(outputFrame,[pts2], CIAN)
+        # Linha entre faixas 2 e 3 SUPERIOR
+        pts4 = np.array([[r(1030),r(250)], [r(1060),r(250)], 
+                         [r(960),0], [r(930),0]], np.int32)
+        cv2.fillPoly(outputFrame,[pts4], BLACK)
+########### FIM Region of Interest ############################################
+        
 #        crop_img = outputFrame[70:320, 0:640]
         
         # ########## MOSTRA OS VIDEOS  ################################################
 #        cv2.imshow('crop_img', crop_img)
-#        cv2.imshow('fgmask', fgmask)
-#        cv2.imshow('out',out)
+#        cv2.imshow('poly_img', poly_img)
+        cv2.imshow('fgmask', fgmask)
 #        cv2.imshow('erodedmask',erodedmask)
 #        cv2.imshow('dilatedmask', dilatedmask)
-#        cv2.imshow('contornos',contornos)        
+#        cv2.imshow('contornos',contornos)     
+#        cv2.imshow('out',out)
         cv2.imshow('outputFrame', outputFrame)
 #        
         frameCount = frameCount + 1    # Conta a quantidade de Frames
