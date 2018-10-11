@@ -38,9 +38,23 @@ def rotate_bound(image, angle):
     return cv2.warpAffine(image, M, (nW, nH))
         
                     
+def get_frame(cap,RESIZE_RATIO):
+	#" Grabs a frame from the video vcture and resizes it. "
+	ret, frame = cap.read()
+	if ret:
+		(h, w) = frame.shape[:2]
+		frame = cv2.resize(frame, (int(w * RESIZE_RATIO), int(h * RESIZE_RATIO)), interpolation=cv2.INTER_CUBIC)
+	return ret, frame
 
 
+from itertools import *
+def pairwise(iterable):
+    r"s -> (s0,s1), (s1,s2), (s2, s3), ..."
+    a, b = tee(iterable)
+    next(b, None)
+    return zip(a, b)
 
+##### XML FUNCTIONS ###########################################################
 def read_xml(xml_file):
 # Funcão que lê o .xml e guarda as informações em um dicionário "iframe"
     tree = ET.parse(xml_file)
@@ -62,24 +76,6 @@ def read_xml(xml_file):
     print('Arquivo {} foi armazenado com sucesso !!'.format(xml_file))
     return iframe
 
-
-def get_frame(cap,RESIZE_RATIO):
-	#" Grabs a frame from the video vcture and resizes it. "
-	ret, frame = cap.read()
-	if ret:
-		(h, w) = frame.shape[:2]
-		frame = cv2.resize(frame, (int(w * RESIZE_RATIO), int(h * RESIZE_RATIO)), interpolation=cv2.INTER_CUBIC)
-	return ret, frame
-
-
-
-
-from itertools import *
-def pairwise(iterable):
-    r"s -> (s0,s1), (s1,s2), (s2, s3), ..."
-    a, b = tee(iterable)
-    next(b, None)
-    return zip(a, b)
 
 def update_info_xml(frameCount, vehicle, dict_lane1, dict_lane2, dict_lane3):
     try:
@@ -107,7 +103,9 @@ def update_info_xml(frameCount, vehicle, dict_lane1, dict_lane2, dict_lane3):
         pass
 
 
-def print_xml_values(frame, dict_lane1, dict_lane2, dict_lane3):
+def print_xml_values(frame, ratio, dict_lane1, dict_lane2, dict_lane3):
+    def r(numero):  # Faz o ajuste de escala das posições de textos e retangulos
+        return int(numero*ratio)
     # Mostra no video os valores das velocidades das 3 Faixas.
     try:  # Posição do texto da FAIXA 1
         text_pos = (r(143), r(43))
@@ -129,4 +127,7 @@ def print_xml_values(frame, dict_lane1, dict_lane2, dict_lane3):
         cv2.putText(frame, 'speed: {}'.format(dict_lane3['speed']), text_pos, 2, .6, (255, 255, 0), 1)
     except:
         pass
+
+##### END --- XML FUNCTIONS ###################################################
+
 # ########## FIM  FUNÇÕES ####################################################################

@@ -14,7 +14,7 @@ import math
 import xml.etree.ElementTree as ET
 import os
 from tccfunctions import *
-from itertools import *
+#from itertools import *
 
 ##########  CONSTANT VALUES ##################################################
 VIDEO_FILE = '../Dataset/video1.avi' # Local do video a ser analisado
@@ -82,7 +82,6 @@ out = 0  # Armazena o frame com os contornos desenhados
 def r(numero):  # Faz o ajuste de escala das posições de textos e retangulos
     return int(numero*RESIZE_RATIO)
 
-
 def calculate_speed (trails, fps):
     # distance: distance on the frame
 	# location: x, y coordinates on the frame
@@ -105,7 +104,7 @@ def roi(frame):
     # Retângulo superior
     cv2.rectangle(frame, (0,0), (r(1920), r(120)), YELLOW , -1)
     # triângulo lado direito
-    pts = np.array([[r(1920), r(700)], [r(1350),0], [r(1920),0]], np.int32)
+    pts = np.array([[r(1920), r(750)], [r(1320),0], [r(1920),0]], np.int32)
     cv2.fillPoly(frame,[pts], BLUE)
     # triângulo lado esquerdo
     pts3 = np.array([[0, r(620)], [r(270),0], [0,0]], np.int32)
@@ -130,28 +129,6 @@ def roi(frame):
     return frame
 ########### FIM Region of Interest ############################################
 
-def print_xml_values(frame, dict_lane1, dict_lane2, dict_lane3):
-    # Mostra no video os valores das velocidades das 3 Faixas.
-    try:  # Posição do texto da FAIXA 1
-        text_pos = (r(143), r(43))
-        cv2.rectangle(frame, (text_pos[0] - 10, text_pos[1] - 20), (text_pos[0] + 135, text_pos[1] + 10), (0, 0, 0), -1)
-        cv2.putText(frame, 'speed: {}'.format(dict_lane1['speed']), text_pos, 2, .6, (255, 255, 0), 1)
-    except:
-        pass
-    
-    try:  # Posição do texto da FAIXA 2
-        text_pos = (r(628), r(43))
-        cv2.rectangle(frame, (text_pos[0] - 10, text_pos[1] - 20), (text_pos[0] + 135, text_pos[1] + 10), (0, 0, 0), -1)
-        cv2.putText(frame, 'speed: {}'.format(str(dict_lane2['speed'])), text_pos, 2, .6, (255, 255, 0), 1)
-    except:
-        pass
-    
-    try:  # Posição do texto da FAIXA 3
-        text_pos = (r(1143), r(43))
-        cv2.rectangle(frame, (text_pos[0] - 10, text_pos[1] - 20), (text_pos[0] + 135, text_pos[1] + 10), (0, 0, 0), -1)
-        cv2.putText(frame, 'speed: {}'.format(dict_lane3['speed']), text_pos, 2, .6, (255, 255, 0), 1)
-    except:
-        pass
 # ########## FIM  FUNÇÕES ####################################################################
 
 vehicle = read_xml(XML_FILE)  # Dicionário que armazena todas as informações do xml
@@ -205,9 +182,9 @@ while(True):
     
     # Equalizar Contrast
     clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(7,7))
-    cl1 = clahe.apply(frameGray)
-    res = np.hstack((frameGray, cl1))
-    frameGray = cl1
+    hist = clahe.apply(frameGray)
+#    res = np.hstack((frameGray, cl1))
+    frameGray = hist
     
     if ret == True:
         update_info_xml(frameCount, vehicle, dict_lane1, dict_lane2, dict_lane3)
@@ -219,7 +196,7 @@ while(True):
 #        erodedmask = cv2.erode(fgmask, KERNEL_ERODE_SCND ,iterations=1) # usa pra tirar os pixels isolados (ruídos)
         # Fim da máscara
         _, contours, hierarchy = cv2.findContours(dilatedmask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        contornos =  cv2.drawContours(frame, contours, -1, (255,0,0), 2, 8, hierarchy) # IGOR
+#        contornos =  cv2.drawContours(frame, contours, -1, (255,0,0), 2, 8, hierarchy) # IGOR
         
         # create hull array for convex hull points
         hull = []
@@ -342,10 +319,10 @@ while(True):
     
     					# ...and we should add this centroid to the trail of
     					# points that make up this blob's history.
-                        closest_blob['trail'].insert(0, center)
-                        closest_blob['last_seen'] = frame_time
-                        if len(closest_blob['trail']) > 10:
-                            closest_blob['speed'].insert(0, calculate_speed (closest_blob['trail'], fps))
+                            closest_blob['trail'].insert(0, center)
+                            closest_blob['last_seen'] = frame_time
+                            if len(closest_blob['trail']) > 10:
+                                closest_blob['speed'].insert(0, calculate_speed (closest_blob['trail'], fps))
     
                 if not closest_blob: # Cria as variaves
     				# If we didn't find a blob, let's make a new one and add it to the list
@@ -514,33 +491,27 @@ while(True):
 #                    spamwriter.writerow(['Spam', 'Lovely Spam', 'Wonderful Spam'])
                 print('lane {}'.format(lane))        
         print ('*********************************************************************')
-        
-        print_xml_values(frame, dict_lane1, dict_lane2, dict_lane3)
-        
+  
         # Mostra a qntd de frames processados e a % do video
         outputFrame = cv2.putText(frame, 'frame: {} {}%'.format(frameCount, 
                                     str(int((100*frameCount)/vehicle['videoframes']))), 
                                     (r(14), r(1071)), 0, .65, (255, 255, 255), 2)
         outputFrame = cv2.putText(frame, 'Retangulos descartados: {}'.format(rectCount), 
                                     (r(571),r(1071)), cv2.FONT_HERSHEY_SIMPLEX, .5, (255,255,255), 2)
+
+        roi(outputFrame) # Ver como esta a ROI
         
-#        cv2.line(outputFrame,(0,70),(672,70),(255,0,0),3) #Linha Horz de Cima
-#        cv2.line(outputFrame,(0,320),(672,320),(255,0,0),3) #Linha Horz de Baixo
-#        cv2.line(outputFrame,(570,0),(570,378),(255,0,0),3) #Linha Vertc da direita
-#        
-#        cv2.line(outputFrame,(0,140),(640,140),(255,255,0),5)#Linha Horz de Cima
-#        cv2.line(outputFrame,(0,320),(640,320),(255,255,0),5)#Linha Horz de Baixo
+        print_xml_values(outputFrame, RESIZE_RATIO, dict_lane1, dict_lane2, dict_lane3)
+
 #        cv2.rectangle(outputFrame, (0,70), (640,320), (255,255,255) , 2)
-        
-#        roi(outputFrame) # Ver como esta a ROI
-        
+
 #        crop_img = outputFrame[70:320, 0:640]
         
         # ########## MOSTRA OS VIDEOS  ################################################
 #        cv2.imshow('crop_img', crop_img)
         
-        cv2.imshow('res', res)
-#        cv2.imshow('fgmask', fgmask)
+#        cv2.imshow('res', res)
+        cv2.imshow('fgmask', fgmask)
 #        cv2.imshow('erodedmask',erodedmask)
 #        cv2.imshow('dilatedmask', dilatedmask)
 #        cv2.imshow('contornos',contornos)     
