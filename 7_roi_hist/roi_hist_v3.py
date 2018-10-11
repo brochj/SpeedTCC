@@ -17,8 +17,8 @@ from tccfunctions import *
 #from itertools import *
 
 ##########  CONSTANT VALUES ##################################################
-VIDEO_FILE = '../Dataset/video1.avi' # Local do video a ser analisado
-XML_FILE = '../Dataset/video1.xml'
+VIDEO_FILE = '../../Dataset/video1.avi' # Local do video a ser analisado
+XML_FILE = '../../Dataset/video1.xml'
 #XML_FILE = '3-xmlreader/video1.xml' # Igor
 
 KERNEL_ERODE = np.ones((3, 3), np.uint8)  # Matriz (3,3) com 1 em seus valores -- Usa na funcao de erode
@@ -100,7 +100,7 @@ def calculate_speed (trails, fps):
 def roi(frame):
     ###########  Region of Interest ###############################################
     # Retângulo superior
-    cv2.rectangle(frame, (0,0), (r(1920), r(120)), YELLOW , -1)
+    cv2.rectangle(frame, (0,0), (r(1920), r(120)), BLUE , -1)
     # triângulo lado direito
     pts = np.array([[r(1920), r(750)], [r(1320),0], [r(1920),0]], np.int32)
     cv2.fillPoly(frame,[pts], BLUE)
@@ -110,20 +110,20 @@ def roi(frame):
     # Linha entre faixas 1 e 2
     pts1 = np.array([[r(510), r(1080)], [r(570),r(250)], 
                      [r(600),r(250)], [r(550),r(1080)]], np.int32)
-    cv2.fillPoly(frame,[pts1], PINK)
+    cv2.fillPoly(frame,[pts1], BLUE)
     # Linha entre faixas 2 e 3 SUPERIOR
     pts5 = np.array([[r(570), r(250)], [r(600),r(250)], 
                      [r(615),r(0)], [r(590),r(0)]], np.int32)
-    cv2.fillPoly(frame,[pts5], BLACK)
+    cv2.fillPoly(frame,[pts5], BLUE)
     
     # Linha entre faixas 2 e 3
     pts2 = np.array([[r(1340), r(1080)], [r(1030),r(250)], 
                      [r(1060),r(250)], [r(1390),r(1080)]], np.int32)
-    cv2.fillPoly(frame,[pts2], CIAN)
+    cv2.fillPoly(frame,[pts2], BLUE)
     # Linha entre faixas 2 e 3 SUPERIOR
     pts4 = np.array([[r(1030),r(250)], [r(1060),r(250)], 
                      [r(960),0], [r(930),0]], np.int32)
-    cv2.fillPoly(frame,[pts4], BLACK)
+    cv2.fillPoly(frame,[pts4], BLUE)
     return frame
 ########### FIM Region of Interest ############################################
 
@@ -182,13 +182,13 @@ while(True):
     clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(7,7))
     hist = clahe.apply(frameGray)
 #    res = np.hstack((frameGray, cl1))
-    frameGray = hist
+#    frameGray = hist
     
     if ret == True:
         update_info_xml(frameCount, vehicle, dict_lane1, dict_lane2, dict_lane3)
         # Cria a máscara
 #        fgmask = bgsMOG.apply(crop_img, None, 0.01)
-        fgmask = bgsMOG.apply(frameGray, None, 0.01)
+        fgmask = bgsMOG.apply(hist, None, 0.01)
         erodedmask = cv2.erode(fgmask, KERNEL_ERODE , iterations=1) # usa pra tirar os pixels isolados (ruídos)
         dilatedmask = cv2.dilate(erodedmask, KERNEL_DILATE , iterations=1) # usa para evidenciar o objeto em movimento
 #        erodedmask = cv2.erode(fgmask, KERNEL_ERODE_SCND ,iterations=1) # usa pra tirar os pixels isolados (ruídos)
@@ -506,16 +506,22 @@ while(True):
         
 #        cv2.imshow('res', res)
         cv2.imshow('fgmask', fgmask)
-#        cv2.imshow('erodedmask',erodedmask)
-#        cv2.imshow('dilatedmask', dilatedmask)
+        cv2.imshow('erodedmask',erodedmask)
+        cv2.imshow('dilatedmask', dilatedmask)
 #        cv2.imshow('contornos',contornos)     
 #        cv2.imshow('out',out)
         cv2.imshow('outputFrame', outputFrame)
 #        final = np.hstack((erodedmask, dilatedmask))
 #        cv2.imshow('final', final)
         
+        # Salva imagens para por no Markdown do GITHUB
         if frameCount ==285:
-            cv2.imwrite('resultado.png', outputFrame)
+            cv2.imwrite('1frameGray.png', frameGray)
+            cv2.imwrite('2hist.png', hist)
+            cv2.imwrite('3fgmask.png', fgmask)
+            cv2.imwrite('4erodedmask.png',erodedmask)
+            cv2.imwrite('5dilatedmask.png', dilatedmask)
+            cv2.imwrite('6resultado.png', outputFrame)
 
 #        
         frameCount = frameCount + 1    # Conta a quantidade de Frames
