@@ -17,18 +17,15 @@ from tccfunctions import *
 from itertools import *
 
 ##########  CONSTANT VALUES ##################################################
-VIDEO_FILE = '../Dataset/video5.avi' # Local do video a ser analisado
-XML_FILE = '../Dataset/video5.xml'
+VIDEO_FILE = '../Dataset/video1.avi' # Local do video a ser analisado
+XML_FILE = '../Dataset/video1.xml'
 #XML_FILE = '3-xmlreader/video1.xml' # Igor
 
 KERNEL_ERODE = np.ones((3, 3), np.uint8)  # Matriz (3,3) com 1 em seus valores -- Usa na funcao de erode
-KERNEL_DILATE = np.ones((15, 15), np.uint8)  # Matriz (15,15) com 1 em seus valores -- Usa na funcao de dilate
+KERNEL_DILATE = np.ones((30, 15), np.uint8)  # Matriz (15,15) com 1 em seus valores -- Usa na funcao de dilate
 # KERNEL_ERODE_SCND = np.ones((3,3), np.uint8)  # Matriz (8,8) com 1 em seus valores -- Usa na 2nd funcao de erode
 RESIZE_RATIO = 0.35 # Resize, valores entre 0 e 1 | 1=Tamanho original do video
 CLOSE_VIDEO = 6917#295  # Fecha o video no frame 400
-
-
-
 
 # The maximum distance a blob centroid is allowed to move in order to
 # consider it a match to a previous scene's blob.
@@ -103,28 +100,58 @@ def calculate_speed (trails, fps):
 
 	return real_dist * fps * 250 / 3.6
 
-#def print_xml_values(frame, dict_lane1, dict_lane2, dict_lane3):
-#    # Mostra no video os valores das velocidades das 3 Faixas.
-#    try:  # Posição do texto da FAIXA 1
-#        text_pos = (r(143), r(43))
-#        cv2.rectangle(frame, (text_pos[0] - 10, text_pos[1] - 20), (text_pos[0] + 135, text_pos[1] + 10), (0, 0, 0), -1)
-#        cv2.putText(frame, 'speed: {}'.format(dict_lane1['speed']), text_pos, 2, .6, (255, 255, 0), 1)
-#    except:
-#        pass
-#    
-#    try:  # Posição do texto da FAIXA 2
-#        text_pos = (r(628), r(43))
-#        cv2.rectangle(frame, (text_pos[0] - 10, text_pos[1] - 20), (text_pos[0] + 135, text_pos[1] + 10), (0, 0, 0), -1)
-#        cv2.putText(frame, 'speed: {}'.format(str(dict_lane2['speed'])), text_pos, 2, .6, (255, 255, 0), 1)
-#    except:
-#        pass
-#    
-#    try:  # Posição do texto da FAIXA 3
-#        text_pos = (r(1143), r(43))
-#        cv2.rectangle(frame, (text_pos[0] - 10, text_pos[1] - 20), (text_pos[0] + 135, text_pos[1] + 10), (0, 0, 0), -1)
-#        cv2.putText(frame, 'speed: {}'.format(dict_lane3['speed']), text_pos, 2, .6, (255, 255, 0), 1)
-#    except:
-#        pass
+def roi(frame):
+    ###########  Region of Interest ###############################################
+    # Retângulo superior
+    cv2.rectangle(frame, (0,0), (r(1920), r(120)), YELLOW , -1)
+    # triângulo lado direito
+    pts = np.array([[r(1920), r(700)], [r(1350),0], [r(1920),0]], np.int32)
+    cv2.fillPoly(frame,[pts], BLUE)
+    # triângulo lado esquerdo
+    pts3 = np.array([[0, r(620)], [r(270),0], [0,0]], np.int32)
+    cv2.fillPoly(frame,[pts3], BLUE)
+    # Linha entre faixas 1 e 2
+    pts1 = np.array([[r(510), r(1080)], [r(570),r(250)], 
+                     [r(600),r(250)], [r(550),r(1080)]], np.int32)
+    cv2.fillPoly(frame,[pts1], PINK)
+    # Linha entre faixas 2 e 3 SUPERIOR
+    pts5 = np.array([[r(570), r(250)], [r(600),r(250)], 
+                     [r(615),r(0)], [r(590),r(0)]], np.int32)
+    cv2.fillPoly(frame,[pts5], BLACK)
+    
+    # Linha entre faixas 2 e 3
+    pts2 = np.array([[r(1340), r(1080)], [r(1030),r(250)], 
+                     [r(1060),r(250)], [r(1390),r(1080)]], np.int32)
+    cv2.fillPoly(frame,[pts2], CIAN)
+    # Linha entre faixas 2 e 3 SUPERIOR
+    pts4 = np.array([[r(1030),r(250)], [r(1060),r(250)], 
+                     [r(960),0], [r(930),0]], np.int32)
+    cv2.fillPoly(frame,[pts4], BLACK)
+    return frame
+########### FIM Region of Interest ############################################
+
+def print_xml_values(frame, dict_lane1, dict_lane2, dict_lane3):
+    # Mostra no video os valores das velocidades das 3 Faixas.
+    try:  # Posição do texto da FAIXA 1
+        text_pos = (r(143), r(43))
+        cv2.rectangle(frame, (text_pos[0] - 10, text_pos[1] - 20), (text_pos[0] + 135, text_pos[1] + 10), (0, 0, 0), -1)
+        cv2.putText(frame, 'speed: {}'.format(dict_lane1['speed']), text_pos, 2, .6, (255, 255, 0), 1)
+    except:
+        pass
+    
+    try:  # Posição do texto da FAIXA 2
+        text_pos = (r(628), r(43))
+        cv2.rectangle(frame, (text_pos[0] - 10, text_pos[1] - 20), (text_pos[0] + 135, text_pos[1] + 10), (0, 0, 0), -1)
+        cv2.putText(frame, 'speed: {}'.format(str(dict_lane2['speed'])), text_pos, 2, .6, (255, 255, 0), 1)
+    except:
+        pass
+    
+    try:  # Posição do texto da FAIXA 3
+        text_pos = (r(1143), r(43))
+        cv2.rectangle(frame, (text_pos[0] - 10, text_pos[1] - 20), (text_pos[0] + 135, text_pos[1] + 10), (0, 0, 0), -1)
+        cv2.putText(frame, 'speed: {}'.format(dict_lane3['speed']), text_pos, 2, .6, (255, 255, 0), 1)
+    except:
+        pass
 # ########## FIM  FUNÇÕES ####################################################################
 
 vehicle = read_xml(XML_FILE)  # Dicionário que armazena todas as informações do xml
@@ -144,36 +171,43 @@ qntd_faixa3 = 0
 
 
 # Deleta os arquivos dos resultados, caso existam
-#if os.path.exists("results/real_speed_lane1.csv"):
-#  os.remove("results/real_speed_lane1.csv")
-#if os.path.exists("results/real_speed_lane2.csv"):
-#  os.remove("results/real_speed_lane2.csv")
-#if os.path.exists("results/real_speed_lane3.csv"):
-#  os.remove("results/real_speed_lane3.csv")
-#
-#if os.path.exists("results/mea_speed_lane1.csv"):
-#  os.remove("results/mea_speed_lane1.csv")
-#if os.path.exists("results/mea_speed_lane2.csv"):
-#  os.remove("results/mea_speed_lane2.csv")  
-#if os.path.exists("results/mea_speed_lane3.csv"):
-#  os.remove("results/mea_speed_lane3.csv")
-#  
-#if os.path.exists("results/real_speed.csv"):
-#  os.remove("results/real_speed.csv")
+if os.path.exists("results/real_speed_lane1.csv"):
+  os.remove("results/real_speed_lane1.csv")
+if os.path.exists("results/real_speed_lane2.csv"):
+  os.remove("results/real_speed_lane2.csv")
+if os.path.exists("results/real_speed_lane3.csv"):
+  os.remove("results/real_speed_lane3.csv")
+
+if os.path.exists("results/mea_speed_lane1.csv"):
+  os.remove("results/mea_speed_lane1.csv")
+if os.path.exists("results/mea_speed_lane2.csv"):
+  os.remove("results/mea_speed_lane2.csv")  
+if os.path.exists("results/mea_speed_lane3.csv"):
+  os.remove("results/mea_speed_lane3.csv")
+  
+if os.path.exists("results/real_speed.csv"):
+  os.remove("results/real_speed.csv")
 
 while(True):
 #    ret , frame = cap.read()
     ret, frame = get_frame(cap, RESIZE_RATIO)
     frame_time = time.time()
     frameGray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    roi(frameGray)
+    
 #    crop_img = frameGray[0:250, 0:640]
 #    crop_img = frameGray[0:320, 0:640]
 #    crop_img = rotate_bound(crop_img, -5)
+        
+#    equ = cv2.equalizeHist(frameGray)
+#    res = np.hstack((frameGray,equ))
+#    frameGray = equ
     
-#    pts = np.array([[671,216],[500,0],[671,0]], np.int32)
-#    poly_img = cv2.fillPoly(frameGray,[pts], (0,255,255))
-#    crop_img = poly_img
-
+    # Equalizar Contrast
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(7,7))
+    cl1 = clahe.apply(frameGray)
+    res = np.hstack((frameGray, cl1))
+    frameGray = cl1
     
     if ret == True:
         update_info_xml(frameCount, vehicle, dict_lane1, dict_lane2, dict_lane3)
@@ -185,7 +219,7 @@ while(True):
 #        erodedmask = cv2.erode(fgmask, KERNEL_ERODE_SCND ,iterations=1) # usa pra tirar os pixels isolados (ruídos)
         # Fim da máscara
         _, contours, hierarchy = cv2.findContours(dilatedmask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-#        contornos =  cv2.drawContours(frame, contours, -1, (255,0,0), 2, 8, hierarchy) # IGOR
+        contornos =  cv2.drawContours(frame, contours, -1, (255,0,0), 2, 8, hierarchy) # IGOR
         
         # create hull array for convex hull points
         hull = []
@@ -210,12 +244,10 @@ while(True):
 
 #            if rectCount2 < 2:
             if cv2.contourArea(contours[i]) > 14000: # Default if cv2.contourArea(contours[i]) > 14000:
-                color_contours = (0, 255, 0) # green - color for contours
-                color = (255, 255, 255) # blue - color for convex hull
                 # draw ith contour
-                cv2.drawContours(drawing, contours, i, color_contours, 0, 8, hierarchy)
+                cv2.drawContours(drawing, contours, i, GREEN, 0, 8, hierarchy)
                 # draw ith convex hull object
-                out = cv2.drawContours(drawing, hull, i, color, -1, 8)
+                out = cv2.drawContours(drawing, hull, i, WHITE, -1, 8)
                 area.append(cv2.contourArea(contours[i]))
                 areahull.append(cv2.contourArea(hull[i]))
                 (x, y, w, h) = cv2.boundingRect(hull[i])
@@ -500,40 +532,15 @@ while(True):
 #        cv2.line(outputFrame,(0,320),(640,320),(255,255,0),5)#Linha Horz de Baixo
 #        cv2.rectangle(outputFrame, (0,70), (640,320), (255,255,255) , 2)
         
-###########  Region of Interest ###############################################
-        # Retângulo superior
-        cv2.rectangle(outputFrame, (0,0), (r(1920), r(80)), YELLOW , -1)
-        # triângulo lado direito
-        pts = np.array([[r(1920), r(700)], [r(1350),0], [r(1920),0]], np.int32)
-        cv2.fillPoly(outputFrame,[pts], BLUE)
-        # triângulo lado esquerdo
-        pts3 = np.array([[0, r(620)], [r(270),0], [0,0]], np.int32)
-        cv2.fillPoly(outputFrame,[pts3], BLUE)
-        # Linha entre faixas 1 e 2
-        pts1 = np.array([[r(510), r(1080)], [r(570),r(250)], 
-                         [r(600),r(250)], [r(550),r(1080)]], np.int32)
-        cv2.fillPoly(outputFrame,[pts1], PINK)
-        # Linha entre faixas 2 e 3 SUPERIOR
-        pts5 = np.array([[r(570), r(250)], [r(600),r(250)], 
-                         [r(615),r(0)], [r(590),r(0)]], np.int32)
-        cv2.fillPoly(outputFrame,[pts5], BLACK)
-        
-        # Linha entre faixas 2 e 3
-        pts2 = np.array([[r(1340), r(1080)], [r(1030),r(250)], 
-                         [r(1060),r(250)], [r(1390),r(1080)]], np.int32)
-        cv2.fillPoly(outputFrame,[pts2], CIAN)
-        # Linha entre faixas 2 e 3 SUPERIOR
-        pts4 = np.array([[r(1030),r(250)], [r(1060),r(250)], 
-                         [r(960),0], [r(930),0]], np.int32)
-        cv2.fillPoly(outputFrame,[pts4], BLACK)
-########### FIM Region of Interest ############################################
+#        roi(outputFrame) # Ver como esta a ROI
         
 #        crop_img = outputFrame[70:320, 0:640]
         
         # ########## MOSTRA OS VIDEOS  ################################################
 #        cv2.imshow('crop_img', crop_img)
-#        cv2.imshow('poly_img', poly_img)
-        cv2.imshow('fgmask', fgmask)
+        
+        cv2.imshow('res', res)
+#        cv2.imshow('fgmask', fgmask)
 #        cv2.imshow('erodedmask',erodedmask)
 #        cv2.imshow('dilatedmask', dilatedmask)
 #        cv2.imshow('contornos',contornos)     
