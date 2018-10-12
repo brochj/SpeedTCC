@@ -21,12 +21,12 @@ VIDEO_FILE = '../Dataset/video{}.avi'.format(VIDEO) # Local do video a ser anali
 XML_FILE = '../Dataset/video{}.xml'.format(VIDEO)
 
 RESIZE_RATIO = 0.35 # Resize, valores entre 0 e 1 | 1=Tamanho original do video
-CLOSE_VIDEO = 6917#295  # Fecha o video no frame 400
+CLOSE_VIDEO = 138 #6917 # Fecha o video no frame 400
 
 # The maximum distance a blob centroid is allowed to move in order to
 # consider it a match to a previous scene's blob.
-BLOB_LOCKON_DISTANCE_PX = 50 # default = 80 # Aqui pode ser um limitador da veloc máx
-LINE_THICKNESS = 1
+BLOB_LOCKON_DISTANCE_PX = 143 # default = 50 p/ ratio 0.35
+
 # The number of seconds a blob is allowed to sit around without having
 # any new blobs matching it.
 BLOB_TRACK_TIMEOUT = 0.7 # Default 0.7
@@ -40,6 +40,7 @@ RED    = (0  , 0  , 255)
 YELLOW = (0  , 255, 255)
 CIAN   = (255, 255,  0 )
 PINK   = (255, 0  , 255)
+ORANGE = (0  , 90 , 255)
 
 ###############################################################
 cap = cv2.VideoCapture(VIDEO_FILE)
@@ -64,13 +65,16 @@ real_speed_lane3 = [0]
 prev_len_speed = []
 
 total_cars = {'lane_1':0, 'lane_2':0, 'lane_3':0}
-speed = 1.0
+prev_speed = 1.0
 
 frameCount = 0  # Armazena a contagem de frames processados do video
 rectCount  = 0
 rectCount2 = 0
 out = 0  # Armazena o frame com os contornos desenhados
 color = 0
+
+final_ave_speed = 0
+ave_speed = 0
 
 # ##############  FUNÇÕES ####################################################################
                      
@@ -213,7 +217,7 @@ while(True):
 #        erodedmask = cv2.erode(fgmask, KERNEL_ERODE_SCND ,iterations=1) # usa pra tirar os pixels isolados (ruídos)
         # Fim da máscara
         _, contours, hierarchy = cv2.findContours(dilatedmask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        contornos =  cv2.drawContours(frame, contours, -1, BLUE, 2, 8, hierarchy) # IGOR
+#        contornos =  cv2.drawContours(frame, contours, -1, BLUE, 2, 8, hierarchy) # IGOR
         
         # create hull array for convex hull points
         hull = []
@@ -310,7 +314,7 @@ while(True):
                             distance_five = cv2.norm(center, close_blob['trail'][10])
     					
                         # Check if the distance is close enough to "lock on"
-                        if distance < BLOB_LOCKON_DISTANCE_PX:
+                        if distance < r(BLOB_LOCKON_DISTANCE_PX):
                             # If it's close enough, make sure the blob was moving in the expected direction
                             expected_dir = close_blob['dir']
                             if expected_dir == 'up' and close_blob['trail'][0][1] < center[1]:
@@ -362,7 +366,9 @@ while(True):
                 if frame_time - tracked_blobs[i]['last_seen'] > BLOB_TRACK_TIMEOUT: # Deleta caso de timeout
                     print ("Removing expired track {}".format(tracked_blobs[i]['id']))
 #                    save_csv()
-                    speed = np.mean(tracked_blobs[i]['speed'])
+#                    prev_speed = np.mean(tracked_blobs[i]['speed'])
+                    prev_speed = ave_speed
+                    final_ave_speed = 0.0
                     del tracked_blobs[i]
 
         # Draw information about the blobs on the screen
@@ -388,8 +394,15 @@ while(True):
                 # remove zero elements on the speed list
                 blob['speed'] = [item for item in blob['speed'] if item != 0.0]
                 print ('========= speed list =========', blob['speed'])
+                prev_speed = ave_speed
                 ave_speed = np.mean(blob['speed'])
+                print ('========= prev_speed =========', float("{0:.5f}".format(prev_speed)))
                 print ('========= ave_speed =========', float("{0:.5f}".format(ave_speed)))
+                print('========prev_final_ave_speed==',float("{0:.5f}".format(final_ave_speed)))
+                if ave_speed == prev_speed and final_ave_speed == 0.0:
+                    final_ave_speed = ave_speed
+                    print('========= final_ave_speed =========', float("{0:.5f}".format(final_ave_speed)))
+#                    cv2.imwrite('img/{}speed_{}.png'.format(frameCount,final_ave_speed), frame)
 
                 if blob['trail'][0][0] < r(571): # entao ta na faixa 1
                     cv2.putText(frame, str(float("{0:.2f}".format(ave_speed))), (blob['trail'][0][0] + r(57), blob['trail'][0][1] + r(143)), 
@@ -405,14 +418,16 @@ while(True):
                         color = GREEN
                     elif abs(dif_lane1) > 3 and abs(dif_lane1) <= 5:
                         color = YELLOW
-                    elif abs(dif_lane1) > 5:
+                    elif abs(dif_lane1) > 5 and abs(dif_lane1) <= 10:
+                        color = ORANGE
+                    elif abs(dif_lane1) > 10:
                         color = RED
                         
-                    cv2.putText(frame, str(float("{0:.2f}".format(ave_speed))), (r(830), r(120)),
+                    cv2.putText(frame, str(float("{0:.2f}".format(ave_speed))), (r(350), r(120)),
                             2, .6, color, thickness=1, lineType=2)  # Velocidade Medida
-                    cv2.putText(frame, str(float("{0:.2f} ".format(dif_lane2))), (r(1030), r(120)),
+                    cv2.putText(frame, str(float("{0:.2f} ".format(dif_lane1))), (r(550), r(120)),
                             2, .6, color, thickness=1, lineType=2)  # erro absoluto
-                    cv2.putText(frame, str(float("{0:.2f}".format(error_lane2)))+'%', (r(1030), r(180)),
+                    cv2.putText(frame, str(float("{0:.2f}".format(error_lane1)))+'%', (r(550), r(180)),
                             2, .6, color, thickness=1, lineType=2)  # erro percentual
                     
                     
@@ -436,7 +451,9 @@ while(True):
                         color = GREEN
                     elif abs(dif_lane2) > 3 and abs(dif_lane2) <= 5:
                         color = YELLOW
-                    elif abs(dif_lane2) > 5:
+                    elif abs(dif_lane2) > 5 and abs(dif_lane2) <= 10:
+                        color = ORANGE
+                    elif abs(dif_lane2) > 10:
                         color = RED
                         
                     cv2.putText(frame, str(float("{0:.2f}".format(ave_speed))), (r(830), r(120)),
@@ -460,8 +477,8 @@ while(True):
                                 cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, YELLOW, thickness=1, lineType=2)
                     # Texto da que fica embaixo da velocidade real
                     try:
-                        dif_lane3 = ave_speed - float(dict_lane3['speed'])
-                        error_lane3 = (abs(ave_speed - float(dict_lane3['speed']))/float(dict_lane3['speed']))*100
+                        dif_lane3 = final_ave_speed - float(dict_lane3['speed'])
+                        error_lane3 = (abs(final_ave_speed - float(dict_lane3['speed']))/float(dict_lane3['speed']))*100
                     except:
                         pass
                     
@@ -469,10 +486,12 @@ while(True):
                         color = GREEN
                     elif abs(dif_lane3) > 3 and abs(dif_lane3) <= 5:
                         color = YELLOW
-                    elif abs(dif_lane3) > 5:
+                    elif abs(dif_lane3) > 5 and abs(dif_lane3) <= 10:
+                        color = ORANGE
+                    elif abs(dif_lane3) > 10:
                         color = RED
                         
-                    cv2.putText(frame, str(float("{0:.2f}".format(ave_speed))), (r(1350), r(120)),
+                    cv2.putText(frame, str(float("{0:.2f}".format(final_ave_speed))), (r(1350), r(120)),
                             2, .6, color, thickness=1, lineType=2)  # Velocidade Medida
                     cv2.putText(frame, str(float("{0:.2f} ".format(dif_lane3))), (r(1550), r(120)),
                             2, .6, color, thickness=1, lineType=2)  # erro absoluto
@@ -574,7 +593,7 @@ while(True):
 #                                            quotechar=',', quoting=csv.QUOTE_MINIMAL)
 #                    spamwriter.writerow(['Spam'] * 5 + ['Baked Beans'])
 #                    spamwriter.writerow(['Spam', 'Lovely Spam', 'Wonderful Spam'])
-                print('lane {}'.format(lane))
+#                print('lane {}'.format(lane))
         print ('*********************************************************************')
   
        
