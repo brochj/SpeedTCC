@@ -16,7 +16,7 @@ import os
 from tccfunctions import *
 
 ##########  CONSTANT VALUES ##################################################
-VIDEO = 2
+VIDEO = 1
 VIDEO_FILE = '../Dataset/video{}.avi'.format(VIDEO) # Local do video a ser analisado
 XML_FILE = '../Dataset/video{}.xml'.format(VIDEO)
 
@@ -70,6 +70,7 @@ frameCount = 0  # Armazena a contagem de frames processados do video
 rectCount  = 0
 rectCount2 = 0
 out = 0  # Armazena o frame com os contornos desenhados
+color = 0
 
 # ##############  FUNÇÕES ####################################################################
                      
@@ -156,22 +157,22 @@ qntd_faixa3 = 0
 
 
 # Deleta os arquivos dos resultados, caso existam
-if os.path.exists("results/real_speed_lane1.csv"):
-  os.remove("results/real_speed_lane1.csv")
-if os.path.exists("results/real_speed_lane2.csv"):
-  os.remove("results/real_speed_lane2.csv")
-if os.path.exists("results/real_speed_lane3.csv"):
-  os.remove("results/real_speed_lane3.csv")
-
-if os.path.exists("results/mea_speed_lane1.csv"):
-  os.remove("results/mea_speed_lane1.csv")
-if os.path.exists("results/mea_speed_lane2.csv"):
-  os.remove("results/mea_speed_lane2.csv")  
-if os.path.exists("results/mea_speed_lane3.csv"):
-  os.remove("results/mea_speed_lane3.csv")
-  
-if os.path.exists("results/real_speed.csv"):
-  os.remove("results/real_speed.csv")
+#if os.path.exists("results/real_speed_lane1.csv"):
+#  os.remove("results/real_speed_lane1.csv")
+#if os.path.exists("results/real_speed_lane2.csv"):
+#  os.remove("results/real_speed_lane2.csv")
+#if os.path.exists("results/real_speed_lane3.csv"):
+#  os.remove("results/real_speed_lane3.csv")
+#
+#if os.path.exists("results/mea_speed_lane1.csv"):
+#  os.remove("results/mea_speed_lane1.csv")
+#if os.path.exists("results/mea_speed_lane2.csv"):
+#  os.remove("results/mea_speed_lane2.csv")  
+#if os.path.exists("results/mea_speed_lane3.csv"):
+#  os.remove("results/mea_speed_lane3.csv")
+#  
+#if os.path.exists("results/real_speed.csv"):
+#  os.remove("results/real_speed.csv")
 
 
 KERNEL_ERODE = np.ones((r(9), r(9)), np.uint8)  # Matriz (3,3) com 1 em seus valores -- Usa na funcao de erode
@@ -212,7 +213,7 @@ while(True):
 #        erodedmask = cv2.erode(fgmask, KERNEL_ERODE_SCND ,iterations=1) # usa pra tirar os pixels isolados (ruídos)
         # Fim da máscara
         _, contours, hierarchy = cv2.findContours(dilatedmask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        contornos =  cv2.drawContours(frame, contours, -1, (255,0,0), 2, 8, hierarchy) # IGOR
+        contornos =  cv2.drawContours(frame, contours, -1, BLUE, 2, 8, hierarchy) # IGOR
         
         # create hull array for convex hull points
         hull = []
@@ -394,8 +395,28 @@ while(True):
                     cv2.putText(frame, str(float("{0:.2f}".format(ave_speed))), (blob['trail'][0][0] + r(57), blob['trail'][0][1] + r(143)), 
                                 cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, YELLOW, thickness=1, lineType=2)
                     # Texto da que fica embaixo da velocidade real
-                    cv2.putText(frame, str(float("{0:.2f}".format(ave_speed))), (r(350), r(120)),
-                                2, .6, YELLOW, thickness=1, lineType=2)
+                    try:
+                        dif_lane1 = ave_speed - float(dict_lane1['speed'])
+                        error_lane1 = (abs(ave_speed - float(dict_lane1['speed']))/float(dict_lane1['speed']))*100
+                    except:
+                        pass
+                    
+                    if abs(dif_lane1) <= 3:
+                        color = GREEN
+                    elif abs(dif_lane1) > 3 and abs(dif_lane1) <= 5:
+                        color = YELLOW
+                    elif abs(dif_lane1) > 5:
+                        color = RED
+                        
+                    cv2.putText(frame, str(float("{0:.2f}".format(ave_speed))), (r(830), r(120)),
+                            2, .6, color, thickness=1, lineType=2)  # Velocidade Medida
+                    cv2.putText(frame, str(float("{0:.2f} ".format(dif_lane2))), (r(1030), r(120)),
+                            2, .6, color, thickness=1, lineType=2)  # erro absoluto
+                    cv2.putText(frame, str(float("{0:.2f}".format(error_lane2)))+'%', (r(1030), r(180)),
+                            2, .6, color, thickness=1, lineType=2)  # erro percentual
+                    
+                    
+                    
                     # PRINTA FAIXA 1
                     cv2.putText(frame, 'Faixa 1', (blob['trail'][0][0] - r(29), blob['trail'][0][1] + r(200)), 
                                 cv2.FONT_HERSHEY_COMPLEX_SMALL, .8, WHITE, thickness=1, lineType=2)
@@ -405,8 +426,29 @@ while(True):
                     cv2.putText(frame, str(float("{0:.2f}".format(ave_speed))), (blob['trail'][0][0] + r(57), blob['trail'][0][1] + r(143)),
                                 cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, YELLOW, thickness=1, lineType=2)
                     # Texto da que fica embaixo da velocidade real
-                    cv2.putText(frame, str(float("{0:.2f}".format(ave_speed))), (r(835), r(120)),
-                                2, .6, YELLOW, thickness=1, lineType=2)
+                    try:
+                        dif_lane2 = ave_speed - float(dict_lane2['speed'])
+                        error_lane2 = (abs(ave_speed - float(dict_lane2['speed']))/float(dict_lane2['speed']))*100
+                    except:
+                        pass
+                    
+                    if abs(dif_lane2) <= 3:
+                        color = GREEN
+                    elif abs(dif_lane2) > 3 and abs(dif_lane2) <= 5:
+                        color = YELLOW
+                    elif abs(dif_lane2) > 5:
+                        color = RED
+                        
+                    cv2.putText(frame, str(float("{0:.2f}".format(ave_speed))), (r(830), r(120)),
+                            2, .6, color, thickness=1, lineType=2)  # Velocidade Medida
+                    cv2.putText(frame, str(float("{0:.2f} ".format(dif_lane2))), (r(1030), r(120)),
+                            2, .6, color, thickness=1, lineType=2)  # erro absoluto
+                    cv2.putText(frame, str(float("{0:.2f}".format(error_lane2)))+'%', (r(1030), r(180)),
+                            2, .6, color, thickness=1, lineType=2)  # erro percentual
+                    
+                    
+                    
+                    
                     # PRINTA FAIXA 2
                     cv2.putText(frame, 'Faixa 2', (blob['trail'][0][0] - r(29), blob['trail'][0][1] + r(200)), 
                                 cv2.FONT_HERSHEY_COMPLEX_SMALL, .8, WHITE, thickness=1, lineType=2)
@@ -417,11 +459,26 @@ while(True):
                     cv2.putText(frame, str(float("{0:.2f}".format(ave_speed))), (blob['trail'][0][0] + r(57), blob['trail'][0][1] + r(143)),
                                 cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, YELLOW, thickness=1, lineType=2)
                     # Texto da que fica embaixo da velocidade real
-#                    try:
-#                        cv2.putText(frame, str(float("{0:.2f}  {}".format(ave_speed,ave_speed-int(dict_lane1['speed'])))), (r(1350), r(120)),
-#                                2, .6, YELLOW, thickness=1, lineType=2)
-#                    except:
-#                        pass
+                    try:
+                        dif_lane3 = ave_speed - float(dict_lane3['speed'])
+                        error_lane3 = (abs(ave_speed - float(dict_lane3['speed']))/float(dict_lane3['speed']))*100
+                    except:
+                        pass
+                    
+                    if abs(dif_lane3) <= 3:
+                        color = GREEN
+                    elif abs(dif_lane3) > 3 and abs(dif_lane3) <= 5:
+                        color = YELLOW
+                    elif abs(dif_lane3) > 5:
+                        color = RED
+                        
+                    cv2.putText(frame, str(float("{0:.2f}".format(ave_speed))), (r(1350), r(120)),
+                            2, .6, color, thickness=1, lineType=2)  # Velocidade Medida
+                    cv2.putText(frame, str(float("{0:.2f} ".format(dif_lane3))), (r(1550), r(120)),
+                            2, .6, color, thickness=1, lineType=2)  # erro absoluto
+                    cv2.putText(frame, str(float("{0:.2f}".format(error_lane3)))+'%', (r(1550), r(180)),
+                            2, .6, color, thickness=1, lineType=2)  # erro percentual
+
                     # PRINTA FAIXA 3
                     cv2.putText(frame, 'Faixa 3', (blob['trail'][0][0] - r(29), blob['trail'][0][1] + r(200)), 
                                 cv2.FONT_HERSHEY_COMPLEX_SMALL, .8, WHITE, thickness=1, lineType=2)
@@ -542,9 +599,9 @@ while(True):
 #        cv2.imshow('fgmask', fgmask)
 #        cv2.imshow('erodedmask',erodedmask)
 #        cv2.imshow('dilatedmask', dilatedmask)
-        cv2.imshow('contornos',contornos)     
+#        cv2.imshow('contornos',contornos)     
 #        cv2.imshow('out',out)
-#        cv2.imshow('outputFrame', outputFrame)
+        cv2.imshow('outputFrame', outputFrame)
 #        final = np.hstack((erodedmask, dilatedmask))
 #        cv2.imshow('final', final)
         
