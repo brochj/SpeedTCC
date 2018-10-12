@@ -101,6 +101,7 @@ def update_info_xml(frameCount, vehicle, dict_lane1, dict_lane2, dict_lane3):
     except KeyError:
 #            print('KeyError: Key Não encotrada no dicionário')
         pass
+    
 
 
 def print_xml_values(frame, ratio, dict_lane1, dict_lane2, dict_lane3):

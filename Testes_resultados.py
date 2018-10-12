@@ -14,16 +14,12 @@ import math
 import xml.etree.ElementTree as ET
 import os
 from tccfunctions import *
-#from itertools import *
 
 ##########  CONSTANT VALUES ##################################################
-VIDEO_FILE = '../Dataset/video1.avi' # Local do video a ser analisado
-XML_FILE = '../Dataset/video1.xml'
-#XML_FILE = '3-xmlreader/video1.xml' # Igor
+VIDEO = 2
+VIDEO_FILE = '../Dataset/video{}.avi'.format(VIDEO) # Local do video a ser analisado
+XML_FILE = '../Dataset/video{}.xml'.format(VIDEO)
 
-KERNEL_ERODE = np.ones((3, 3), np.uint8)  # Matriz (3,3) com 1 em seus valores -- Usa na funcao de erode
-KERNEL_DILATE = np.ones((30, 15), np.uint8)  # Matriz (15,15) com 1 em seus valores -- Usa na funcao de dilate
-# KERNEL_ERODE_SCND = np.ones((3,3), np.uint8)  # Matriz (8,8) com 1 em seus valores -- Usa na 2nd funcao de erode
 RESIZE_RATIO = 0.35 # Resize, valores entre 0 e 1 | 1=Tamanho original do video
 CLOSE_VIDEO = 6917#295  # Fecha o video no frame 400
 
@@ -99,27 +95,41 @@ def calculate_speed (trails, fps):
 
 def roi(frame):
     ###########  Region of Interest ###############################################
+    # GRID
+#    for i in range(1081): # Linhas Horizontais
+#        gridsize = 60
+#        if i*gridsize <= 1080:
+#            cv2.line(frame, (0,r(i*gridsize)),(r(1920),r(i*gridsize)), CIAN, 2)
+#            if i*gridsize == 1080:
+#                break
+#    for i in range(1921): # Linhas Verticais
+#        gridsize = 30
+#        if i*gridsize <= 1920:
+#            cv2.line(frame, (r(i*gridsize),0),(r(i*gridsize), r(1080)), CIAN, 2)
+#            if i*gridsize == 1920:
+#                break
     # Retângulo superior
-    cv2.rectangle(frame, (0,0), (r(1920), r(120)), YELLOW , -1)
+    cv2.rectangle(frame, (0,0), (r(1920), r(120)), BLACK , -1)
+        
     # triângulo lado direito
     pts = np.array([[r(1920), r(750)], [r(1320),0], [r(1920),0]], np.int32)
-    cv2.fillPoly(frame,[pts], BLUE)
+    cv2.fillPoly(frame,[pts], BLACK)
     # triângulo lado esquerdo
     pts3 = np.array([[0, r(620)], [r(270),0], [0,0]], np.int32)
-    cv2.fillPoly(frame,[pts3], BLUE)
+    cv2.fillPoly(frame,[pts3], BLACK)
     # Linha entre faixas 1 e 2
     pts1 = np.array([[r(510), r(1080)], [r(570),r(250)], 
                      [r(600),r(250)], [r(550),r(1080)]], np.int32)
-    cv2.fillPoly(frame,[pts1], PINK)
+    cv2.fillPoly(frame,[pts1], BLACK)
     # Linha entre faixas 2 e 3 SUPERIOR
     pts5 = np.array([[r(570), r(250)], [r(600),r(250)], 
-                     [r(615),r(0)], [r(590),r(0)]], np.int32)
+                     [r(615),r(0)], [r(590),0]], np.int32)
     cv2.fillPoly(frame,[pts5], BLACK)
     
     # Linha entre faixas 2 e 3
     pts2 = np.array([[r(1340), r(1080)], [r(1030),r(250)], 
                      [r(1060),r(250)], [r(1390),r(1080)]], np.int32)
-    cv2.fillPoly(frame,[pts2], CIAN)
+    cv2.fillPoly(frame,[pts2], BLACK)
     # Linha entre faixas 2 e 3 SUPERIOR
     pts4 = np.array([[r(1030),r(250)], [r(1060),r(250)], 
                      [r(960),0], [r(930),0]], np.int32)
@@ -163,12 +173,20 @@ if os.path.exists("results/mea_speed_lane3.csv"):
 if os.path.exists("results/real_speed.csv"):
   os.remove("results/real_speed.csv")
 
+
+KERNEL_ERODE = np.ones((r(9), r(9)), np.uint8)  # Matriz (3,3) com 1 em seus valores -- Usa na funcao de erode
+KERNEL_DILATE = np.ones((r(86), r(43)), np.uint8)  # Matriz (15,15) com 1 em seus valores -- Usa na funcao de dilate
+# KERNEL_ERODE_SCND = np.ones((r(9), r(9)), np.uint8)  # Matriz (8,8) com 1 em seus valores -- Usa na 2nd funcao de erode
+
+
 while(True):
 #    ret , frame = cap.read()
     ret, frame = get_frame(cap, RESIZE_RATIO)
     frame_time = time.time()
     frameGray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     roi(frameGray)
+    
+    roi(frame) # para mostrar na imagem Final
     
 #    crop_img = frameGray[0:250, 0:640]
 #    crop_img = frameGray[0:320, 0:640]
@@ -194,7 +212,7 @@ while(True):
 #        erodedmask = cv2.erode(fgmask, KERNEL_ERODE_SCND ,iterations=1) # usa pra tirar os pixels isolados (ruídos)
         # Fim da máscara
         _, contours, hierarchy = cv2.findContours(dilatedmask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-#        contornos =  cv2.drawContours(frame, contours, -1, (255,0,0), 2, 8, hierarchy) # IGOR
+        contornos =  cv2.drawContours(frame, contours, -1, (255,0,0), 2, 8, hierarchy) # IGOR
         
         # create hull array for convex hull points
         hull = []
@@ -227,7 +245,7 @@ while(True):
                 areahull.append(cv2.contourArea(hull[i]))
                 (x, y, w, h) = cv2.boundingRect(hull[i])
 #                out = cv2.rectangle(out, (x, y), (x + w, y + h), (0, 255, 255), 2) # printa na mask
-                cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 255), 2) # printa na frame
+                cv2.rectangle(frame, (x, y), (x + w, y + h), GREEN, 2) # printa na frame
                 
                 rectCount2 += 1
                 
@@ -350,13 +368,13 @@ while(True):
         #print ('tracked_blobs', tracked_blobs)
         for blob in tracked_blobs:
             for (a, b) in pairwise(blob['trail']):
-                cv2.circle(frame, a, 5, (255, 0, 0), LINE_THICKNESS)
+                cv2.circle(frame, a, 5, BLUE, -1)
 
                 # print ('blob', blob)
                 if blob['dir'] == 'up':
-                    cv2.line(frame, a, b, CIAN, LINE_THICKNESS)
+                    cv2.line(frame, a, b, WHITE, 2)
                 else:
-                    cv2.line(frame, a, b, YELLOW, LINE_THICKNESS)            
+                    cv2.line(frame, a, b, YELLOW, 2)            
 ################# FIM PRINTA OS BLOBS  ##########################################
                 
             if blob['speed'] and blob['speed'][0] != 0:
@@ -371,26 +389,42 @@ while(True):
                 print ('========= speed list =========', blob['speed'])
                 ave_speed = np.mean(blob['speed'])
                 print ('========= ave_speed =========', float("{0:.5f}".format(ave_speed)))
-#                cv2.putText(frame, str(int(ave_speed)) + 'km/h', (blob['trail'][0][0] - 10, blob['trail'][0][1] + 50), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (0, 255, 0), thickness=1, lineType=2)
 
-                if blob['trail'][0][0] < 200: # entao ta na faixa 1
-                    cv2.putText(frame, str(float("{0:.2f}".format(ave_speed))) + 'km/h', (blob['trail'][0][0] + 20, blob['trail'][0][1] + 50), 
-                                cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (0, 255, 0), thickness=1, lineType=2)
-                    cv2.putText(frame, 'Faixa 1', (blob['trail'][0][0] - 10, blob['trail'][0][1] + 70), 
-                                cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (255, 255, 255), thickness=1, lineType=2)
+                if blob['trail'][0][0] < r(571): # entao ta na faixa 1
+                    cv2.putText(frame, str(float("{0:.2f}".format(ave_speed))), (blob['trail'][0][0] + r(57), blob['trail'][0][1] + r(143)), 
+                                cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, YELLOW, thickness=1, lineType=2)
+                    # Texto da que fica embaixo da velocidade real
+                    cv2.putText(frame, str(float("{0:.2f}".format(ave_speed))), (r(350), r(120)),
+                                2, .6, YELLOW, thickness=1, lineType=2)
+                    # PRINTA FAIXA 1
+                    cv2.putText(frame, 'Faixa 1', (blob['trail'][0][0] - r(29), blob['trail'][0][1] + r(200)), 
+                                cv2.FONT_HERSHEY_COMPLEX_SMALL, .8, WHITE, thickness=1, lineType=2)
                     lane = 1
-                elif blob['trail'][0][0] >= 200 and blob['trail'][0][0] < 400:  # entao ta na faixa 2
-                    cv2.putText(frame, str(float("{0:.2f}".format(ave_speed))) + 'km/h', (blob['trail'][0][0] + 20, blob['trail'][0][1] + 50),
-                                cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (0, 255, 0), thickness=1, lineType=2)
-                    cv2.putText(frame, 'Faixa 2', (blob['trail'][0][0] - 10, blob['trail'][0][1] + 70), 
-                                cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (255, 255, 255), thickness=1, lineType=2)
+                    
+                elif blob['trail'][0][0] >= r(571) and blob['trail'][0][0] < r(1143):  # entao ta na faixa 2
+                    cv2.putText(frame, str(float("{0:.2f}".format(ave_speed))), (blob['trail'][0][0] + r(57), blob['trail'][0][1] + r(143)),
+                                cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, YELLOW, thickness=1, lineType=2)
+                    # Texto da que fica embaixo da velocidade real
+                    cv2.putText(frame, str(float("{0:.2f}".format(ave_speed))), (r(835), r(120)),
+                                2, .6, YELLOW, thickness=1, lineType=2)
+                    # PRINTA FAIXA 2
+                    cv2.putText(frame, 'Faixa 2', (blob['trail'][0][0] - r(29), blob['trail'][0][1] + r(200)), 
+                                cv2.FONT_HERSHEY_COMPLEX_SMALL, .8, WHITE, thickness=1, lineType=2)
                     lane = 2
-                elif blob['trail'][0][0] >= 400 and blob['trail'][0][0] < 670:  # entao ta na faixa 3
+                    
+                elif blob['trail'][0][0] >= r(1143):  # entao ta na faixa 3
                     lane = 3
-                    cv2.putText(frame, str(float("{0:.2f}".format(ave_speed))) + 'km/h', (blob['trail'][0][0] + 20, blob['trail'][0][1] + 50),
-                                cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (0, 255, 0), thickness=1, lineType=2)
-                    cv2.putText(frame, 'Faixa 3', (blob['trail'][0][0] - 10, blob['trail'][0][1] + 70), 
-                                cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (255, 255, 255), thickness=1, lineType=2)
+                    cv2.putText(frame, str(float("{0:.2f}".format(ave_speed))), (blob['trail'][0][0] + r(57), blob['trail'][0][1] + r(143)),
+                                cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, YELLOW, thickness=1, lineType=2)
+                    # Texto da que fica embaixo da velocidade real
+#                    try:
+#                        cv2.putText(frame, str(float("{0:.2f}  {}".format(ave_speed,ave_speed-int(dict_lane1['speed'])))), (r(1350), r(120)),
+#                                2, .6, YELLOW, thickness=1, lineType=2)
+#                    except:
+#                        pass
+                    # PRINTA FAIXA 3
+                    cv2.putText(frame, 'Faixa 3', (blob['trail'][0][0] - r(29), blob['trail'][0][1] + r(200)), 
+                                cv2.FONT_HERSHEY_COMPLEX_SMALL, .8, WHITE, thickness=1, lineType=2)
                     
      
                 # Parte que coloca as velocidades reais no arquivo CSV
@@ -483,17 +517,18 @@ while(True):
 #                                            quotechar=',', quoting=csv.QUOTE_MINIMAL)
 #                    spamwriter.writerow(['Spam'] * 5 + ['Baked Beans'])
 #                    spamwriter.writerow(['Spam', 'Lovely Spam', 'Wonderful Spam'])
-                print('lane {}'.format(lane))        
+                print('lane {}'.format(lane))
         print ('*********************************************************************')
   
+       
         # Mostra a qntd de frames processados e a % do video
         outputFrame = cv2.putText(frame, 'frame: {} {}%'.format(frameCount, 
                                     str(int((100*frameCount)/vehicle['videoframes']))), 
-                                    (r(14), r(1071)), 0, .65, (255, 255, 255), 2)
-        outputFrame = cv2.putText(frame, 'Retangulos descartados: {}'.format(rectCount), 
-                                    (r(571),r(1071)), cv2.FONT_HERSHEY_SIMPLEX, .5, (255,255,255), 2)
+                                    (r(14), r(1071)), 0, .65, WHITE, 2)
+#        outputFrame = cv2.putText(frame, 'Retangulos descartados: {}'.format(rectCount), 
+#                                    (r(571),r(1071)), cv2.FONT_HERSHEY_SIMPLEX, .5, WHITE, 2)
 
-        roi(outputFrame) # Ver como esta a ROI
+#        roi(frame) # Ver como esta a ROI
         
         print_xml_values(outputFrame, RESIZE_RATIO, dict_lane1, dict_lane2, dict_lane3)
 
@@ -504,20 +539,25 @@ while(True):
         # ########## MOSTRA OS VIDEOS  ################################################
 #        cv2.imshow('crop_img', crop_img)
         
-#        cv2.imshow('res', res)
-        cv2.imshow('fgmask', fgmask)
+#        cv2.imshow('fgmask', fgmask)
 #        cv2.imshow('erodedmask',erodedmask)
 #        cv2.imshow('dilatedmask', dilatedmask)
-#        cv2.imshow('contornos',contornos)     
+        cv2.imshow('contornos',contornos)     
 #        cv2.imshow('out',out)
-        cv2.imshow('outputFrame', outputFrame)
+#        cv2.imshow('outputFrame', outputFrame)
 #        final = np.hstack((erodedmask, dilatedmask))
 #        cv2.imshow('final', final)
         
-        if frameCount ==285:
-            cv2.imwrite('resultado.png', outputFrame)
+        # Salva imagens para o README do GITHUB
+#        if frameCount == 285:
+#            cv2.imwrite('1frameGray.png', frameGray)
+#            cv2.imwrite('2hist.png', hist)
+#            cv2.imwrite('3fgmask.png', fgmask)
+#            cv2.imwrite('4erodedmask.png',erodedmask)
+#            cv2.imwrite('5dilatedmask.png', dilatedmask)
+#            cv2.imwrite('6resultado.png', outputFrame)
 
-#        
+        
         frameCount = frameCount + 1    # Conta a quantidade de Frames
         
         if frameCount == CLOSE_VIDEO: #  fecha o video
