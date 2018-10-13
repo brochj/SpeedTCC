@@ -21,7 +21,7 @@ VIDEO_FILE = '../Dataset/video{}.avi'.format(VIDEO) # Local do video a ser anali
 XML_FILE = '../Dataset/video{}.xml'.format(VIDEO)
 
 RESIZE_RATIO = 0.35 # Resize, valores entre 0 e 1 | 1=Tamanho original do video
-CLOSE_VIDEO = 138 #6917 # Fecha o video no frame 400
+CLOSE_VIDEO = 6917 # 138 # 6917 # Fecha o video no frame 400
 
 # The maximum distance a blob centroid is allowed to move in order to
 # consider it a match to a previous scene's blob.
@@ -29,7 +29,7 @@ BLOB_LOCKON_DISTANCE_PX = 143 # default = 50 p/ ratio 0.35
 
 # The number of seconds a blob is allowed to sit around without having
 # any new blobs matching it.
-BLOB_TRACK_TIMEOUT = 0.7 # Default 0.7
+BLOB_TRACK_TIMEOUT = 0.1 # Default 0.7
 
 # Colors
 WHITE  = (255, 255, 255)
@@ -75,7 +75,7 @@ color = 0
 
 final_ave_speed = 0
 ave_speed = 0
-
+flag = 0
 # ##############  FUNÇÕES ####################################################################
                      
 def r(numero):  # Faz o ajuste de escala das posições de textos e retangulos
@@ -369,6 +369,7 @@ while(True):
 #                    prev_speed = np.mean(tracked_blobs[i]['speed'])
                     prev_speed = ave_speed
                     final_ave_speed = 0.0
+                    flag = 1
                     del tracked_blobs[i]
 
         # Draw information about the blobs on the screen
@@ -399,7 +400,7 @@ while(True):
                 print ('========= prev_speed =========', float("{0:.5f}".format(prev_speed)))
                 print ('========= ave_speed =========', float("{0:.5f}".format(ave_speed)))
                 print('========prev_final_ave_speed==',float("{0:.5f}".format(final_ave_speed)))
-                if ave_speed == prev_speed and final_ave_speed == 0.0:
+                if ave_speed == prev_speed and final_ave_speed != 1:
                     final_ave_speed = ave_speed
                     print('========= final_ave_speed =========', float("{0:.5f}".format(final_ave_speed)))
 #                    cv2.imwrite('img/{}speed_{}.png'.format(frameCount,final_ave_speed), frame)
@@ -497,7 +498,9 @@ while(True):
                             2, .6, color, thickness=1, lineType=2)  # erro absoluto
                     cv2.putText(frame, str(float("{0:.2f}".format(error_lane3)))+'%', (r(1550), r(180)),
                             2, .6, color, thickness=1, lineType=2)  # erro percentual
-
+                    cv2.putText(frame,'Carro ' + str(total_cars['lane_3']), (r(1550), r(230)),
+                            2, .6, color, thickness=1, lineType=2)
+                    cv2.imwrite('img/{}_Carro_{}.png'.format(frameCount,total_cars['lane_3']), frame)
                     # PRINTA FAIXA 3
                     cv2.putText(frame, 'Faixa 3', (blob['trail'][0][0] - r(29), blob['trail'][0][1] + r(200)), 
                                 cv2.FONT_HERSHEY_COMPLEX_SMALL, .8, WHITE, thickness=1, lineType=2)
@@ -540,14 +543,13 @@ while(True):
                         file.close()
                 except:
                     pass
-
-                
+                                
                  # CSV PART
                 try:
-                    if float("{0:.3f}".format(ave_speed)) == meas_speed_lane1[0] or len(blob['speed']) >= 2:
+                    if float("{0:.3f}".format(final_ave_speed)) == meas_speed_lane1[0] or len(blob['speed']) >= 2:
                         pass
-                    elif lane == 1 and prev_len_speed[0] == prev_len_speed[1]:
-                        meas_speed_lane1.insert(0, float("{0:.3f}".format(ave_speed)))
+                    elif lane == 1 and prev_len_speed[0] == prev_len_speed[1] and final_ave_speed != 0:
+                        meas_speed_lane1.insert(0, float("{0:.3f}".format(final_ave_speed)))
                         file = open('results/mea_speed_lane1.csv', 'a')
                         file.write('Carro {},{} \n'.format(total_cars['lane_1'], dict_lane1['speed']))
                         file.close()
@@ -555,10 +557,10 @@ while(True):
                     pass
                 
                 try:
-                    if float("{0:.3f}".format(ave_speed)) == meas_speed_lane2[0] or len(blob['speed']) < 2:
+                    if float("{0:.3f}".format(final_ave_speed)) == meas_speed_lane2[0] or len(blob['speed']) < 2:
                         pass    
-                    elif lane == 2 and prev_len_speed[0] == prev_len_speed[1]:
-                        meas_speed_lane2.insert(0, float("{0:.3f}".format(ave_speed)))
+                    elif lane == 2 and prev_len_speed[0] == prev_len_speed[1] and final_ave_speed != 0:
+                        meas_speed_lane2.insert(0, float("{0:.3f}".format(final_ave_speed)))
                         file = open('results/mea_speed_lane2.csv', 'a')
                         file.write('Carro {},{} \n'.format(total_cars['lane_2'], dict_lane2['speed']))
                         file.close()
@@ -566,10 +568,10 @@ while(True):
                     pass
                 
                 try:
-                    if float("{0:.3f}".format(ave_speed)) == meas_speed_lane3[0] or len(blob['speed']) < 2:
+                    if float("{0:.3f}".format(final_ave_speed)) == meas_speed_lane3[0] or len(blob['speed']) < 2:
                         pass       
-                    elif lane == 3 and prev_len_speed[0] == prev_len_speed[1]:
-                        meas_speed_lane3.insert(0, float("{0:.3f}".format(ave_speed)))
+                    elif lane == 3 and prev_len_speed[0] == prev_len_speed[1] and final_ave_speed != 0:
+                        meas_speed_lane3.insert(0, float("{0:.3f}".format(final_ave_speed)))
                         file = open('results/mea_speed_lane3.csv', 'a')
                         file.write('Carro {},{},{} \n'.format(total_cars['lane_3'], dict_lane3['speed'], meas_speed_lane3[0]))
                         file.close()
