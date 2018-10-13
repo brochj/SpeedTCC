@@ -20,16 +20,22 @@ VIDEO = 1
 VIDEO_FILE = '../Dataset/video{}.avi'.format(VIDEO) # Local do video a ser analisado
 XML_FILE = '../Dataset/video{}.xml'.format(VIDEO)
 
-RESIZE_RATIO = 0.35 # Resize, valores entre 0 e 1 | 1=Tamanho original do video
-CLOSE_VIDEO = 6917 # 138 # 6917 # Fecha o video no frame 400
+RESIZE_RATIO = 0.65 # Resize, valores entre 0 e 1 | 1=Tamanho original do video
+CLOSE_VIDEO = 1000 # 138 # 6917 # Fecha o video no frame 400
 
 # The maximum distance a blob centroid is allowed to move in order to
 # consider it a match to a previous scene's blob.
-BLOB_LOCKON_DISTANCE_PX = 143 # default = 50 p/ ratio 0.35
+BLOB_LOCKON_DIST_PX_MAX = 150 # default = 50 p/ ratio 0.35
+BLOB_LOCKON_DIST_PX_MIN = 10  # default 10
+MIN_AREA_FOR_DETEC = 40000  # Default 40000 (não detecta Moto)
+# Limites da Área de Medição, área onde é feita o Tracking
+# Distancia de medição: default 915-430 = 485
+BOTTOM_LIMIT_TRACK = 915  # Default 915 # (Valor da altura mínima (eixo y))
+UPPER_LIMIT_TRACK = 430  # Default 430  # (Valor da altura Máxima (eixo y))
 
 # The number of seconds a blob is allowed to sit around without having
 # any new blobs matching it.
-BLOB_TRACK_TIMEOUT = 0.1 # Default 0.7
+BLOB_TRACK_TIMEOUT = 0.7 # Default 0.7
 
 # Colors
 WHITE  = (255, 255, 255)
@@ -42,10 +48,11 @@ CIAN   = (255, 255,  0 )
 PINK   = (255, 0  , 255)
 ORANGE = (0  , 90 , 255)
 
-###############################################################
+###############################################################################
+
 cap = cv2.VideoCapture(VIDEO_FILE)
 fps = cap.get(cv2.CAP_PROP_FPS)
-width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))  # Retorna a largura do video
+WIDTH = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))  # Retorna a largura do video
 
 bgsMOG = cv2.createBackgroundSubtractorMOG2(history=10, varThreshold = 50, detectShadows=0)
 
@@ -92,7 +99,7 @@ def calculate_speed (trails, fps):
 
 	mmp_y = 0.125 / (3 * (1 + (3.22 / 432)) * trails[0][1])
 #    mmp_y = 0.2 / (3 * (1 + (3.22 / 432)) * trails[0][1])  # Default
-	mmp_x = 0.125 / (5 * (1 + (1.5 / 773)) * (width - trails[0][1]))  
+	mmp_x = 0.125 / (5 * (1 + (1.5 / 773)) * (WIDTH - trails[0][1]))  
 #    mmp_x = 0.2 / (5 * (1 + (1.5 / 773)) * (width - trails[0][1]))  # Default
 	real_dist = math.sqrt(dist_x * mmp_x * dist_x * mmp_x + dist_y * mmp_y * dist_y * mmp_y)
 
@@ -123,22 +130,23 @@ def roi(frame):
     pts3 = np.array([[0, r(620)], [r(270),0], [0,0]], np.int32)
     cv2.fillPoly(frame,[pts3], BLACK)
     # Linha entre faixas 1 e 2
-    pts1 = np.array([[r(510), r(1080)], [r(570),r(250)], 
-                     [r(600),r(250)], [r(550),r(1080)]], np.int32)
+    pts1 = np.array([[r(480), r(1080)], [r(560),r(0)], 
+                     [r(640),r(0)], [r(570),r(1080)]], np.int32)
     cv2.fillPoly(frame,[pts1], BLACK)
-    # Linha entre faixas 2 e 3 SUPERIOR
-    pts5 = np.array([[r(570), r(250)], [r(600),r(250)], 
-                     [r(615),r(0)], [r(590),0]], np.int32)
-    cv2.fillPoly(frame,[pts5], BLACK)
-    
+    # Linha entre faixas GROSSA 1 e 2
+    pts1 = np.array([[r(510), r(1080)], [r(580),r(0)], 
+                     [r(620),r(0)], [r(550),r(1080)]], np.int32)
+    cv2.fillPoly(frame,[pts1], BLACK)
+        
     # Linha entre faixas 2 e 3
-    pts2 = np.array([[r(1340), r(1080)], [r(1030),r(250)], 
-                     [r(1060),r(250)], [r(1390),r(1080)]], np.int32)
+    pts7 = np.array([[r(1310), r(1080)], [r(900),r(0)], 
+                     [r(990),r(0)], [r(1410),r(1080)]], np.int32)
+    cv2.fillPoly(frame,[pts7], BLACK)
+    # Linha entre faixas GROSSA 2 e 3
+    pts2 = np.array([[r(1340), r(1080)], [r(930),r(0)], 
+                     [r(970),r(0)], [r(1390),r(1080)]], np.int32)
     cv2.fillPoly(frame,[pts2], BLACK)
-    # Linha entre faixas 2 e 3 SUPERIOR
-    pts4 = np.array([[r(1030),r(250)], [r(1060),r(250)], 
-                     [r(960),0], [r(930),0]], np.int32)
-    cv2.fillPoly(frame,[pts4], BLACK)
+    
     return frame
 ########### FIM Region of Interest ############################################
 
@@ -179,9 +187,12 @@ qntd_faixa3 = 0
 #  os.remove("results/real_speed.csv")
 
 
-KERNEL_ERODE = np.ones((r(9), r(9)), np.uint8)  # Matriz (3,3) com 1 em seus valores -- Usa na funcao de erode
-KERNEL_DILATE = np.ones((r(86), r(43)), np.uint8)  # Matriz (15,15) com 1 em seus valores -- Usa na funcao de dilate
-# KERNEL_ERODE_SCND = np.ones((r(9), r(9)), np.uint8)  # Matriz (8,8) com 1 em seus valores -- Usa na 2nd funcao de erode
+KERNEL_ERODE = np.ones((r(9), r(9)), np.uint8)  # Matriz (3,3) com 1 em seus valores
+KERNEL_DILATE = np.ones((r(100), r(50)), np.uint8)  # Matriz (r(86), r(43)) com 1 em seus valores
+#KERNEL_DILATE = np.ones((r(120), r(80)), np.uint8)  # Matriz (r(86), r(43)) com 1 em seus valores
+
+#KERNEL_DILATE = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(r(50), r(120)))
+# KERNEL_ERODE_SCND = np.ones((r(9), r(9)), np.uint8)  # Matriz (8,8) com 1 em seus valores
 
 
 while(True):
@@ -241,7 +252,7 @@ while(True):
 #                break
 
 #            if rectCount2 < 2:
-            if cv2.contourArea(contours[i]) > 14000: # Default if cv2.contourArea(contours[i]) > 14000:
+            if cv2.contourArea(contours[i]) > r(MIN_AREA_FOR_DETEC): # Default if cv2.contourArea(contours[i]) > 14000:
                 # draw ith contour
                 cv2.drawContours(drawing, contours, i, GREEN, 0, 8, hierarchy)
                 # draw ith convex hull object
@@ -256,7 +267,7 @@ while(True):
                 
 #                if y > 70:
 ##                    cv2.line(frame,(0,140),(640,140),(255,255,0),5)
-##                    cv2.line(frame,(0,320),(640,320),(255,255,0),5)
+
 ##                    cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 255, 255), 4) # printa na mask
 #                    pass
                 
@@ -264,8 +275,10 @@ while(True):
                     continue
                 center = (int(x + w/2), int(y + h/2))
                 
-                if center[1] > 320 or center[1] < 150:  # ponto que da pra mudar
+                # Área de medição do Tracking
+                if center[1] > r(BOTTOM_LIMIT_TRACK) or center[1] < r(UPPER_LIMIT_TRACK):  
                     continue
+                
 
 #        outputFrame = cv2.drawContours(frame, contours, -1, (0,255,0),-1)
         
@@ -314,7 +327,7 @@ while(True):
                             distance_five = cv2.norm(center, close_blob['trail'][10])
     					
                         # Check if the distance is close enough to "lock on"
-                        if distance < r(BLOB_LOCKON_DISTANCE_PX):
+                        if distance < r(BLOB_LOCKON_DIST_PX_MAX) and distance > r(BLOB_LOCKON_DIST_PX_MIN):
                             # If it's close enough, make sure the blob was moving in the expected direction
                             expected_dir = close_blob['dir']
                             if expected_dir == 'up' and close_blob['trail'][0][1] < center[1]:
@@ -500,7 +513,7 @@ while(True):
                             2, .6, color, thickness=1, lineType=2)  # erro percentual
                     cv2.putText(frame,'Carro ' + str(total_cars['lane_3']), (r(1550), r(230)),
                             2, .6, color, thickness=1, lineType=2)
-                    cv2.imwrite('img/{}_Carro_{}.png'.format(frameCount,total_cars['lane_3']), frame)
+#                    cv2.imwrite('img/{}_Carro_{}.png'.format(frameCount,total_cars['lane_3']), frame)
                     # PRINTA FAIXA 3
                     cv2.putText(frame, 'Faixa 3', (blob['trail'][0][0] - r(29), blob['trail'][0][1] + r(200)), 
                                 cv2.FONT_HERSHEY_COMPLEX_SMALL, .8, WHITE, thickness=1, lineType=2)
@@ -611,6 +624,8 @@ while(True):
         print_xml_values(outputFrame, RESIZE_RATIO, dict_lane1, dict_lane2, dict_lane3)
 
 #        cv2.rectangle(outputFrame, (0,70), (640,320), (255,255,255) , 2)
+        cv2.line(frame,(0,r(429)),(WIDTH,r(429)),(255,255,0),2)
+        cv2.line(frame,(0,r(914)),(WIDTH,r(914)),(255,255,0),2)
 
 #        crop_img = outputFrame[70:320, 0:640]
         
@@ -634,6 +649,10 @@ while(True):
 #            cv2.imwrite('4erodedmask.png',erodedmask)
 #            cv2.imwrite('5dilatedmask.png', dilatedmask)
 #            cv2.imwrite('6resultado.png', outputFrame)
+#        if frameCount > 865 and frameCount < 888:
+#            cv2.imwrite('{}.png'.format(frameCount), outputFrame)
+#            cv2.imwrite('dilate1{}.png'.format(frameCount), dilatedmask)
+
 
         
         frameCount = frameCount + 1    # Conta a quantidade de Frames
