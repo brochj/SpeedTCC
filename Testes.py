@@ -21,7 +21,7 @@ VIDEO_FILE = '../Dataset/video{}.avi'.format(VIDEO) # Local do video a ser anali
 XML_FILE = '../Dataset/video{}.xml'.format(VIDEO)
 
 RESIZE_RATIO = 0.65 # Resize, valores entre 0 e 1 | 1=Tamanho original do video
-CLOSE_VIDEO = 1000 # 138 # 6917 # Fecha o video no frame 400
+CLOSE_VIDEO = 6917 # 138 # 6917 # Fecha o video no frame 400
 
 # The maximum distance a blob centroid is allowed to move in order to
 # consider it a match to a previous scene's blob.
