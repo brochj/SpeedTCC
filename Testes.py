@@ -41,11 +41,9 @@ BLOB_TRACK_TIMEOUT = 0.7 # Default 0.7
 
 #----- Speed Values -----------------------------------------------------------
 # Correction Factor
-CF_LANE1 = 0.045383  # default 0.055383 
-CF_LANE2 = 0.45383  # default 0.055383
-CF_LANE3 = 0.045383  # default 0.055383
-
-
+CF_LANE1 = 6.62022044  # default 6.62022044 
+CF_LANE2 = 6.62022044  # default 6.62022044 
+CF_LANE3 = 6.49881616  # default 6.62022044 
 
 #----- Colors -----------------------------------------------------------------
 WHITE  = (255, 255, 255)
@@ -106,13 +104,11 @@ def crop(frame):
 def calculate_speed (trails, fps):
     med_area_meter = 3.5
     med_area_pixel = 485
-    frames = 10
-#    c = 0.055383
-#    c = 0.045383
+    frames = 11
     dist_pixel = cv2.norm(trails[0], trails[10])
     dist_meter = dist_pixel*(med_area_meter/med_area_pixel)
-    speed1 = dist_meter/(frames*(1/fps)*cf)
-    return speed1
+    speed = (dist_meter*3.6*cf)/(frames*(1/fps))
+    return speed
 
 #def calculate_speed (trails, fps):
 #    # distance: distance on the frame
@@ -487,9 +483,9 @@ while(True):
                             2, .6, color, thickness=1, lineType=2)  # erro percentual
                     cv2.putText(frame,'Carro ' + str(total_cars['lane_1']), (r(550), r(230)),
                             2, .6, color, thickness=1, lineType=2)
-                    cv2.line(frame,(0,r(UPPER_LIMIT_TRACK)),(WIDTH,r(UPPER_LIMIT_TRACK)), CIAN, 2)
-                    cv2.line(frame,(0,r(BOTTOM_LIMIT_TRACK)),(WIDTH,r(BOTTOM_LIMIT_TRACK)), CIAN, 2) 
-                    cv2.imwrite('img/{}-{}_F1_Carro_{}.png'.format(VIDEO,frameCount,total_cars['lane_1']), frame)
+#                    cv2.line(frame,(0,r(UPPER_LIMIT_TRACK)),(WIDTH,r(UPPER_LIMIT_TRACK)), CIAN, 2)
+#                    cv2.line(frame,(0,r(BOTTOM_LIMIT_TRACK)),(WIDTH,r(BOTTOM_LIMIT_TRACK)), CIAN, 2) 
+#                    cv2.imwrite('img/{}-{}_F1_Carro_{}.png'.format(VIDEO,frameCount,total_cars['lane_1']), frame)
                                
                     
                     
@@ -564,7 +560,7 @@ while(True):
                             2, .6, color, thickness=1, lineType=2)  # erro percentual
                     cv2.putText(frame,'Carro ' + str(total_cars['lane_3']), (r(1550), r(230)),
                             2, .6, color, thickness=1, lineType=2)
-#                    cv2.imwrite('img/{}-{}_F3_Carro_{}.png'.format(VIDEO, frameCount,total_cars['lane_3']), frame)
+                    cv2.imwrite('img/{}-{}_F3_Carro_{}.png'.format(VIDEO, frameCount,total_cars['lane_3']), frame)
 #                     PRINTA FAIXA 3
                     cv2.putText(frame, 'Faixa 3', (blob['trail'][0][0] - r(29), blob['trail'][0][1] + r(200)), 
                                 cv2.FONT_HERSHEY_COMPLEX_SMALL, .8, WHITE, thickness=1, lineType=2)
