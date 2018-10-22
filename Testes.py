@@ -84,6 +84,7 @@ color = 0
 final_ave_speed = 0
 ave_speed = 0
 flag = 0
+
 # ##############  FUNÇÕES ####################################################################
                      
 def r(numero):  # Faz o ajuste de escala das posições de textos e retangulos
@@ -91,6 +92,17 @@ def r(numero):  # Faz o ajuste de escala das posições de textos e retangulos
 
 def crop(frame):
     return frame[30:370, 205:620]
+
+#def calculate_speed (trails, fps):
+#    med_area_meter = 3.5
+#    med_area_pixel = 485
+#    frames = 10
+#    c = 0.055383
+#    c = 0.045383
+#    dist_pixel = cv2.norm(trails[0], trails[10])
+#    dist_meter = dist_pixel*(med_area_meter/med_area_pixel)
+#    speed1 = dist_meter/(frames*(1/fps)*c)
+#    return speed1
 
 def calculate_speed (trails, fps):
     # distance: distance on the frame
@@ -428,7 +440,8 @@ while(True):
                     final_ave_speed = ave_speed
                     print('========= final_ave_speed =========', float("{0:.5f}".format(final_ave_speed)))
 #                    cv2.imwrite('img/{}speed_{}.png'.format(frameCount,final_ave_speed), frame)
-
+                
+                ### PRINTS DA FAIXA 1 ###########################################
                 if blob['trail'][0][0] < r(571): # entao ta na faixa 1
                     cv2.putText(frame, str(float("{0:.2f}".format(ave_speed))), (blob['trail'][0][0] + r(57), blob['trail'][0][1] + r(143)), 
                                 cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, YELLOW, thickness=1, lineType=2)
@@ -454,17 +467,19 @@ while(True):
                             2, .6, color, thickness=1, lineType=2)  # erro absoluto
                     cv2.putText(frame, str(float("{0:.2f}".format(error_lane1)))+'%', (r(550), r(180)),
                             2, .6, color, thickness=1, lineType=2)  # erro percentual
-                    cv2.putText(frame,'Carro ' + str(total_cars['lane_1']), (r(1550), r(230)),
+                    cv2.putText(frame,'Carro ' + str(total_cars['lane_1']), (r(550), r(230)),
                             2, .6, color, thickness=1, lineType=2)
-                    cv2.imwrite('img/{}_F1_Carro_{}.png'.format(frameCount,total_cars['lane_1']), frame)
-
+                    cv2.line(frame,(0,r(UPPER_LIMIT_TRACK)),(WIDTH,r(UPPER_LIMIT_TRACK)), CIAN, 2)
+                    cv2.line(frame,(0,r(BOTTOM_LIMIT_TRACK)),(WIDTH,r(BOTTOM_LIMIT_TRACK)), CIAN, 2) 
+                    cv2.imwrite('img/{}-{}_F1_Carro_{}.png'.format(VIDEO,frameCount,total_cars['lane_1']), frame)
+                               
                     
                     
                     # PRINTA FAIXA 1
                     cv2.putText(frame, 'Faixa 1', (blob['trail'][0][0] - r(29), blob['trail'][0][1] + r(200)), 
                                 cv2.FONT_HERSHEY_COMPLEX_SMALL, .8, WHITE, thickness=1, lineType=2)
                     lane = 1
-                    
+               ### PRINTS DA FAIXA 2 ###########################################     
                 elif blob['trail'][0][0] >= r(571) and blob['trail'][0][0] < r(1143):  # entao ta na faixa 2
                     cv2.putText(frame, str(float("{0:.2f}".format(ave_speed))), (blob['trail'][0][0] + r(57), blob['trail'][0][1] + r(143)),
                                 cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, YELLOW, thickness=1, lineType=2)
@@ -490,9 +505,9 @@ while(True):
                             2, .6, color, thickness=1, lineType=2)  # erro absoluto
                     cv2.putText(frame, str(float("{0:.2f}".format(error_lane2)))+'%', (r(1030), r(180)),
                             2, .6, color, thickness=1, lineType=2)  # erro percentual
-                    cv2.putText(frame,'Carro ' + str(total_cars['lane_2']), (r(1550), r(230)),
+                    cv2.putText(frame,'Carro ' + str(total_cars['lane_2']), (r(1030), r(230)),
                             2, .6, color, thickness=1, lineType=2)
-#                    cv2.imwrite('img/{}_F2_Carro_{}.png'.format(frameCount,total_cars['lane_2']), frame)
+#                    cv2.imwrite('img/{}-{}_F2_Carro_{}.png'.format(VIDEO, frameCount,total_cars['lane_2']), frame)
 
                     
                     
@@ -502,7 +517,7 @@ while(True):
                     cv2.putText(frame, 'Faixa 2', (blob['trail'][0][0] - r(29), blob['trail'][0][1] + r(200)), 
                                 cv2.FONT_HERSHEY_COMPLEX_SMALL, .8, WHITE, thickness=1, lineType=2)
                     lane = 2
-                    
+              ### PRINTS DA FAIXA 3 ###########################################      
                 elif blob['trail'][0][0] >= r(1143):  # entao ta na faixa 3
                     lane = 3
                     cv2.putText(frame, str(float("{0:.2f}".format(ave_speed))), (blob['trail'][0][0] + r(100), blob['trail'][0][1] + r(143)),
@@ -531,7 +546,7 @@ while(True):
                             2, .6, color, thickness=1, lineType=2)  # erro percentual
                     cv2.putText(frame,'Carro ' + str(total_cars['lane_3']), (r(1550), r(230)),
                             2, .6, color, thickness=1, lineType=2)
-#                    cv2.imwrite('img/{}_Carro_{}.png'.format(frameCount,total_cars['lane_3']), frame)
+#                    cv2.imwrite('img/{}-{}_F3_Carro_{}.png'.format(VIDEO, frameCount,total_cars['lane_3']), frame)
 #                     PRINTA FAIXA 3
                     cv2.putText(frame, 'Faixa 3', (blob['trail'][0][0] - r(29), blob['trail'][0][1] + r(200)), 
                                 cv2.FONT_HERSHEY_COMPLEX_SMALL, .8, WHITE, thickness=1, lineType=2)
@@ -647,8 +662,8 @@ while(True):
 
 #        cv2.rectangle(outputFrame, (0,70), (640,320), (255,255,255) , 2)
         # Desenha os Limites da Área de Tracking
-#        cv2.line(frame,(0,r(UPPER_LIMIT_TRACK)),(WIDTH,r(UPPER_LIMIT_TRACK)), CIAN, 2)
-#        cv2.line(frame,(0,r(BOTTOM_LIMIT_TRACK)),(WIDTH,r(BOTTOM_LIMIT_TRACK)), CIAN, 2)
+        cv2.line(frame,(0,r(UPPER_LIMIT_TRACK)),(WIDTH,r(UPPER_LIMIT_TRACK)), CIAN, 2)
+        cv2.line(frame,(0,r(BOTTOM_LIMIT_TRACK)),(WIDTH,r(BOTTOM_LIMIT_TRACK)), CIAN, 2)
         
 
 #        crop_img = outputFrame[70:320, 0:640]
@@ -685,7 +700,7 @@ while(True):
 
             
             
-#        if frameCount > 230 and frameCount < 260:
+#        if frameCount > 175 and frameCount < 192:
 #            cv2.imwrite('{}.png'.format(frameCount), outputFrame)
 #            cv2.imwrite('dilate{}.png'.format(frameCount), dilatedmask)
 
