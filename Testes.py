@@ -4,8 +4,6 @@ Created on Tue Oct  2 21:15:05 2018
 
 @author: broch
 """
-
-#
 import cv2
 import numpy as np
 import time
@@ -24,6 +22,9 @@ RESIZE_RATIO = 0.35 # Resize, valores entre 0 e 1 | 1=Tamanho original do video
 CLOSE_VIDEO = 6917 # 138 # 6917 # Fecha o video no frame 400
 ARTG_FRAME = 0 #254  # Frame q usei para exemplo no Artigo
 
+#----- Tracking Values --------------------------------------------------------
+SHOW_TRACKING_AREA = True
+
 # The maximum distance a blob centroid is allowed to move in order to
 # consider it a match to a previous scene's blob.
 BLOB_LOCKON_DIST_PX_MAX = 150 # default = 50 p/ ratio 0.35
@@ -38,7 +39,15 @@ UPPER_LIMIT_TRACK = 430  # Default 430  # (Valor da altura Máxima (eixo y))
 # any new blobs matching it.
 BLOB_TRACK_TIMEOUT = 0.7 # Default 0.7
 
-# Colors
+#----- Speed Values -----------------------------------------------------------
+# Correction Factor
+CF_LANE1 = 0.045383  # default 0.055383 
+CF_LANE2 = 0.45383  # default 0.055383
+CF_LANE3 = 0.045383  # default 0.055383
+
+
+
+#----- Colors -----------------------------------------------------------------
 WHITE  = (255, 255, 255)
 BLACK  = (0  , 0  ,  0 )
 BLUE   = (255, 0  ,  0 )
@@ -49,11 +58,12 @@ CIAN   = (255, 255,  0 )
 PINK   = (255, 0  , 255)
 ORANGE = (0  , 90 , 255)
 
-###############################################################################
+######### END - CONSTANT VALUES ###############################################
 
 cap = cv2.VideoCapture(VIDEO_FILE)
 fps = cap.get(cv2.CAP_PROP_FPS)
 WIDTH = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))  # Retorna a largura do video
+HEIGHT = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))  # Retorna a largura do video
 
 bgsMOG = cv2.createBackgroundSubtractorMOG2(history=10, varThreshold = 50, detectShadows=0)
 
@@ -93,33 +103,33 @@ def r(numero):  # Faz o ajuste de escala das posições de textos e retangulos
 def crop(frame):
     return frame[30:370, 205:620]
 
-#def calculate_speed (trails, fps):
-#    med_area_meter = 3.5
-#    med_area_pixel = 485
-#    frames = 10
+def calculate_speed (trails, fps):
+    med_area_meter = 3.5
+    med_area_pixel = 485
+    frames = 10
 #    c = 0.055383
 #    c = 0.045383
-#    dist_pixel = cv2.norm(trails[0], trails[10])
-#    dist_meter = dist_pixel*(med_area_meter/med_area_pixel)
-#    speed1 = dist_meter/(frames*(1/fps)*c)
-#    return speed1
+    dist_pixel = cv2.norm(trails[0], trails[10])
+    dist_meter = dist_pixel*(med_area_meter/med_area_pixel)
+    speed1 = dist_meter/(frames*(1/fps)*cf)
+    return speed1
 
-def calculate_speed (trails, fps):
-    # distance: distance on the frame
-	# location: x, y coordinates on the frame
-	# fps: framerate
-	# mmp: meter per pixel
-#	dist = cv2.norm(trails[0], trails[10])
-	dist_x = trails[0][0] - trails[10][0]
-	dist_y = trails[0][1] - trails[10][1]
-
-	mmp_y = 0.125 / (3 * (1 + (3.22 / 432)) * trails[0][1])
-#    mmp_y = 0.2 / (3 * (1 + (3.22 / 432)) * trails[0][1])  # Default
-	mmp_x = 0.125 / (5 * (1 + (1.5 / 773)) * (WIDTH - trails[0][1]))  
-#    mmp_x = 0.2 / (5 * (1 + (1.5 / 773)) * (width - trails[0][1]))  # Default
-	real_dist = math.sqrt(dist_x * mmp_x * dist_x * mmp_x + dist_y * mmp_y * dist_y * mmp_y)
-
-	return real_dist * fps * 250 / 3.6
+#def calculate_speed (trails, fps):
+#    # distance: distance on the frame
+#	# location: x, y coordinates on the frame
+#	# fps: framerate
+#	# mmp: meter per pixel
+##	dist = cv2.norm(trails[0], trails[10])
+#	dist_x = trails[0][0] - trails[10][0]
+#	dist_y = trails[0][1] - trails[10][1]
+#
+#	mmp_y = 0.125 / (3 * (1 + (3.22 / 432)) * trails[0][1])
+##    mmp_y = 0.2 / (3 * (1 + (3.22 / 432)) * trails[0][1])  # Default
+#	mmp_x = 0.125 / (5 * (1 + (1.5 / 773)) * (WIDTH - trails[0][1]))  
+##    mmp_x = 0.2 / (5 * (1 + (1.5 / 773)) * (width - trails[0][1]))  # Default
+#	real_dist = math.sqrt(dist_x * mmp_x * dist_x * mmp_x + dist_y * mmp_y * dist_y * mmp_y)
+#
+#	return real_dist * fps * 250 / 3.6
 
 def roi(frame):
     ###########  Region of Interest ###############################################
@@ -375,7 +385,15 @@ while(True):
                             closest_blob['trail'].insert(0, center)
                             closest_blob['last_seen'] = frame_time
                             if len(closest_blob['trail']) > 10:
-                                closest_blob['speed'].insert(0, calculate_speed (closest_blob['trail'], fps))
+                                if closest_blob['trail'][0][0] < r(570):
+                                    cf = CF_LANE1
+                                    closest_blob['speed'].insert(0, calculate_speed (closest_blob['trail'], fps))
+                                elif closest_blob['trail'][0][0] >= r(570) and closest_blob['trail'][0][0] < r(1180):
+                                    cf = CF_LANE2
+                                    closest_blob['speed'].insert(0, calculate_speed (closest_blob['trail'], fps))
+                                elif closest_blob['trail'][0][0] >= r(1180):
+                                    cf = CF_LANE3
+                                    closest_blob['speed'].insert(0, calculate_speed (closest_blob['trail'], fps))
     
                 if not closest_blob: # Cria as variaves
     				# If we didn't find a blob, let's make a new one and add it to the list
@@ -659,11 +677,14 @@ while(True):
 #        roi(frame) # Ver como esta a ROI
         
         print_xml_values(outputFrame, RESIZE_RATIO, dict_lane1, dict_lane2, dict_lane3)
-
-#        cv2.rectangle(outputFrame, (0,70), (640,320), (255,255,255) , 2)
-        # Desenha os Limites da Área de Tracking
-        cv2.line(frame,(0,r(UPPER_LIMIT_TRACK)),(WIDTH,r(UPPER_LIMIT_TRACK)), CIAN, 2)
-        cv2.line(frame,(0,r(BOTTOM_LIMIT_TRACK)),(WIDTH,r(BOTTOM_LIMIT_TRACK)), CIAN, 2)
+        
+        # Mostra os limites entres as faixas
+#        cv2.line(frame, (r(570), 0), (r(570),HEIGHT), YELLOW, 2)
+#        cv2.line(frame, (r(1180), 0), (r(1180),HEIGHT), YELLOW, 2)
+        
+        if SHOW_TRACKING_AREA:  # Desenha os Limites da Área de Tracking
+            cv2.line(frame,(0,r(UPPER_LIMIT_TRACK)),(WIDTH,r(UPPER_LIMIT_TRACK)), CIAN, 2)
+            cv2.line(frame,(0,r(BOTTOM_LIMIT_TRACK)),(WIDTH,r(BOTTOM_LIMIT_TRACK)), CIAN, 2)
         
 
 #        crop_img = outputFrame[70:320, 0:640]

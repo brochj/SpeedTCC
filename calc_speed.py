@@ -32,8 +32,7 @@ for i in range(1,300):
     speed = real_dist * fps * 250 / 3.6
     speeds.append((i,speed))
 
-#dist_pixel = math.sqrt(dist_x**2 + dist_y**2)
-#dist2 = cv2.norm(trails[0], trails[10])
+
 
 def calculate_speed (trails, fps):
     med_area_meter = 3.5 # tamanho da area de medição em metros [eixo y]
@@ -42,7 +41,7 @@ def calculate_speed (trails, fps):
 #    c = 0.055383
     c = 0.045383 # fator de correção
     
-    dist_pixel = cv2.norm(trails[0], trails[10])
+    dist_pixel = cv2.norm(trails[0], trails[10]) # Distancia entre o ponto 0 e 10
     dist_meter = dist_pixel*(med_area_meter/med_area_pixel)
     speed1 = dist_meter/(frames*(1/fps)*c)
     return speed1
