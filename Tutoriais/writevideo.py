@@ -15,14 +15,14 @@ while(True):
   if ret == True: 
   
     # Write the frame into the file 'output.avi'
-    if frameCount > 100 and frameCount < 200:
+    if frameCount > 2000 and frameCount < 4000:
         cv2.putText(frame, 'frame: {}'.format(frameCount),(14, 25), 0, 1, (255,255,255), 2)
         out.write(frame)  # Salva o Frame
         
-    if frameCount > 500 and frameCount < 600:
+    #if frameCount > 500 and frameCount < 600:
         
-        cv2.putText(frame, 'frame: {}'.format(frameCount),(14, 25), 0, 1, (255,255,255), 2)
-        out.write(frame) # Salva o Frame
+       #cv2.putText(frame, 'frame: {}'.format(frameCount),(14, 25), 0, 1, (255,255,255), 2)
+       # out.write(frame) # Salva o Frame
     
     
     
