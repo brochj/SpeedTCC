@@ -41,9 +41,13 @@ BLOB_TRACK_TIMEOUT = 0.7 # Default 0.7
 
 #----- Speed Values -----------------------------------------------------------
 # Correction Factor
-CF_LANE1 = 2.3068397  # default 2.3068397 
-CF_LANE2 = 2.3068397  # default 2.3068397 
+CF_LANE1 = 2.5869977  # default 2.3068397 
+CF_LANE2 = 2.5869977  # default 2.3068397 
 CF_LANE3 = 2.3068397  # default 2.3068397
+#IGOR
+# default 2.5869977 
+ # default 2.5869977
+# default 2.3068397
 
 #-----  Results Values --------------------------------------------------------
 SAVE_FRAME_F1 = False
@@ -106,11 +110,59 @@ def r(numero):  # Faz o ajuste de escala das posições de textos e retangulos
 def crop(frame):
     return frame[30:370, 205:620]
 
+def linearRegression(pts, frames):
+    sqrs_x = []
+    sqrs_y = []
+    ms_xy = []
+    x_values = [] 
+    y_values = []
+    for x,y in pts:
+        sqr_x = x**2
+        sqr_y = y**2
+        m_xy = x*y
+        
+        x_values.append(x)
+        y_values.append(y)
+        
+        ms_xy.append(m_xy)
+        sqrs_x.append(sqr_x)
+        sqrs_y.append(sqr_y)
+        
+        sum_x_values = sum(x_values)
+        sum_y_values = sum(y_values)
+        sum_ms_xy = sum(ms_xy)
+        sum_sqrs_x = sum(sqrs_x)
+        
+        ave_x = sum_x_values/len(pts)
+        ave_y = sum_y_values/len(pts)
+    
+    b = (sum_ms_xy - (len(pts)*ave_x*ave_y) )/(sum_sqrs_x - (len(pts)*(ave_x**2)))
+    a = ave_y - b*ave_x
+    
+    predicted_final_y = a + b*x_values[0]
+    predicted_initial_y = a + b*x_values[frames-1]
+    
+    final_pt = (x_values[0], int(predicted_final_y))
+    initial_pt = (x_values[frames-1], int(predicted_initial_y))
+    
+    return initial_pt, final_pt   
+
+
 def calculate_speed (trails, fps):
     med_area_meter = 3.5  # metros
     med_area_pixel = r(485)
     frames = 11
-    dist_pixel = cv2.norm(trails[0], trails[10])
+    # Usando Regressão Linear
+    initial_pt, final_pt = linearRegression(trails, frames)
+    dist_pixel = cv2.norm(final_pt, initial_pt)
+    
+    # Sem usar Regressão linear
+#    dist_pixel = cv2.norm(trails[0], trails[10])
+    # Mostrar retas
+    cv2.line(frame,initial_pt,final_pt, PINK, 10)
+#    cv2.line(frame,trails[0],trails[10], PINK, 2)
+#    cv2.imwrite('img/regressao_{}.png'.format(frameCount), frame)
+    
     dist_meter = dist_pixel*(med_area_meter/med_area_pixel)
     speed = (dist_meter*3.6*cf)/(frames*(1/fps))
     return speed
@@ -131,6 +183,7 @@ def calculate_speed (trails, fps):
 #	real_dist = math.sqrt(dist_x * mmp_x * dist_x * mmp_x + dist_y * mmp_y * dist_y * mmp_y)
 #
 #	return real_dist * fps * 250 / 3.6
+
 
 def roi(frame):
     ###########  Region of Interest ###############################################
@@ -726,6 +779,9 @@ while(True):
 #        if frameCount > 175 and frameCount < 192:
 #            cv2.imwrite('{}.png'.format(frameCount), outputFrame)
 #            cv2.imwrite('dilate{}.png'.format(frameCount), dilatedmask)
+#        if frameCount == 600:
+##            cv2.imwrite('{}.png'.format(frameCount), outputFrame)
+#            break
 
 
         frameCount = frameCount + 1    # Conta a quantidade de Frames
