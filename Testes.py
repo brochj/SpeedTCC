@@ -160,7 +160,7 @@ def calculate_speed (trails, fps):
 #    dist_pixel = cv2.norm(trails[0], trails[10])
     # Mostrar retas
     cv2.line(frame,initial_pt,final_pt, PINK, 10)
-#    cv2.line(frame,trails[0],trails[10], PINK, 2)
+#    cv2.line(frame,trails[0],trails[10], GREEN, 2)
 #    cv2.imwrite('img/regressao_{}.png'.format(frameCount), frame)
     
     dist_meter = dist_pixel*(med_area_meter/med_area_pixel)
