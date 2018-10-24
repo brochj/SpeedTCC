@@ -333,6 +333,15 @@ def print_xml_values(frame, ratio, dict_lane1, dict_lane2, dict_lane3):
 
 ##### END --- XML FUNCTIONS ###################################################
 
+def skip_video(frameCount, video):
+    skip = False
+    if video == 1:
+        if frameCount < 40: skip = True
+        if frameCount > 80: skip = True
+            
+    return skip
+
+
 #def calculate_speed (trails, fps):
 #    # distance: distance on the frame
 #    # location: x, y coordinates on the frame

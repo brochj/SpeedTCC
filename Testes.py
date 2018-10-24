@@ -19,6 +19,7 @@ SHOW_TRACKING_AREA = True
 SHOW_LINEAR_REGRESSION = False
 SHOW_CAR_RECTANGLE = True
 SHOW_REAL_SPEEDS = True
+SKIP_VIDEO = False
 
 
 #----- Tracking Values --------------------------------------------------------
@@ -86,10 +87,10 @@ ave_speed = 0
 flag = 0
 
 # ##############  FUNÇÕES #####################################################
-def r(numero):  # Faz o ajuste de escala das posições de textos e retangulos
+def r(numero):
     return int(numero*RESIZE_RATIO)
 
-def crop(frame): # Funcao para o cortar img do Artigo
+def crop(frame):
     return frame[30:370, 205:620]
 
 def calculate_speed(trails, fps):
@@ -137,34 +138,28 @@ while True:
     if SHOW_TRACKING_AREA:  # Desenha os Limites da Área de Tracking
             cv2.line(frame, (0, r(UPPER_LIMIT_TRACK)), (WIDTH, r(UPPER_LIMIT_TRACK)), t.CIAN, 2)
             cv2.line(frame, (0, r(BOTTOM_LIMIT_TRACK)), (WIDTH, r(BOTTOM_LIMIT_TRACK)), t.CIAN, 2)
-    if frameCount > 40 and frameCount < 1000:
-        frameCount += 1
-        continue
-#    equ = cv2.equalizeHist(frameGray)
-#    res = np.hstack((frameGray,equ))
-#    frameGray = equ
 
-    # Equalizar Contrast
+    if SKIP_VIDEO:
+        skip = t.skip_video(frameCount, VIDEO)
+        if not skip:
+            frameCount += 1
+            continue
+
+    # Equalizar Contraste
     clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(7, 7))
     hist = clahe.apply(frameGray)
-    res = np.hstack((frameGray, hist))
     frameGray = hist
-
+    
     if ret == True:
         t.update_info_xml(frameCount, vehicle, dict_lane1, dict_lane2, dict_lane3)
         if SHOW_REAL_SPEEDS:
             t.print_xml_values(frame, RESIZE_RATIO, dict_lane1, dict_lane2, dict_lane3)
-        # Cria a máscara
-#        fgmask = bgsMOG.apply(crop_img, None, 0.01)
+
         fgmask = bgsMOG.apply(frameGray, None, 0.01)
-        erodedmask = cv2.erode(fgmask, KERNEL_ERODE, iterations=1) # usa pra tirar os pixels isolados (ruídos)
-        dilatedmask = cv2.dilate(erodedmask, KERNEL_DILATE, iterations=1) # usa para evidenciar o objeto em movimento
-#        erodedmask = cv2.erode(fgmask, KERNEL_ERODE_SCND ,iterations=1) # usa pra tirar os pixels isolados (ruídos)
-        # Fim da máscara
+        erodedmask = cv2.erode(fgmask, KERNEL_ERODE, iterations=1) 
+        dilatedmask = cv2.dilate(erodedmask, KERNEL_DILATE, iterations=1)
         _, contours, hierarchy = cv2.findContours(dilatedmask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 #        contornos =  cv2.drawContours(frame, contours, -1, BLUE, 2, 8, hierarchy) # IGOR
-#        if frameCount == ARTG_FRAME:
-#            cv2.imwrite('contorno.png', crop(contornos))
 
         # create hull array for convex hull points
         hull = []
@@ -195,9 +190,16 @@ while True:
                 areahull.append(cv2.contourArea(hull[i]))
                 (x, y, w, h) = cv2.boundingRect(hull[i])
                 center = (int(x + w/2), int(y + h/2))
-#                out = cv2.rectangle(out, (x, y), (x + w, y + h), t.t.GREEN, 2) # printa na mask
+                # out = cv2.rectangle(out, (x, y), (x + w, y + h), t.t.GREEN, 2) # printa na mask
+                # CONDIÇÕES PARA CONTINUAR COM TRACKING
                 if center[1] < r(UPPER_LIMIT_TRACK):
                         break
+                
+                if w < r(330) and h < r(330):  # ponto que da pra mudar
+                    continue
+                # Área de medição do Tracking
+                if center[1] > r(BOTTOM_LIMIT_TRACK) or center[1] < r(UPPER_LIMIT_TRACK):
+                    continue
                 
                 if SHOW_CAR_RECTANGLE:
                     if int(y + h/2) > r(UPPER_LIMIT_TRACK):
@@ -205,18 +207,8 @@ while True:
                     else:
                         cv2.rectangle(frame, (x, y), (x + w, y + h), t.PINK, 2)
                 
-                cv2.putText(frame, f'area = {x*y/RESIZE_RATIO:.0f}', (r(400),r(400)), 2, .6, t.WHITE, 1)
-                cv2.putText(frame, f'w={w}  h={h}', (r(450),r(480)), 2, .6, t.WHITE, 1)
-
-                
-                if w < r(330) and h < r(330):  # ponto que da pra mudar
-                    continue
-                
-
-                # Área de medição do Tracking
-                if center[1] > r(BOTTOM_LIMIT_TRACK) or center[1] < r(UPPER_LIMIT_TRACK):
-                    continue
-
+#                cv2.putText(frame, f'area = {x*y/RESIZE_RATIO:.0f}', (r(400),r(400)), 2, .6, t.WHITE, 1)
+#                cv2.putText(frame, f'w={w}  h={h}', (r(450),r(480)), 2, .6, t.WHITE, 1)
 
 #        outputFrame = cv2.drawContours(frame, contours, -1, (0,255,0),-1)
 
