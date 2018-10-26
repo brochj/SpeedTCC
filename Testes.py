@@ -10,7 +10,7 @@ VIDEO_FILE = '../Dataset/video{}.avi'.format(VIDEO)
 XML_FILE = '../Dataset/video{}.xml'.format(VIDEO)
 
 RESIZE_RATIO = 0.35  # Resize, valores entre 0 e 1 | 1= ize original do video
-CLOSE_VIDEO = 255  # 6917 # Fecha o video no frame indicado
+CLOSE_VIDEO = 290  # 6917 # Fecha o video no frame indicado
 ARTG_FRAME = 0  # 254  # Frame q usei para exemplo no Artigo
 
 SHOW_ROI = True
@@ -162,6 +162,10 @@ while True:
         fgmask = bgsMOG.apply(frameGray, None, 0.01)
         erodedmask = cv2.erode(fgmask, KERNEL_ERODE, iterations=1)
         dilatedmask = cv2.dilate(erodedmask, KERNEL_DILATE, iterations=1)
+        if frameCount == 254:
+            cv2.imwrite('img/5fgmask{}.png'.format(frameCount), fgmask)
+            cv2.imwrite('img/6erodedmask{}.png'.format(frameCount), erodedmask)
+            cv2.imwrite('img/7dilatedmask{}.png'.format(frameCount), dilatedmask)
         _, contours, hierarchy = cv2.findContours(dilatedmask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         #contornos =  cv2.drawContours(frame, contours, -1, BLUE, 2, 8, hierarchy)
         hull = []
@@ -179,6 +183,8 @@ while True:
                 #cv2.drawContours(drawing, contours, i, t.GREEN, 0, 8, hierarchy)
                 # draw ith convex hull object
                 out = cv2.drawContours(drawing, hull, i, t.WHITE, -1, 8)
+                if frameCount == 254:
+                    cv2.imwrite('img/8out{}.png'.format(frameCount), out)
                 area.append(cv2.contourArea(contours[i]))
                 areahull.append(cv2.contourArea(hull[i]))
                 (x, y, w, h) = cv2.boundingRect(hull[i])
@@ -203,7 +209,8 @@ while True:
                         cv2.rectangle(frame, (x, y), (x+w, y+h), t.GREEN, 2)
                     else:
                         cv2.rectangle(frame, (x, y), (x+w, y+h), t.PINK, 2)
-                
+                if frameCount == 254:
+                    cv2.imwrite('img/9rect{}.png'.format(frameCount), frame)
                 
 #                cv2.putText(frame, f'area = {x*y/RESIZE_RATIO:.0f}', (r(400),r(400)), 2, .6, t.WHITE, 1)
 #                cv2.putText(frame, f'w={w}  h={h}', (r(450),r(480)), 2, .6, t.WHITE, 1)
@@ -341,8 +348,8 @@ while True:
 #        cv2.imshow('final', final)
 #        cv2.imshow('mask_eroded', np.concatenate((fgmask, dilatedmask),0))
 #        crop_img = outputFrame[70:320, 0:640]
-#        if frameCount == 254:
-#            cv2.imwrite('img/{}.png'.format(frameCount), frame)
+        if frameCount > 200 and frameCount < 254:
+            cv2.imwrite('img/{}.png'.format(frameCount), frame)
 #            cv2.imwrite('img/teste/{}.png'.format(frameCount), np.vstack((out,frame)))
         frameCount += 1    # Conta a quantidade de Frames
         if frameCount == CLOSE_VIDEO:  # fecha o video

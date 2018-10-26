@@ -186,6 +186,9 @@ while True:
         cv2.line(frame, (0, r(UPPER_LIMIT_TRACK)), (WIDTH, r(UPPER_LIMIT_TRACK)), t.WHITE, 2)
         cv2.line(frame, (0, r(BOTTOM_LIMIT_TRACK)), (WIDTH, r(BOTTOM_LIMIT_TRACK)), t.WHITE, 2)
 ````
+![frame](https://github.com/Brockzera/SpeedTCC/blob/master/backup/imagens/1frame254.png)
+![2framegray254](https://github.com/Brockzera/SpeedTCC/blob/master/backup/imagens/2framegray254.png)
+![3roi254](https://github.com/Brockzera/SpeedTCC/blob/master/backup/imagens/3roi254.png)
 ### 5. Equaliza o contraste
 ````python       
     # Equalizar Contraste
@@ -193,6 +196,8 @@ while True:
     hist = clahe.apply(frameGray)
     frameGray = hist
 ````
+![4hist254](https://github.com/Brockzera/SpeedTCC/blob/master/backup/imagens/4hist254.png)
+
 ### 6. Operações morfológicas
 ````py    
     if ret is True:
@@ -205,8 +210,14 @@ while True:
         dilatedmask = cv2.dilate(erodedmask, KERNEL_DILATE, iterations=1) # Aplica Diltação
 
         # Encontra os contornos e salva os pontos em 'contours'
-        _, contours, hierarchy = cv2.findContours(dilatedmask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE) 
+        _, contours, hierarchy = cv2.findContours(dilatedmask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
  ````
+#### fgmask
+![5fgmask254](https://github.com/Brockzera/SpeedTCC/blob/master/backup/imagens/5fgmask254.png)
+#### erodedmask
+![6erodedmask254](https://github.com/Brockzera/SpeedTCC/blob/master/backup/imagens/6erodedmask254.png)
+#### dilatedmask
+![7dilatedmask254](https://github.com/Brockzera/SpeedTCC/blob/master/backup/imagens/7dilatedmask254.png)
 ### 7. Convex Hull
 ````py
         hull = []
@@ -248,7 +259,9 @@ while True:
                     else:
                         cv2.rectangle(frame, (x, y), (x+w, y+h), t.PINK, 2)
 ````                
-                
+#### Resultado de `cv2.drawContours(drawing, hull, i, t.WHITE, -1, 8)`
+![8out254](https://github.com/Brockzera/SpeedTCC/blob/master/backup/imagens/8out254.png)
+
 ### 9. _Tracking_
 ````py
                 # ################## TRACKING #################################
@@ -426,6 +439,7 @@ cv2.destroyAllWindows()
 ![3roi254](https://github.com/Brockzera/SpeedTCC/blob/master/backup/imagens/3roi254.png)
 ![4hist254](https://github.com/Brockzera/SpeedTCC/blob/master/backup/imagens/4hist254.png)
 
-![4erodedmask](https://github.com/Brockzera/SpeedTCC/blob/master/backup/imagens/4erodedmask.png)
-![5dilatedmask](https://github.com/Brockzera/SpeedTCC/blob/master/backup/imagens/5dilatedmask.png)
-![6resultado](https://github.com/Brockzera/SpeedTCC/blob/master/backup/imagens/6resultado.png)
+![5fgmask254](https://github.com/Brockzera/SpeedTCC/blob/master/backup/imagens/5fgmask254.png)
+![6erodedmask254](https://github.com/Brockzera/SpeedTCC/blob/master/backup/imagens/6erodedmask254.png)
+![7dilatedmask254](https://github.com/Brockzera/SpeedTCC/blob/master/backup/imagens/7dilatedmask254.png)
+![8out254](https://github.com/Brockzera/SpeedTCC/blob/master/backup/imagens/8out254.png)
