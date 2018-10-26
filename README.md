@@ -32,7 +32,7 @@ SHOW_TRAIL = True # Mostra os pontos centrais
 SHOW_LINEAR_REGRESSION = True
 SHOW_CAR_RECTANGLE = True
 ````
-- `SHOW_TRACKING_AREA` Mostra os limites da área de medição, limites que são definidos por `SHOW_TRACKING_AREA` e `UPPER_LIMIT_TRACK`.
+- `SHOW_TRACKING_AREA` Mostra os limites da área de medição, limites que são definidos por `BOTTOM_LIMIT_TRACK` e `UPPER_LIMIT_TRACK`.
 
 ````python
 SHOW_REAL_SPEEDS = True # Mostra as velocidades que foram lidas do arquivo **.xml**
