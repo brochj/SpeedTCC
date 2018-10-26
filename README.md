@@ -1,6 +1,6 @@
 # SpeedTCC
 
-###  Módulos
+###  1. Módulos
 ````python
 ''' -*- coding: utf-8 -*-'''
 import time
@@ -15,7 +15,7 @@ import tccfunctions as t
 - `import tccfunctions as t` é usado para importar o as funções que fiz. Pra acessá-las usa-se **`t.nome_da_funcao()`** ou **`t.nome_da_variável`**
 ---
 
-###  Valores Constantes
+###  2. Valores Constantes
 ```python
 # ########  CONSTANT VALUES ###################################################
 VIDEO = 1
@@ -120,7 +120,9 @@ frameCount = 0  # Armazena a contagem de frames processados do video
 out = 0  # Armazena o frame com os contornos desenhados
 final_ave_speed = 0
 ave_speed = 0
-
+````
+### 3. Funções
+````python
 # ##############  FUNÇÕES #####################################################
 def r(numero):
     return int(numero*RESIZE_RATIO)
@@ -143,30 +145,27 @@ def calculate_speed(trails, fps):
     speed = (dist_meter*3.6*cf)/(qntd_frames*(1/fps))
     return speed
 # ########## FIM  FUNÇÕES #####################################################
+````
 
+````python
 vehicle = t.read_xml(XML_FILE)  # Dicionário que armazena todas as informações do xml
-t.remove_old_csv_files()
-''' d'''
-#qntd_faixa1 = 0
-#qntd_faixa2 = 0
-##qntd_faixa3 = 0
-#for vehicles in vehicle:
-#    if vehicle[vehicles] == 6918:
-#        break
-#    if vehicle[vehicles]['lane'] == str(1):
-#        qntd_faixa1 += 1
-#    if vehicle[vehicles]['lane'] == str(2):
-#        qntd_faixa2 += 1
-#    if vehicle[vehicles]['lane'] == str(3):
-#        qntd_faixa3 += 1
+t.remove_old_csv_files()  # remove os arquivos csv que são criado em cada execução do código. 
+# Esses arquivos armazenam as velocidades calculadas, mas ainda não estão confiáveis.
+````
+- Kernel são usados nas **Operações morfológicas**
+
+````py
 KERNEL_ERODE = np.ones((r(9), r(9)), np.uint8)
 KERNEL_DILATE = np.ones((r(100), r(50)), np.uint8)  # Default (r(100), r(50))
+````
 
+### 4. Começo do código
+````py
 while True:
-    ret, frame = t.get_frame(cap, RESIZE_RATIO)
+    ret, frame = t.get_frame(cap, RESIZE_RATIO)  # Lê o frame, ret == True se existe frame
     frame_time = time.time()
     
-    if SKIP_VIDEO:
+    if SKIP_VIDEO:  # pula as partes que não precisam
         skip = t.skip_video(frameCount, VIDEO, frame)
         if SEE_CUTTED_VIDEO:
             if not skip:
@@ -177,41 +176,51 @@ while True:
                 frameCount += 1
                 continue
             
-    frameGray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    t.region_of_interest(frameGray, RESIZE_RATIO)
+    frameGray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) # Transforma o frame em Escala de Cinza
+    t.region_of_interest(frameGray, RESIZE_RATIO)  # aplica a região de interesse
     
     
-    if SHOW_ROI:
+    if SHOW_ROI: # if True mostra a Região de Interesse
         t.region_of_interest(frame, RESIZE_RATIO)
     if SHOW_TRACKING_AREA:  # Desenha os Limites da Área de Tracking
         cv2.line(frame, (0, r(UPPER_LIMIT_TRACK)), (WIDTH, r(UPPER_LIMIT_TRACK)), t.WHITE, 2)
         cv2.line(frame, (0, r(BOTTOM_LIMIT_TRACK)), (WIDTH, r(BOTTOM_LIMIT_TRACK)), t.WHITE, 2)
-        
+````
+### 5. Equaliza o contraste
+````python       
     # Equalizar Contraste
     clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(7, 7))
     hist = clahe.apply(frameGray)
-    cv2.imshow('framed', np.hstack((frameGray, hist)))
     frameGray = hist
-    
+````
+### 6. Operações morfológicas
+````py    
     if ret is True:
         t.update_info_xml(frameCount, vehicle, dict_lane1, dict_lane2, dict_lane3)
         if SHOW_REAL_SPEEDS:
             t.print_xml_values(frame, RESIZE_RATIO, dict_lane1, dict_lane2, dict_lane3)
 
-        fgmask = bgsMOG.apply(frameGray, None, 0.01)
-        erodedmask = cv2.erode(fgmask, KERNEL_ERODE, iterations=1)
-        dilatedmask = cv2.dilate(erodedmask, KERNEL_DILATE, iterations=1)
-        _, contours, hierarchy = cv2.findContours(dilatedmask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        #contornos =  cv2.drawContours(frame, contours, -1, BLUE, 2, 8, hierarchy)
+        fgmask = bgsMOG.apply(frameGray, None, 0.01) # Aplica o BackgroundSubtractor
+        erodedmask = cv2.erode(fgmask, KERNEL_ERODE, iterations=1) # Aplica Erosão
+        dilatedmask = cv2.dilate(erodedmask, KERNEL_DILATE, iterations=1) # Aplica Diltação
+
+        # Encontra os contornos e salva os pontos em 'contours'
+        _, contours, hierarchy = cv2.findContours(dilatedmask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE) 
+ ````
+### 7. Convex Hull
+````py
         hull = []
         for i in range(len(contours)):  # calculate points for each contour
             # creating convex hull object for each contour
             hull.append(cv2.convexHull(contours[i], False))
+
         # create an empty black image
-        drawing = np.zeros((dilatedmask.shape[0], dilatedmask.shape[1], 3), np.uint8)
+        drawing = np.zeros((dilatedmask.shape[0], dilatedmask.shape[1], 3), np.uint8) # Nessa imagem q será desenhado o ConvexHull
         area = []
         areahull = []
-        #draw contours and hull points
+````
+### 8. Condições para desenhar o retângulo
+````py
         for i in range(len(contours)):
             if cv2.contourArea(contours[i]) > r(MIN_AREA_FOR_DETEC):
                 # draw ith contour
@@ -220,11 +229,8 @@ while True:
                 out = cv2.drawContours(drawing, hull, i, t.WHITE, -1, 8)
                 area.append(cv2.contourArea(contours[i]))
                 areahull.append(cv2.contourArea(hull[i]))
-                (x, y, w, h) = cv2.boundingRect(hull[i])
-#                w -= r(50)
-#                h -= r(80)
-                
-                center = (int(x + w/2), int(y + h/2))
+                (x, y, w, h) = cv2.boundingRect(hull[i]) # Faz o retangulo envolta do objeto           
+                center = (int(x + w/2), int(y + h/2)) # Ponto central definido
                 #out = cv2.rectangle(out, (x, y), (x + w, y + h), t.t.GREEN, 2) # printa na mask
                 # CONDIÇÕES PARA CONTINUAR COM TRACKING
 #                if h > r(HEIGHT)*.80 or w > r(WIDTH)*.40:
@@ -236,17 +242,15 @@ while True:
                 if center[1] > r(BOTTOM_LIMIT_TRACK) or center[1] < r(UPPER_LIMIT_TRACK):
                     continue
                 
-                
                 if SHOW_CAR_RECTANGLE:
                     if center[1] > r(UPPER_LIMIT_TRACK):
                         cv2.rectangle(frame, (x, y), (x+w, y+h), t.GREEN, 2)
                     else:
                         cv2.rectangle(frame, (x, y), (x+w, y+h), t.PINK, 2)
+````                
                 
-                
-#                cv2.putText(frame, f'area = {x*y/RESIZE_RATIO:.0f}', (r(400),r(400)), 2, .6, t.WHITE, 1)
-#                cv2.putText(frame, f'w={w}  h={h}', (r(450),r(480)), 2, .6, t.WHITE, 1)
-
+### 9. _Tracking_
+````py
                 # ################## TRACKING #################################
                 # Look for existing blobs that match this one
                 closest_blob = None
@@ -298,7 +302,9 @@ while True:
                              size=[0, 0],)
                     tracked_blobs.append(b)  # Agora tracked_blobs não será False
                 # ################# END TRACKING ##############################
-
+````
+### 10. Deleta os _trails_
+````py
         if tracked_blobs:
             # Prune out the blobs that haven't been seen in some amount of time
             for i in range(len(tracked_blobs) - 1, -1, -1):
@@ -308,7 +314,10 @@ while True:
                     prev_speed = ave_speed
                     final_ave_speed = 0.0
                     del tracked_blobs[i]
+````
 
+## 11. Printa os resultados
+````py
         # ################ PRINTA OS BLOBS ####################################
         for blob in tracked_blobs:  # Desenha os pontos centrais
             for (a, b) in t.pairwise(blob['trail']):
@@ -356,6 +365,10 @@ while True:
 
                 # SALVA VALORES DE VELOCIDADE EM ARQUIVOS CSV
                 # Ta ruim, nao tá salvando certinho
+````
+### 12. Salva os resultados em CSV
+- Não da pra confiar muito bem nesses resultados, tenho que rever
+````py
                 t.save_real_speed_in_csv(total_cars, dict_lane1, real_speed_lane1, dict_lane2,
                                          real_speed_lane2, dict_lane3, real_speed_lane3)
                 # Ta ruim, nao tá salvando certinho
@@ -367,6 +380,11 @@ while True:
         if SHOW_FRAME_COUNT:
             PERCE = str(int((100*frameCount)/vehicle['videoframes']))
             cv2.putText(frame, f'frame: {frameCount} {PERCE}%', (r(14), r(1071)), 0, .65, t.WHITE, 2)
+````
+
+### 13. Mostra os resultados de cada operação
+````py
+##
         # ########## MOSTRA OS VIDEOS  ########################################
 #        cv2.imshow('equ', equ)
 #        cv2.imshow('res', res)
@@ -380,11 +398,20 @@ while True:
 #        cv2.imshow('final', final)
 #        cv2.imshow('mask_eroded', np.concatenate((fgmask, dilatedmask),0))
 #        crop_img = outputFrame[70:320, 0:640]
-#        if frameCount > 40 and frameCount < 281:
-#            cv2.imwrite('img/{}.png'.format(frameCount), frame)
-#            cv2.imwrite('img/teste/{}.png'.format(frameCount), np.vstack((out,frame)))
-        frameCount += 1    # Conta a quantidade de Frames
-        if frameCount == CLOSE_VIDEO:  # fecha o video
+````
+### 14. Salva os frames em imagens
+- Uso quando preciso ver o que está acontecendo em um determinado intervalo
+````py
+       if frameCount > 40 and frameCount < 281:
+           cv2.imwrite('img/{}.png'.format(frameCount), frame)
+           cv2.imwrite('img/teste/{}.png'.format(frameCount), np.vstack((out,frame)))
+````
+
+### 15. Fim do código
+````py
+        frameCount += 1    # Atualiza a quantidade de Frames
+        if frameCount == CLOSE_VIDEO:  # fecha o video de acordo com o 
+        							   # frame escolhido no começo do código
             break
         if cv2.waitKey(1) & 0xFF == ord('q'):  # Tecla Q para fechar
             break
@@ -393,3 +420,12 @@ while True:
 cap.release()
 cv2.destroyAllWindows()
 ````
+
+![frame](https://github.com/Brockzera/SpeedTCC/blob/master/backup/imagens/1frame254.png)
+![2framegray254](https://github.com/Brockzera/SpeedTCC/blob/master/backup/imagens/2framegray254.png)
+![3roi254](https://github.com/Brockzera/SpeedTCC/blob/master/backup/imagens/3roi254.png)
+![4hist254](https://github.com/Brockzera/SpeedTCC/blob/master/backup/imagens/4hist254.png)
+
+![4erodedmask](https://github.com/Brockzera/SpeedTCC/blob/master/backup/imagens/4erodedmask.png)
+![5dilatedmask](https://github.com/Brockzera/SpeedTCC/blob/master/backup/imagens/5dilatedmask.png)
+![6resultado](https://github.com/Brockzera/SpeedTCC/blob/master/backup/imagens/6resultado.png)
