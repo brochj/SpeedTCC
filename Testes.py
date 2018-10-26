@@ -10,7 +10,7 @@ VIDEO_FILE = '../Dataset/video{}.avi'.format(VIDEO)
 XML_FILE = '../Dataset/video{}.xml'.format(VIDEO)
 
 RESIZE_RATIO = 0.35  # Resize, valores entre 0 e 1 | 1= ize original do video
-CLOSE_VIDEO = 953  # 6917 # Fecha o video no frame indicado
+CLOSE_VIDEO = 255  # 6917 # Fecha o video no frame indicado
 ARTG_FRAME = 0  # 254  # Frame q usei para exemplo no Artigo
 
 SHOW_ROI = True
@@ -118,6 +118,8 @@ KERNEL_DILATE = np.ones((r(100), r(50)), np.uint8)  # Default (r(100), r(50))
 
 while True:
     ret, frame = t.get_frame(cap, RESIZE_RATIO)
+    if frameCount == 254:
+        cv2.imwrite('img/1frame{}.png'.format(frameCount), frame)
     frame_time = time.time()
     
     if SKIP_VIDEO:
@@ -132,7 +134,11 @@ while True:
                 continue
             
     frameGray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    if frameCount == 254:
+        cv2.imwrite('img/2framegray{}.png'.format(frameCount), frameGray)
     t.region_of_interest(frameGray, RESIZE_RATIO)
+    if frameCount == 254:
+        cv2.imwrite('img/3roi{}.png'.format(frameCount), frameGray)
     
     
     if SHOW_ROI:
@@ -144,7 +150,8 @@ while True:
     # Equalizar Contraste
     clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(7, 7))
     hist = clahe.apply(frameGray)
-    cv2.imshow('framed', np.hstack((frameGray, hist)))
+    if frameCount == 254:
+        cv2.imwrite('img/4hist{}.png'.format(frameCount), hist)
     frameGray = hist
     
     if ret is True:
@@ -334,7 +341,7 @@ while True:
 #        cv2.imshow('final', final)
 #        cv2.imshow('mask_eroded', np.concatenate((fgmask, dilatedmask),0))
 #        crop_img = outputFrame[70:320, 0:640]
-#        if frameCount > 40 and frameCount < 281:
+#        if frameCount == 254:
 #            cv2.imwrite('img/{}.png'.format(frameCount), frame)
 #            cv2.imwrite('img/teste/{}.png'.format(frameCount), np.vstack((out,frame)))
         frameCount += 1    # Conta a quantidade de Frames
