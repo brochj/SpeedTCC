@@ -186,9 +186,15 @@ while True:
         cv2.line(frame, (0, r(UPPER_LIMIT_TRACK)), (WIDTH, r(UPPER_LIMIT_TRACK)), t.WHITE, 2)
         cv2.line(frame, (0, r(BOTTOM_LIMIT_TRACK)), (WIDTH, r(BOTTOM_LIMIT_TRACK)), t.WHITE, 2)
 ````
+#### 4.1 frame
 ![frame](https://github.com/Brockzera/SpeedTCC/blob/master/backup/imagens/1frame254.png)
+
+#### 4.2 frameGray
 ![2framegray254](https://github.com/Brockzera/SpeedTCC/blob/master/backup/imagens/2framegray254.png)
+
+#### 4.3 Roi
 ![3roi254](https://github.com/Brockzera/SpeedTCC/blob/master/backup/imagens/3roi254.png)
+
 ### 5. Equaliza o contraste
 ````python       
     # Equalizar Contraste
@@ -196,6 +202,7 @@ while True:
     hist = clahe.apply(frameGray)
     frameGray = hist
 ````
+#### 5.1 hist
 ![4hist254](https://github.com/Brockzera/SpeedTCC/blob/master/backup/imagens/4hist254.png)
 
 ### 6. Operações morfológicas
@@ -212,12 +219,15 @@ while True:
         # Encontra os contornos e salva os pontos em 'contours'
         _, contours, hierarchy = cv2.findContours(dilatedmask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
  ````
-#### fgmask
+#### 6.1 fgmask
 ![5fgmask254](https://github.com/Brockzera/SpeedTCC/blob/master/backup/imagens/5fgmask254.png)
-#### erodedmask
+
+#### 6.2 erodedmask
 ![6erodedmask254](https://github.com/Brockzera/SpeedTCC/blob/master/backup/imagens/6erodedmask254.png)
-#### dilatedmask
+
+#### 6.3 dilatedmask
 ![7dilatedmask254](https://github.com/Brockzera/SpeedTCC/blob/master/backup/imagens/7dilatedmask254.png)
+
 ### 7. Convex Hull
 ````py
         hull = []
@@ -443,3 +453,4 @@ cv2.destroyAllWindows()
 ![6erodedmask254](https://github.com/Brockzera/SpeedTCC/blob/master/backup/imagens/6erodedmask254.png)
 ![7dilatedmask254](https://github.com/Brockzera/SpeedTCC/blob/master/backup/imagens/7dilatedmask254.png)
 ![8out254](https://github.com/Brockzera/SpeedTCC/blob/master/backup/imagens/8out254.png)
+![final](https://github.com/Brockzera/SpeedTCC/blob/master/backup/imagens/final.png)
