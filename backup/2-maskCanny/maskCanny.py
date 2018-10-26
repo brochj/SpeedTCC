@@ -8,7 +8,7 @@ Created on Mon Sep 17 13:24:34 2018
 import cv2
 import numpy as np
 
-cap = cv2.VideoCapture("../../video01.avi")
+cap = cv2.VideoCapture("../../../Dataset/video1.avi")
 width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))      # Retorna a largura do video
 height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))    # Retorna a altura do video
 length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))     # Retorna a quantidade de frames
@@ -17,7 +17,6 @@ kernel1 = np.ones((3,3), np.uint8) # Matriz (3,3) com 1 em seus valores -- Usa n
 kernel2 = np.ones((8,8), np.uint8) # # Matriz (8,8) com 1 em seus valores -- Usa na funcao de dilate
 
 RESIZE_RATIO = 0.35 # U
-
 
 bgsMOG = cv2.createBackgroundSubtractorMOG2(history=10, varThreshold = 50, detectShadows=0)
 

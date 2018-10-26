@@ -216,8 +216,8 @@ def show_results_on_screen(frame, frameCount, ave_speed, lane, blob, total_cars,
         dict_lane = dict_lane3
         positions = [(r(1350), r(120)), (r(1550), r(120)), (r(1550), r(180)), (r(1550), r(230))]
 
-    cv2.putText(frame, str(float("{0:.2f}".format(ave_speed))), (blob['trail'][0][0] + r(57), blob['trail'][0][1] + r(143)),
-                cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, YELLOW, thickness=1, lineType=2)
+#    cv2.putText(frame, str(float("{0:.2f}".format(ave_speed))), (blob['trail'][0][0] + r(57), blob['trail'][0][1] + r(143)),
+#                cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, YELLOW, thickness=1, lineType=2)
     # Texto da que fica embaixo da velocidade real
     try:
         dif_lane = ave_speed - float(dict_lane['speed'])
@@ -246,15 +246,15 @@ def show_results_on_screen(frame, frameCount, ave_speed, lane, blob, total_cars,
         pass
     
     if SAVE_FRAME_F1 and lane == 1:
-        cv2.imwrite('img/{}-{}_F1_Carro_{}.png'.format(VIDEO, frameCount, total_cars['lane_{}'.format(lane)]), frame)
+        cv2.imwrite('img/novo/{}-{}_F1_Carro_{}.png'.format(VIDEO, frameCount, total_cars['lane_{}'.format(lane)]), frame)
     if SAVE_FRAME_F2 and lane == 2:
-        cv2.imwrite('img/{}-{}_F2_Carro_{}.png'.format(VIDEO, frameCount, total_cars['lane_{}'.format(lane)]), frame)
+        cv2.imwrite('img/novo/{}-{}_F2_Carro_{}.png'.format(VIDEO, frameCount, total_cars['lane_{}'.format(lane)]), frame)
     if SAVE_FRAME_F3 and lane == 3:
-        cv2.imwrite('img/{}-{}_F3_Carro_{}.png'.format(VIDEO, frameCount, total_cars['lane_{}'.format(lane)]), frame)
+        cv2.imwrite('img/novo/{}-{}_F3_Carro_{}.png'.format(VIDEO, frameCount, total_cars['lane_{}'.format(lane)]), frame)
 
     # PRINTA FAIXA 2
-    cv2.putText(frame, 'Faixa {}'.format(lane), (blob['trail'][0][0] - r(29), blob['trail'][0][1] + r(200)),
-                cv2.FONT_HERSHEY_COMPLEX_SMALL, .8, WHITE, thickness=1, lineType=2)
+#    cv2.putText(frame, 'Faixa {}'.format(lane), (blob['trail'][0][0] - r(29), blob['trail'][0][1] + r(200)),
+#                cv2.FONT_HERSHEY_COMPLEX_SMALL, .8, WHITE, thickness=1, lineType=2)
 
 ##### XML FUNCTIONS ###########################################################
 def read_xml(xml_file):
@@ -333,12 +333,31 @@ def print_xml_values(frame, ratio, dict_lane1, dict_lane2, dict_lane3):
 
 ##### END --- XML FUNCTIONS ###################################################
 
-def skip_video(frameCount, video):
+def skip_video(frameCount, video, frame):
     skip = False
     if video == 1:
-        if frameCount < 40: skip = True
-        if frameCount > 80: skip = True
-            
+        if frameCount < 49: skip = True
+        if frameCount > 90 and frameCount < 96: skip = True
+        if frameCount > 130 and frameCount < 176: skip = True
+        if frameCount > 212 and frameCount < 235: skip = True
+        if frameCount > 336 and frameCount < 361: skip = True
+        if frameCount > 460 and frameCount < 467: skip = True
+        if frameCount > 499 and frameCount < 563: skip = True
+        if frameCount > 598 and frameCount < 614: skip = True
+        if frameCount > 644 and frameCount < 696: skip = True
+        if frameCount > 731 and frameCount < 739: skip = True
+        if frameCount > 781 and frameCount < 794: skip = True
+        if frameCount > 829 and frameCount < 857: skip = True
+        if frameCount > 894 and frameCount < 925: skip = True
+        if frameCount > 958 and frameCount < 1054: skip = True
+        if frameCount > 1053 and frameCount < 1101: skip = True  # Caminhão
+        if frameCount > 1100 and frameCount < 1140: skip = True
+        if frameCount > 1139 and frameCount < 1199: skip = True  # Carro parado
+    
+        
+        
+        
+#        if frameCount < 1200: skip = True
     return skip
 
 

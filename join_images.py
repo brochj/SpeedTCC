@@ -11,14 +11,27 @@ import numpy as np
 
 PATH_VALOR_NOVO = 'img/novo'
 PATH_VALOR_VELHO = 'img/velho'
-PATH_OUT = 'img/'
+PATH_OUT = 'img/comparacao/'
 
-NEW_VALUES = os.listdir(PATH_VALOR_NOVO)
-OLD_VALUES = os.listdir(PATH_VALOR_VELHO)
+new_values = os.listdir(PATH_VALOR_NOVO)
+old_values = os.listdir(PATH_VALOR_VELHO)
+a = []
+b = []
+
 array = []
-for i in range(len(NEW_VALUES)):
-    array.append((OLD_VALUES[i], NEW_VALUES[i]))
+for i in range(len(new_values)):
+    frame_a = int(new_values[i][new_values[i].find('-')+1:new_values[i].find('_')])
+    frame_b = int(old_values[i][old_values[i].find('-')+1:old_values[i].find('_')])
+    a.append((frame_a, new_values[i]))
+    b.append((frame_b, old_values[i]))
+    array.append((old_values[i], new_values[i]))
+a.sort()
+b.sort()
 
+frameCount = int(old_values[0][old_values[0].find('-')+1:old_values[0].find('_')])
+def abc(ele):
+    ele = ele[0][ele[0].find('-')+1:ele[0].find('_')]
+    return ele
 
 for new_img, old_img in array:
     if new_img == old_img:
