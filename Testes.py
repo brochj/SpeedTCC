@@ -2,15 +2,18 @@
 import time
 import uuid
 import numpy as np
+import matplotlib.pyplot as plt
 import cv2
 import tccfunctions as t
+import datetime
+now = datetime.datetime.now()
 # ########  CONSTANT VALUES ###################################################
 VIDEO = 1
 VIDEO_FILE = '../Dataset/video{}.avi'.format(VIDEO)
 XML_FILE = '../Dataset/video{}.xml'.format(VIDEO)
 
 RESIZE_RATIO = 0.35  # Resize, valores entre 0 e 1 | 1= ize original do video
-CLOSE_VIDEO = 290  # 6917 # Fecha o video no frame indicado
+CLOSE_VIDEO = 6917  # 6917 # Fecha o video no frame indicado
 ARTG_FRAME = 0  # 254  # Frame q usei para exemplo no Artigo
 
 SHOW_ROI = True
@@ -36,7 +39,7 @@ BOTTOM_LIMIT_TRACK = 915  # Default 915
 UPPER_LIMIT_TRACK = 430  # Default 430
 # The number of seconds a blob is allowed to sit around without having
 # any new blobs matching it.
-BLOB_TRACK_TIMEOUT = 0.1  # Default 0.7
+BLOB_TRACK_TIMEOUT = 0.7  # Default 0.7
 # ---- Speed Values -----------------------------------------------------------
 CF_LANE1 = 2.5869977  # default 2.5869977 # Correction Factor
 CF_LANE2 = 2.5869977  # default 2.5869977
@@ -44,7 +47,7 @@ CF_LANE3 = 2.30683  # default 2.3068397
 # ----  Save Results Values ---------------------------------------------------
 SAVE_FRAME_F1 = False  # Faixa 1
 SAVE_FRAME_F2 = False  # Faixa 2
-SAVE_FRAME_F3 = True  # Faixa 3
+SAVE_FRAME_F3 = False  # Faixa 3
 # ####### END - CONSTANT VALUES ###############################################
 cap = cv2.VideoCapture(VIDEO_FILE)
 FPS = cap.get(cv2.CAP_PROP_FPS)
@@ -76,6 +79,18 @@ out = 0  # Armazena o frame com os contornos desenhados
 final_ave_speed = 0
 ave_speed = 0
 
+teste = []
+keep_speeds = {}
+speed1 = []
+sp_list = []
+last_id = 0
+real_speed = 0
+
+abs_error_list = []
+per_error_list = []
+final_abs_errors = []
+final_per_errors = []
+
 # ##############  FUNÇÕES #####################################################
 def r(numero):
     return int(numero*RESIZE_RATIO)
@@ -98,9 +113,9 @@ def calculate_speed(trails, fps):
     speed = (dist_meter*3.6*cf)/(qntd_frames*(1/fps))
     return speed
 # ########## FIM  FUNÇÕES #####################################################
+t.remove_old_csv_files(VIDEO)
+vehicle = t.read_xml(XML_FILE, VIDEO)  # Dicionário que armazena todas as informações do xml
 
-vehicle = t.read_xml(XML_FILE)  # Dicionário que armazena todas as informações do xml
-t.remove_old_csv_files()
 #qntd_faixa1 = 0
 #qntd_faixa2 = 0
 ##qntd_faixa3 = 0
@@ -224,11 +239,8 @@ while True:
 
                     # Starting from the closest blob, make sure the blob in question is in the expected direction
                     distance = 0.0
-                    distance_five = 0.0
                     for close_blob in closest_blobs:
                         distance = cv2.norm(center, close_blob['trail'][0])
-                        if len(close_blob['trail']) > 10:
-                            distance_five = cv2.norm(center, close_blob['trail'][10])
 
                         # Check if the distance is close enough to "lock on"
                         if distance < r(BLOB_LOCKON_DIST_PX_MAX) and distance > r(BLOB_LOCKON_DIST_PX_MIN):
@@ -252,12 +264,55 @@ while True:
                                 if closest_blob['trail'][0][0] < r(570):
                                     cf = CF_LANE1
                                     closest_blob['speed'].insert(0, calculate_speed(closest_blob['trail'], FPS))
+                                    
+                                    
                                 elif closest_blob['trail'][0][0] >= r(570) and closest_blob['trail'][0][0] < r(1180):
                                     cf = CF_LANE2
                                     closest_blob['speed'].insert(0, calculate_speed(closest_blob['trail'], FPS))
                                 elif closest_blob['trail'][0][0] >= r(1180):
                                     cf = CF_LANE3
                                     closest_blob['speed'].insert(0, calculate_speed(closest_blob['trail'], FPS))
+                                    
+                                    sp = calculate_speed(closest_blob['trail'], FPS)
+                                    sp_list.append(sp)
+                                    try:
+                                        if frameCount > vehicle[str(frameCount)]['frame_start'] and frameCount < vehicle[str(frameCount)]['frame_end']:
+                                            
+                                            real_speed = int(vehicle[str(frameCount)]['speed'])
+                                    except:
+                                        pass
+                                    
+#                                    if closest_blob['speed'] != 0:
+#                                    final_speed = np.mean(closest_blob['speed'])
+                                    id_3 = closest_blob['id']
+                                    abs_error, per_error = t.save_results_frames(frame, frameCount, ave_speed, 3, id_3, RESIZE_RATIO, VIDEO,
+                                                                                 dict_lane1, dict_lane2, dict_lane3)
+                                    
+                                    keep_speeds[str(closest_blob['id'])] = dict(ave_speed = round(ave_speed, 2),
+                                                                                speeds = closest_blob['speed'],
+                                                                                frame = frameCount, 
+                                                                                real_speed = dict_lane3['speed'],
+                                                                                abs_errors = round(abs_error, 2),
+                                                                                per_errors = round(per_error, 3))
+                                    abs_error = []
+                                    per_error = []
+                                    
+                                    frameStart = dict_lane3['frame_start']
+                                    cv2.putText(frame, f'id: {id_3} %', (r(14), r(1071)), 0, .65, t.WHITE, 2)
+                                    cv2.imwrite(f'img/teste/{frameStart}_{id_3}.png', frame)
+#                                    if last_id == 0:
+#                                        closest_blob['id'] == last_id
+#                                        
+#                                    if closest_blob['id'] == last_id:
+#                                        sp = calculate_speed(closest_blob['trail'], FPS)
+#                                        sp_list.append(sp)
+#                                        keep_speeds[str(closest_blob['id'])] = sp_list 
+#                                        last_id = closest_blob['id']
+#                                        keep_speeds[str(closest_blob['id'])] = dict(speeds=sp_list)
+                                    
+                                    
+#                                    d1 = {}
+#                                    d1['unique_id'] = dict(speeds=[1323,213,213,213,213], id2=123)   
 
                 if not closest_blob: # Cria as variaves
                     # If we didn't find a blob, let's make a new one and add it to the list
@@ -272,7 +327,12 @@ while True:
             for i in range(len(tracked_blobs) - 1, -1, -1):
                 if frame_time - tracked_blobs[i]['last_seen'] > BLOB_TRACK_TIMEOUT: # Deleta caso de timeout
                     print("Removing expired track {}".format(tracked_blobs[i]['id']))
-#                    prev_speed = np.mean(tracked_blobs[i]['speed'])
+#                    abc = np.mean(tracked_blobs[i]['speed'])
+#                    teste.append(abc)
+                    if ave_speed != 0:
+                        file = open('results/speed.csv', 'a')
+                        file.write(f'ave_speed, {round(ave_speed, 2)} \n')
+                        file.close()
                     prev_speed = ave_speed
                     final_ave_speed = 0.0
                     del tracked_blobs[i]
@@ -308,24 +368,24 @@ while True:
                 # MOSTRA RESULTADOS DAS VELOCIDADES CALCULADAS ################
                 if blob['trail'][0][0] < r(571): # entao esta na faixa 1
                     lane = 1
-                    t.show_results_on_screen(frame, frameCount, ave_speed, lane, blob, total_cars,
-                                             RESIZE_RATIO, VIDEO, dict_lane1, dict_lane2,
-                                             dict_lane3, SAVE_FRAME_F1, SAVE_FRAME_F2, SAVE_FRAME_F3)
+#                    t.show_results_on_screen(frame, frameCount, ave_speed, lane, blob, total_cars,
+#                                             RESIZE_RATIO, VIDEO, dict_lane1, dict_lane2,
+#                                             dict_lane3, SAVE_FRAME_F1, SAVE_FRAME_F2, SAVE_FRAME_F3)
                 elif blob['trail'][0][0] >= r(571) and blob['trail'][0][0] < r(1143):  # faixa 2
                     lane = 2
-                    t.show_results_on_screen(frame, frameCount, ave_speed, lane, blob, total_cars,
-                                             RESIZE_RATIO, VIDEO, dict_lane1, dict_lane2,
-                                             dict_lane3, SAVE_FRAME_F1, SAVE_FRAME_F2, SAVE_FRAME_F3)
+#                    t.show_results_on_screen(frame, frameCount, ave_speed, lane, blob, total_cars,
+#                                             RESIZE_RATIO, VIDEO, dict_lane1, dict_lane2,
+#                                             dict_lane3, SAVE_FRAME_F1, SAVE_FRAME_F2, SAVE_FRAME_F3)
                 elif blob['trail'][0][0] >= r(1143):  # entao esta na faixa 3
                     lane = 3
-                    t.show_results_on_screen(frame, frameCount, ave_speed, lane, blob, total_cars,
-                                             RESIZE_RATIO, VIDEO, dict_lane1, dict_lane2,
-                                             dict_lane3, SAVE_FRAME_F1, SAVE_FRAME_F2, SAVE_FRAME_F3)
+#                    t.show_results_on_screen(frame, frameCount, ave_speed, lane, blob, total_cars,
+#                                             RESIZE_RATIO, VIDEO, dict_lane1, dict_lane2,
+#                                             dict_lane3, SAVE_FRAME_F1, SAVE_FRAME_F2, SAVE_FRAME_F3)
 
                 # SALVA VALORES DE VELOCIDADE EM ARQUIVOS CSV
                 # Ta ruim, nao tá salvando certinho
-                t.save_real_speed_in_csv(total_cars, dict_lane1, real_speed_lane1, dict_lane2,
-                                         real_speed_lane2, dict_lane3, real_speed_lane3)
+#                t.save_real_speed_in_csv(total_cars, dict_lane1, real_speed_lane1, dict_lane2,
+#                                         real_speed_lane2, dict_lane3, real_speed_lane3)
                 # Ta ruim, nao tá salvando certinho
                 t.save_mea_speed_in_csv(blob, total_cars, prev_len_speed, final_ave_speed, lane,
                                         dict_lane1, meas_speed_lane1, dict_lane2, meas_speed_lane2,
@@ -348,8 +408,9 @@ while True:
 #        cv2.imshow('final', final)
 #        cv2.imshow('mask_eroded', np.concatenate((fgmask, dilatedmask),0))
 #        crop_img = outputFrame[70:320, 0:640]
-        if frameCount > 200 and frameCount < 254:
-            cv2.imwrite('img/{}.png'.format(frameCount), frame)
+#        if frameCount > 100 and frameCount < 254:
+#        if frameCount == 114:
+#            cv2.imwrite('img/teste/{}.png'.format(frameCount), frame)
 #            cv2.imwrite('img/teste/{}.png'.format(frameCount), np.vstack((out,frame)))
         frameCount += 1    # Conta a quantidade de Frames
         if frameCount == CLOSE_VIDEO:  # fecha o video
@@ -358,6 +419,58 @@ while True:
             break
     else:  # sai do while: ret == False
         break
+
+
+for errors in keep_speeds:
+    
+    abs_error_list.append(keep_speeds[errors]['abs_errors'])
+    per_error_list.append(keep_speeds[errors]['per_errors'])
+    ave_abs_error = round(np.mean(abs_error_list), 3)
+    ave_per_error = round(np.mean(per_error_list), 3)
+
+
+x2 = []
+y2 = []
+abs_error = []
+erro_3km = []
+
+#for i in range(len(abs_error_list)):
+#    if x[i] > 50 and x[i] < 54:
+#        x2.append(x[i])
+#        y2.append(y[i])
+        
+#    abs_error.append(round(x[i]-y[i], 4))
+#    erro_3km.append((3,-3))
+
+
+#fig = plt.figure(0)
+# the histogram of the data
+plt.plot(abs_error_list)
+
+plt.plot([0, len(abs_error_list) + 3], [0, 0], color='k', linestyle='-', linewidth=1)
+plt.plot([0, len(abs_error_list) + 3], [3, 3], color='k', linestyle=':', linewidth=2)
+plt.plot([0, len(abs_error_list) + 3], [-3, -3], color='k', linestyle=':', linewidth=2)
+plt.plot([0, len(abs_error_list) + 3], [5, 5], color='k', linestyle='--', linewidth=2)
+plt.plot([0, len(abs_error_list) + 3], [-5, -5], color='k', linestyle='--', linewidth=2)
+
+
+
+plt.xlabel('Medições')
+plt.ylabel('Erro Absoluto (km/h)')
+plt.title(f'Média dos erros absolutos =  {ave_abs_error}')
+#plt.text(0.05, 10, 'teste')
+plt.xlim(0, len(abs_error_list) + 3)
+plt.grid(False)
+date = f'{now.day}-{now.month}-{now.year}_{now.hour}-{now.minute}'
+plt.savefig(f'results/log/result_{date}.png')
+plt.show()
+
+
+
+
+
+
+
 
 cap.release()
 cv2.destroyAllWindows()

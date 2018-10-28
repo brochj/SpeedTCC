@@ -89,14 +89,16 @@ def region_of_interest(frame, resize_ratio):
 
 
 # #### CSV FUNCTIONS ##########################################################
-def remove_old_csv_files():
+def remove_old_csv_files(video):
     for i in range(1, 4):
         if os.path.exists(f"results/mea_speed_lane{i}.csv"):
             os.remove(f"results/mea_speed_lane{i}.csv")
             print(f'Arquivo Deletado: "results/mea_speed_lane{i}.csv"')
-        if os.path.exists(f"results/real_speed_lane{i}.csv"):
-            os.remove(f"results/real_speed_lane{i}.csv")
-            print(f'Arquivo Deletado: "results/real_speed_lane{i}.csv"')
+        if os.path.exists(f"results/video{video}_lane{i}.csv"):
+            os.remove(f"results/video{video}_lane{i}.csv")            
+            print(f'Arquivo Deletado: "results/video{video}_lane{i}.csv"')
+    if os.path.exists(f"results/speed.csv"):
+        os.remove(f"results/speed.csv")
 
 
 def save_real_speed_in_csv(total_cars, dict_lane1, real_speed_lane1,
@@ -257,7 +259,7 @@ def show_results_on_screen(frame, frameCount, ave_speed, lane, blob, total_cars,
 #                cv2.FONT_HERSHEY_COMPLEX_SMALL, .8, WHITE, thickness=1, lineType=2)
 
 ##### XML FUNCTIONS ###########################################################
-def read_xml(xml_file):
+def read_xml(xml_file, video):
 # Funcão que lê o .xml e guarda as informações em um dicionário "iframe"
     tree = ET.parse(xml_file)
     root = tree.getroot()
@@ -273,10 +275,28 @@ def read_xml(xml_file):
                     iframe[child.get('iframe')]['moto'] = child.get('moto')
 #                    iframe[child.get('iframe')]['plate'] = child.get('plate')  # Desnecessário
 #                    iframe[child.get('iframe')]['sema'] = child.get('sema')  # Desnecessário
+                    speed = iframe[child.get('iframe')]['speed']
+                    frame_start = iframe[child.get('iframe')]['frame_start']
+                    frame_end = iframe[child.get('iframe')]['frame_end']
+                    
+                    if iframe[child.get('iframe')]['lane'] == '1':
+                        file = open(f'results/video{video}_lane1.csv', 'a')
+                        file.write(f'frame_start, {frame_start}, frame_end, {frame_end}, speed, {speed} \n')
+                        file.close()
+                    if iframe[child.get('iframe')]['lane'] == '2':
+                        file = open(f'results/video{video}_lane2.csv', 'a')
+                        file.write(f'frame_start, {frame_start}, frame_end, {frame_end}, speed, {speed} \n')
+                        file.close()
+                    if iframe[child.get('iframe')]['lane'] == '3':
+                        file = open(f'results/video{video}_lane3.csv', 'a')
+                        file.write(f'frame_start, {frame_start}, frame_end, {frame_end}, speed, {speed} \n')
+                        file.close()
         if child.tag == 'videoframes':
             iframe[child.tag] = int(child.get('total'))
     file_name = xml_file[xml_file.rfind('/')+1:]
+    
     print('Arquivo "{}" foi armazenado com sucesso !!'.format(file_name))
+    
     return iframe
 
 
@@ -331,6 +351,7 @@ def print_xml_values(frame, ratio, dict_lane1, dict_lane2, dict_lane3):
     except:
         pass
 
+    return
 ##### END --- XML FUNCTIONS ###################################################
 
 def skip_video(frameCount, video, frame):
@@ -379,3 +400,52 @@ def skip_video(frameCount, video, frame):
 #    return real_dist * fps * 250 / 3.6
 
 # ########## FIM  FUNÇÕES ####################################################################
+    
+
+
+def save_results_frames(frame, frameCount, ave_speed, lane, id_car, RESIZE_RATIO, VIDEO,
+                        dict_lane1, dict_lane2, dict_lane3):
+    def r(numero):  # Faz o ajuste de escala das posições de textos e retangulos
+        return int(numero*RESIZE_RATIO)
+    color = WHITE
+    if lane == 1:
+        dict_lane = dict_lane1
+        positions = [(r(350), r(120)), (r(550), r(120)), (r(550), r(180)), (r(550), r(230))]
+    if lane == 2:
+        dict_lane = dict_lane2
+        positions = [(r(830), r(120)), (r(1030), r(120)), (r(1030), r(180)), (r(1030), r(230))]
+    if lane == 3:
+        dict_lane = dict_lane3
+        positions = [(r(1350), r(120)), (r(1550), r(120)), (r(1550), r(180)), (r(1550), r(230))]
+
+#    cv2.putText(frame, str(float("{0:.2f}".format(ave_speed))), (blob['trail'][0][0] + r(57), blob['trail'][0][1] + r(143)),
+#                cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, YELLOW, thickness=1, lineType=2)
+    # Texto da que fica embaixo da velocidade real
+    try:
+        abs_error = ave_speed - float(dict_lane['speed'])
+        per_error = (abs(ave_speed - float(dict_lane['speed']))/float(dict_lane['speed']))*100
+    except:
+        pass
+    try:
+        if abs(abs_error) <= 3:
+            color = GREEN
+        elif abs(abs_error) > 3 and abs(abs_error) <= 5:
+            color = YELLOW
+        elif abs(abs_error) > 5 and abs(abs_error) <= 10:
+            color = ORANGE
+        elif abs(abs_error) > 10:
+            color = RED
+            
+        cv2.putText(frame, str(float("{0:.2f}".format(ave_speed))), positions[0],
+                    2, .6, color, thickness=1, lineType=2)  # Velocidade Medida
+        cv2.putText(frame, str(float("{0:.2f} ".format(abs_error))), positions[1],
+                    2, .6, color, thickness=1, lineType=2)  # erro absoluto
+        cv2.putText(frame, str(float("{0:.2f}".format(per_error)))+'%', positions[2],
+                    2, .6, color, thickness=1, lineType=2)  # erro percentual
+        cv2.putText(frame, f'id: {id_car}', positions[3],
+                    2, .6, color, thickness=1, lineType=2)
+    except:
+        pass
+    
+    return abs_error, per_error     
+
