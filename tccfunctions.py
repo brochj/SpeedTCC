@@ -8,10 +8,11 @@ Created on Wed Oct 10 18:32:28 2018
 
 
 import numpy as np
-import os
+#import os
 import itertools as it
 #import math
 import xml.etree.ElementTree as ET
+import matplotlib.pyplot as plt
 import cv2
 #from tccfunctions import *
 
@@ -88,80 +89,6 @@ def region_of_interest(frame, resize_ratio):
     return frame
 
 
-# #### CSV FUNCTIONS ##########################################################
-def remove_old_csv_files(video):
-    for i in range(1, 4):
-        if os.path.exists(f"results/mea_speed_lane{i}.csv"):
-            os.remove(f"results/mea_speed_lane{i}.csv")
-            print(f'Arquivo Deletado: "results/mea_speed_lane{i}.csv"')
-        if os.path.exists(f"results/video{video}_lane{i}.csv"):
-            os.remove(f"results/video{video}_lane{i}.csv")            
-            print(f'Arquivo Deletado: "results/video{video}_lane{i}.csv"')
-    if os.path.exists(f"results/speed.csv"):
-        os.remove(f"results/speed.csv")
-
-
-def save_real_speed_in_csv(total_cars, dict_lane1, real_speed_lane1,
-                           dict_lane2, real_speed_lane2, dict_lane3,
-                           real_speed_lane3):
-    for i in range(1, 4):
-        if i == 1:
-            dict_lane, real_speed_lane = dict_lane1, real_speed_lane1
-        elif i == 2:
-            dict_lane, real_speed_lane = dict_lane2, real_speed_lane2
-        elif i == 3:
-            dict_lane, real_speed_lane = dict_lane3, real_speed_lane3
-        try:
-            if dict_lane['speed'] == real_speed_lane[0]:
-                pass
-            else:
-                real_speed_lane.insert(0, dict_lane['speed'])
-                total_cars[f'lane_{i}'] += 1
-                file = open(f'results/real_speed_lane{i}.csv', 'a')
-                file.write('Carro {}, {} \n'.format(total_cars[f'lane_{i}'], dict_lane['speed']))
-                file.close()
-        except:
-            pass
-
-
-def save_mea_speed_in_csv(blob, total_cars, prev_len_speed, final_ave_speed,
-                          lane,
-                          dict_lane1, meas_speed_lane1,
-                          dict_lane2, meas_speed_lane2,
-                          dict_lane3, meas_speed_lane3):
-    try:
-        if float("{0:.3f}".format(final_ave_speed)) == meas_speed_lane1[0] or len(blob['speed']) >= 2:
-            pass
-        elif lane == 1 and prev_len_speed[0] == prev_len_speed[1] and final_ave_speed != 0:
-            meas_speed_lane1.insert(0, float("{0:.3f}".format(final_ave_speed)))
-            file = open('results/mea_speed_lane1.csv', 'a')
-            file.write('Carro {}, {} \n'.format(total_cars['lane_1'], dict_lane1['speed']))
-            file.close()
-    except:
-        pass
-
-    try:
-        if float("{0:.3f}".format(final_ave_speed)) == meas_speed_lane2[0] or len(blob['speed']) < 2:
-            pass
-        elif lane == 2 and prev_len_speed[0] == prev_len_speed[1] and final_ave_speed != 0:
-            meas_speed_lane2.insert(0, float("{0:.3f}".format(final_ave_speed)))
-            file = open('results/mea_speed_lane2.csv', 'a')
-            file.write('Carro {}, {} \n'.format(total_cars['lane_2'], dict_lane2['speed']))
-            file.close()
-    except:
-        pass
-
-    try:
-        if float("{0:.3f}".format(final_ave_speed)) == meas_speed_lane3[0] or len(blob['speed']) < 2:
-            pass
-        elif lane == 3 and prev_len_speed[0] == prev_len_speed[1] and final_ave_speed != 0:
-            meas_speed_lane3.insert(0, float("{0:.3f}".format(final_ave_speed)))
-            file = open('results/mea_speed_lane3.csv', 'a')
-            file.write('Carro {}, {}, {} \n'.format(total_cars['lane_3'], dict_lane3['speed'], meas_speed_lane3[0]))
-            file.close()
-    except:
-        pass
-##### END - CSV FUNCTIONS ######################################################################
 
 #### SPEED FUNCTIONS ########################################################################
 def linearRegression(pts, frames):
@@ -259,11 +186,14 @@ def show_results_on_screen(frame, frameCount, ave_speed, lane, blob, total_cars,
 #                cv2.FONT_HERSHEY_COMPLEX_SMALL, .8, WHITE, thickness=1, lineType=2)
 
 ##### XML FUNCTIONS ###########################################################
-def read_xml(xml_file, video):
+def read_xml(xml_file, video, DATE):
 # Funcão que lê o .xml e guarda as informações em um dicionário "iframe"
     tree = ET.parse(xml_file)
     root = tree.getroot()
     iframe = {}
+    lane1_count = 0
+    lane2_count = 0
+    lane3_count = 0
     for child in root:
         if child.get('radar') == 'True':
             for subchild in child:
@@ -279,22 +209,34 @@ def read_xml(xml_file, video):
                     frame_start = iframe[child.get('iframe')]['frame_start']
                     frame_end = iframe[child.get('iframe')]['frame_end']
                     
+                    if child.get('lane') == '1':
+                        lane1_count += 1
+                    if child.get('lane') == '2':
+                        lane2_count += 1
+                    if child.get('lane') == '3':
+                        lane3_count += 1
+                    
+                    
                     if iframe[child.get('iframe')]['lane'] == '1':
-                        file = open(f'results/video{video}_lane1.csv', 'a')
+                        file = open(f'results/{DATE}/planilhas/video{video}_real_lane1.csv', 'a')
                         file.write(f'frame_start, {frame_start}, frame_end, {frame_end}, speed, {speed} \n')
                         file.close()
                     if iframe[child.get('iframe')]['lane'] == '2':
-                        file = open(f'results/video{video}_lane2.csv', 'a')
+                        file = open(f'results/{DATE}/planilhas/video{video}_real_lane2.csv', 'a')
                         file.write(f'frame_start, {frame_start}, frame_end, {frame_end}, speed, {speed} \n')
                         file.close()
                     if iframe[child.get('iframe')]['lane'] == '3':
-                        file = open(f'results/video{video}_lane3.csv', 'a')
+                        file = open(f'results/{DATE}/planilhas/video{video}_real_lane3.csv', 'a')
                         file.write(f'frame_start, {frame_start}, frame_end, {frame_end}, speed, {speed} \n')
                         file.close()
         if child.tag == 'videoframes':
             iframe[child.tag] = int(child.get('total'))
-    file_name = xml_file[xml_file.rfind('/')+1:]
     
+    iframe['total_cars_lane1'] = lane1_count
+    iframe['total_cars_lane2'] = lane2_count
+    iframe['total_cars_lane3'] = lane3_count
+        
+    file_name = xml_file[xml_file.rfind('/')+1:]  
     print('Arquivo "{}" foi armazenado com sucesso !!'.format(file_name))
     
     return iframe
@@ -382,28 +324,11 @@ def skip_video(frameCount, video, frame):
     return skip
 
 
-#def calculate_speed (trails, fps):
-#    # distance: distance on the frame
-#    # location: x, y coordinates on the frame
-#    # fps: framerate
-#    # mmp: meter per pixel
-##    dist = cv2.norm(trails[0], trails[10])
-#    dist_x = trails[0][0] - trails[10][0]
-#    dist_y = trails[0][1] - trails[10][1]
-#
-#    mmp_y = 0.125 / (3 * (1 + (3.22 / 432)) * trails[0][1])
-##    mmp_y = 0.2 / (3 * (1 + (3.22 / 432)) * trails[0][1])  # Default
-#    mmp_x = 0.125 / (5 * (1 + (1.5 / 773)) * (WIDTH - trails[0][1]))
-##    mmp_x = 0.2 / (5 * (1 + (1.5 / 773)) * (width - trails[0][1]))  # Default
-#    real_dist = math.sqrt(dist_x * mmp_x * dist_x * mmp_x + dist_y * mmp_y * dist_y * mmp_y)
-#
-#    return real_dist * fps * 250 / 3.6
-
 # ########## FIM  FUNÇÕES ####################################################################
     
 
 
-def save_results_frames(frame, frameCount, ave_speed, lane, id_car, RESIZE_RATIO, VIDEO,
+def write_results_on_image(frame, frameCount, ave_speed, lane, id_car, RESIZE_RATIO, VIDEO,
                         dict_lane1, dict_lane2, dict_lane3):
     def r(numero):  # Faz o ajuste de escala das posições de textos e retangulos
         return int(numero*RESIZE_RATIO)
@@ -418,9 +343,6 @@ def save_results_frames(frame, frameCount, ave_speed, lane, id_car, RESIZE_RATIO
         dict_lane = dict_lane3
         positions = [(r(1350), r(120)), (r(1550), r(120)), (r(1550), r(180)), (r(1550), r(230))]
 
-#    cv2.putText(frame, str(float("{0:.2f}".format(ave_speed))), (blob['trail'][0][0] + r(57), blob['trail'][0][1] + r(143)),
-#                cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, YELLOW, thickness=1, lineType=2)
-    # Texto da que fica embaixo da velocidade real
     try:
         abs_error = ave_speed - float(dict_lane['speed'])
         per_error = (abs(ave_speed - float(dict_lane['speed']))/float(dict_lane['speed']))*100
@@ -447,5 +369,65 @@ def save_results_frames(frame, frameCount, ave_speed, lane, id_car, RESIZE_RATIO
     except:
         pass
     
-    return abs_error, per_error     
+    return abs_error, per_error
+
+def print_trail(trail, frame):
+    for (a, b) in pairwise(trail):
+        cv2.circle(frame, a, 3, BLUE, -1)
+        cv2.line(frame, a, b, WHITE, 1)
+
+def plot_graph(abs_error_list, ave_abs_error, ave_per_error, rate_detec_lane, 
+               real_total_lane, total_cars_lane, DATE, lane, VIDEO, cf, SHOW_LIN):
+    plt.figure(lane, figsize=[9,7])
+    plt.plot(abs_error_list, 'o-')
+    
+    plt.plot([0, len(abs_error_list) + 3], [0, 0], color='k', linestyle='-', linewidth=1)
+    plt.plot([0, len(abs_error_list) + 3], [3, 3], color='k', linestyle=':', linewidth=1)
+    plt.plot([0, len(abs_error_list) + 3], [-3, -3], color='k', linestyle=':', linewidth=1)
+    plt.plot([0, len(abs_error_list) + 3], [5, 5], color='k', linestyle='--', linewidth=1)
+    plt.plot([0, len(abs_error_list) + 3], [-5, -5], color='k', linestyle='--', linewidth=1)
+    
+    if lane == 'total':
+        titulo = 'Resultado Total'
+    else:
+        titulo = f'Resultados da Faixa {lane}'
+    plt.xlabel('Medições')
+    plt.ylabel('Erro Absoluto (km/h)')
+    plt.title(f'{titulo} - Video {VIDEO} \n\n'
+              f'Média dos erros absolutos =  {ave_abs_error} km/h\n'
+              f'Média dos erros percentuais = {ave_per_error} % \n'
+              f'Taxa de Detecção: {rate_detec_lane} % \n'
+              f'Carros detectados: {total_cars_lane} de {real_total_lane} \n'
+              f'Fator de correção: {cf}')
+    plt.xlim(0, len(abs_error_list) + 3)
+    plt.grid(False)
+            
+    plt.savefig(f'results/{DATE}/graficos/result_{DATE}_F{lane}.jpg', bbox_inches='tight', pad_inches=0.3)
+    plt.savefig(f'results/{DATE}/graficos/pdfs/result_{DATE}_F{lane}.pdf', bbox_inches='tight', pad_inches=0.3)
+    plt.show()
+    
+    
+    if SHOW_LIN:
+        plt.figure(5, figsize=[9,7])
+        abs_list = []
+        for value in abs_error_list:
+            abs_list.append(abs(value))
+        
+        plt.xlabel('Medições')
+        plt.ylabel('Erro Absoluto (km/h)')
+        plt.title(f'{titulo} - Video {VIDEO} \n\n'
+              f'Média dos erros absolutos =  {ave_abs_error} km/h\n'
+              f'Média dos erros percentuais = {ave_per_error} % \n'
+              f'Taxa de Detecção: {rate_detec_lane} % \n'
+              f'Carros detectados: {total_cars_lane} de {real_total_lane} \n'
+              f'Fator de correção: {cf}')
+        
+        plt.plot([0, len(abs_list) + 3], [0, 0], color='k', linestyle='-', linewidth=1)
+        plt.plot([0, len(abs_list) + 3], [3, 3], color='k', linestyle=':', linewidth=1)
+        plt.plot([0, len(abs_list) + 3], [5, 5], color='k', linestyle='--', linewidth=1)
+        
+        plt.plot(sorted(abs_list), 'ro-')
+        plt.savefig(f'results/{DATE}/graficos/result_{DATE}_F{lane}_lin.jpg', bbox_inches='tight', pad_inches=0.3)
+        plt.savefig(f'results/{DATE}/graficos/pdfs/result_{DATE}_F{lane}_lin.pdf', bbox_inches='tight', pad_inches=0.3)
+
 

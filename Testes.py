@@ -2,18 +2,18 @@
 import time
 import uuid
 import numpy as np
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
+import os
 import cv2
 import tccfunctions as t
 import datetime
-now = datetime.datetime.now()
 # ########  CONSTANT VALUES ###################################################
 VIDEO = 1
 VIDEO_FILE = '../Dataset/video{}.avi'.format(VIDEO)
 XML_FILE = '../Dataset/video{}.xml'.format(VIDEO)
 
 RESIZE_RATIO = 0.35  # Resize, valores entre 0 e 1 | 1= ize original do video
-CLOSE_VIDEO = 6917  # 6917 # Fecha o video no frame indicado
+CLOSE_VIDEO = 6917  # 1-6917 # 5-36253
 ARTG_FRAME = 0  # 254  # Frame q usei para exemplo no Artigo
 
 SHOW_ROI = True
@@ -47,7 +47,7 @@ CF_LANE3 = 2.30683  # default 2.3068397
 # ----  Save Results Values ---------------------------------------------------
 SAVE_FRAME_F1 = False  # Faixa 1
 SAVE_FRAME_F2 = False  # Faixa 2
-SAVE_FRAME_F3 = False  # Faixa 3
+SAVE_FRAME_F3 = True  # Faixa 3
 # ####### END - CONSTANT VALUES ###############################################
 cap = cv2.VideoCapture(VIDEO_FILE)
 FPS = cap.get(cv2.CAP_PROP_FPS)
@@ -62,16 +62,8 @@ dict_lane1 = {}  # Armazena os valores de "speed, frame_start, frame_end" da FAI
 dict_lane2 = {}  # Armazena os valores de "speed, frame_start, frame_end" da FAIXA 2
 dict_lane3 = {}  # Armazena os valores de "speed, frame_start, frame_end" da FAIXA 3
 tracked_blobs = []  # Lista que salva os dicionários dos tracked_blobs
-average_speed = [1]
-meas_speed_lane1 = [0]
-meas_speed_lane2 = [0]
-meas_speed_lane3 = [0]
-real_speed_lane1 = [0]
-real_speed_lane2 = [0]
-real_speed_lane3 = [0]
-
 prev_len_speed = []
-total_cars = {'lane_1': 0, 'lane_2': 0, 'lane_3': 0}
+#total_cars = {'lane_1': 0, 'lane_2': 0, 'lane_3': 0}
 prev_speed = 1.0
 
 frameCount = 0  # Armazena a contagem de frames processados do video
@@ -79,17 +71,11 @@ out = 0  # Armazena o frame com os contornos desenhados
 final_ave_speed = 0
 ave_speed = 0
 
-teste = []
-keep_speeds = {}
-speed1 = []
-sp_list = []
-last_id = 0
-real_speed = 0
+results_lane1 = {}
+results_lane2 = {}
+results_lane3 = {}
 
-abs_error_list = []
-per_error_list = []
-final_abs_errors = []
-final_per_errors = []
+
 
 # ##############  FUNÇÕES #####################################################
 def r(numero):
@@ -113,28 +99,23 @@ def calculate_speed(trails, fps):
     speed = (dist_meter*3.6*cf)/(qntd_frames*(1/fps))
     return speed
 # ########## FIM  FUNÇÕES #####################################################
-t.remove_old_csv_files(VIDEO)
-vehicle = t.read_xml(XML_FILE, VIDEO)  # Dicionário que armazena todas as informações do xml
+now = datetime.datetime.now()
+DATE = f'video{VIDEO}_{now.day}-{now.month}-{now.year}_{now.hour}-{now.minute}-{now.second}'
+if not os.path.exists(f"results/{DATE}"):
+    os.makedirs(f"results/{DATE}/graficos/pdfs")
+    os.makedirs(f"results/{DATE}/planilhas/")
+    os.makedirs(f"results/{DATE}/imagens/faixa1")
+    os.makedirs(f"results/{DATE}/imagens/faixa2")
+    os.makedirs(f"results/{DATE}/imagens/faixa3")
 
-#qntd_faixa1 = 0
-#qntd_faixa2 = 0
-##qntd_faixa3 = 0
-#for vehicles in vehicle:
-#    if vehicle[vehicles] == 6918:
-#        break
-#    if vehicle[vehicles]['lane'] == str(1):
-#        qntd_faixa1 += 1
-#    if vehicle[vehicles]['lane'] == str(2):
-#        qntd_faixa2 += 1
-#    if vehicle[vehicles]['lane'] == str(3):
-#        qntd_faixa3 += 1
+
+vehicle = t.read_xml(XML_FILE, VIDEO, DATE)  # Dicionário que armazena todas as informações do xml
+
 KERNEL_ERODE = np.ones((r(9), r(9)), np.uint8)
 KERNEL_DILATE = np.ones((r(100), r(50)), np.uint8)  # Default (r(100), r(50))
 
 while True:
     ret, frame = t.get_frame(cap, RESIZE_RATIO)
-    if frameCount == 254:
-        cv2.imwrite('img/1frame{}.png'.format(frameCount), frame)
     frame_time = time.time()
     
     if SKIP_VIDEO:
@@ -142,18 +123,18 @@ while True:
         if SEE_CUTTED_VIDEO:
             if not skip:
                 frameCount += 1
+                if frameCount == CLOSE_VIDEO:  # fecha o video
+                    break
                 continue
         else:
             if skip:
                 frameCount += 1
+                if frameCount == CLOSE_VIDEO:  # fecha o video
+                    break
                 continue
             
     frameGray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    if frameCount == 254:
-        cv2.imwrite('img/2framegray{}.png'.format(frameCount), frameGray)
     t.region_of_interest(frameGray, RESIZE_RATIO)
-    if frameCount == 254:
-        cv2.imwrite('img/3roi{}.png'.format(frameCount), frameGray)
     
     
     if SHOW_ROI:
@@ -165,8 +146,6 @@ while True:
     # Equalizar Contraste
     clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(7, 7))
     hist = clahe.apply(frameGray)
-    if frameCount == 254:
-        cv2.imwrite('img/4hist{}.png'.format(frameCount), hist)
     frameGray = hist
     
     if ret is True:
@@ -177,10 +156,6 @@ while True:
         fgmask = bgsMOG.apply(frameGray, None, 0.01)
         erodedmask = cv2.erode(fgmask, KERNEL_ERODE, iterations=1)
         dilatedmask = cv2.dilate(erodedmask, KERNEL_DILATE, iterations=1)
-        if frameCount == 254:
-            cv2.imwrite('img/5fgmask{}.png'.format(frameCount), fgmask)
-            cv2.imwrite('img/6erodedmask{}.png'.format(frameCount), erodedmask)
-            cv2.imwrite('img/7dilatedmask{}.png'.format(frameCount), dilatedmask)
         _, contours, hierarchy = cv2.findContours(dilatedmask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         #contornos =  cv2.drawContours(frame, contours, -1, BLUE, 2, 8, hierarchy)
         hull = []
@@ -198,8 +173,6 @@ while True:
                 #cv2.drawContours(drawing, contours, i, t.GREEN, 0, 8, hierarchy)
                 # draw ith convex hull object
                 out = cv2.drawContours(drawing, hull, i, t.WHITE, -1, 8)
-                if frameCount == 254:
-                    cv2.imwrite('img/8out{}.png'.format(frameCount), out)
                 area.append(cv2.contourArea(contours[i]))
                 areahull.append(cv2.contourArea(hull[i]))
                 (x, y, w, h) = cv2.boundingRect(hull[i])
@@ -224,8 +197,7 @@ while True:
                         cv2.rectangle(frame, (x, y), (x+w, y+h), t.GREEN, 2)
                     else:
                         cv2.rectangle(frame, (x, y), (x+w, y+h), t.PINK, 2)
-                if frameCount == 254:
-                    cv2.imwrite('img/9rect{}.png'.format(frameCount), frame)
+
                 
 #                cv2.putText(frame, f'area = {x*y/RESIZE_RATIO:.0f}', (r(400),r(400)), 2, .6, t.WHITE, 1)
 #                cv2.putText(frame, f'w={w}  h={h}', (r(450),r(480)), 2, .6, t.WHITE, 1)
@@ -264,55 +236,77 @@ while True:
                                 if closest_blob['trail'][0][0] < r(570):
                                     cf = CF_LANE1
                                     closest_blob['speed'].insert(0, calculate_speed(closest_blob['trail'], FPS))
+                                    lane = 1
+                                    abs_error, per_error = t.write_results_on_image(frame, frameCount, ave_speed, lane, closest_blob['id'], RESIZE_RATIO, VIDEO,
+                                                                                    dict_lane1, dict_lane2, dict_lane3)                                
+                                    results_lane1[str(closest_blob['id'])] = dict(ave_speed = round(ave_speed, 2),
+                                                                                 speeds = closest_blob['speed'],
+                                                                                 frame = frameCount, 
+                                                                                 real_speed = float(dict_lane1['speed']),
+                                                                                 abs_error = round(abs_error, 2),
+                                                                                 per_error = round(per_error, 3),
+                                                                                 trail = closest_blob['trail'],
+                                                                                 car_id = closest_blob['id'])
+                                    abs_error = []
+                                    per_error = []
+                                    if SHOW_TRAIL:
+                                        t.print_trail(closest_blob['trail'], frame)
+                                    if SHOW_FRAME_COUNT:
+                                        PERCE = str(int((100*frameCount)/vehicle['videoframes']))
+                                        cv2.putText(frame, f'frame: {frameCount} {PERCE}%', (r(14), r(1071)), 0, .65, t.WHITE, 2)                                    
+                                    if SAVE_FRAME_F3:
+                                        cv2.imwrite('results/{}/imagens/faixa1/{}_{}_F{}_{}.png'.format(DATE, VIDEO, dict_lane3['frame_start'], lane, closest_blob['id']), frame)
                                     
                                     
                                 elif closest_blob['trail'][0][0] >= r(570) and closest_blob['trail'][0][0] < r(1180):
                                     cf = CF_LANE2
                                     closest_blob['speed'].insert(0, calculate_speed(closest_blob['trail'], FPS))
-                                elif closest_blob['trail'][0][0] >= r(1180):
-                                    cf = CF_LANE3
-                                    closest_blob['speed'].insert(0, calculate_speed(closest_blob['trail'], FPS))
-                                    
-                                    sp = calculate_speed(closest_blob['trail'], FPS)
-                                    sp_list.append(sp)
-                                    try:
-                                        if frameCount > vehicle[str(frameCount)]['frame_start'] and frameCount < vehicle[str(frameCount)]['frame_end']:
-                                            
-                                            real_speed = int(vehicle[str(frameCount)]['speed'])
-                                    except:
-                                        pass
-                                    
-#                                    if closest_blob['speed'] != 0:
-#                                    final_speed = np.mean(closest_blob['speed'])
-                                    id_3 = closest_blob['id']
-                                    abs_error, per_error = t.save_results_frames(frame, frameCount, ave_speed, 3, id_3, RESIZE_RATIO, VIDEO,
-                                                                                 dict_lane1, dict_lane2, dict_lane3)
-                                    
-                                    keep_speeds[str(closest_blob['id'])] = dict(ave_speed = round(ave_speed, 2),
-                                                                                speeds = closest_blob['speed'],
-                                                                                frame = frameCount, 
-                                                                                real_speed = dict_lane3['speed'],
-                                                                                abs_errors = round(abs_error, 2),
-                                                                                per_errors = round(per_error, 3))
+                                    lane = 2
+                                    abs_error, per_error = t.write_results_on_image(frame, frameCount, ave_speed, lane, closest_blob['id'], RESIZE_RATIO, VIDEO,
+                                                                                    dict_lane1, dict_lane2, dict_lane3)                                
+                                    results_lane2[str(closest_blob['id'])] = dict(ave_speed = round(ave_speed, 2),
+                                                                                 speeds = closest_blob['speed'],
+                                                                                 frame = frameCount, 
+                                                                                 real_speed = float(dict_lane2['speed']),
+                                                                                 abs_error = round(abs_error, 2),
+                                                                                 per_error = round(per_error, 3),
+                                                                                 trail = closest_blob['trail'],
+                                                                                 car_id = closest_blob['id'])
                                     abs_error = []
                                     per_error = []
-                                    
-                                    frameStart = dict_lane3['frame_start']
-                                    cv2.putText(frame, f'id: {id_3} %', (r(14), r(1071)), 0, .65, t.WHITE, 2)
-                                    cv2.imwrite(f'img/teste/{frameStart}_{id_3}.png', frame)
-#                                    if last_id == 0:
-#                                        closest_blob['id'] == last_id
-#                                        
-#                                    if closest_blob['id'] == last_id:
-#                                        sp = calculate_speed(closest_blob['trail'], FPS)
-#                                        sp_list.append(sp)
-#                                        keep_speeds[str(closest_blob['id'])] = sp_list 
-#                                        last_id = closest_blob['id']
-#                                        keep_speeds[str(closest_blob['id'])] = dict(speeds=sp_list)
+                                    if SHOW_TRAIL:
+                                        t.print_trail(closest_blob['trail'], frame)
+                                    if SHOW_FRAME_COUNT:
+                                        PERCE = str(int((100*frameCount)/vehicle['videoframes']))
+                                        cv2.putText(frame, f'frame: {frameCount} {PERCE}%', (r(14), r(1071)), 0, .65, t.WHITE, 2)                                    
+                                    if SAVE_FRAME_F3:
+                                        cv2.imwrite('results/{}/imagens/faixa2/{}_{}_F{}_{}.png'.format(DATE, VIDEO, dict_lane3['frame_start'], lane, closest_blob['id']), frame)
                                     
                                     
-#                                    d1 = {}
-#                                    d1['unique_id'] = dict(speeds=[1323,213,213,213,213], id2=123)   
+                                elif closest_blob['trail'][0][0] >= r(1180):
+                                    cf = CF_LANE3                                    
+                                    closest_blob['speed'].insert(0, calculate_speed(closest_blob['trail'], FPS))
+                                    lane = 3
+                                    abs_error, per_error = t.write_results_on_image(frame, frameCount, ave_speed, lane, closest_blob['id'], RESIZE_RATIO, VIDEO,
+                                                                                    dict_lane1, dict_lane2, dict_lane3)                                
+                                    results_lane3[str(closest_blob['id'])] = dict(ave_speed = round(ave_speed, 2),
+                                                                                 speeds = closest_blob['speed'],
+                                                                                 frame = frameCount, 
+                                                                                 real_speed = float(dict_lane3['speed']),
+                                                                                 abs_error = round(abs_error, 2),
+                                                                                 per_error = round(per_error, 3),
+                                                                                 trail = closest_blob['trail'],
+                                                                                 car_id = closest_blob['id'])
+                                    abs_error = []
+                                    per_error = []
+                                    if SHOW_TRAIL:
+                                        t.print_trail(closest_blob['trail'], frame)
+                                    if SHOW_FRAME_COUNT:
+                                        PERCE = str(int((100*frameCount)/vehicle['videoframes']))
+                                        cv2.putText(frame, f'frame: {frameCount} {PERCE}%', (r(14), r(1071)), 0, .65, t.WHITE, 2)                                    
+                                    if SAVE_FRAME_F3:
+                                        cv2.imwrite('results/{}/imagens/faixa3/{}_{}_F{}_{}.png'.format(DATE, VIDEO, dict_lane3['frame_start'], lane, closest_blob['id']), frame)
+                                    
 
                 if not closest_blob: # Cria as variaves
                     # If we didn't find a blob, let's make a new one and add it to the list
@@ -327,22 +321,14 @@ while True:
             for i in range(len(tracked_blobs) - 1, -1, -1):
                 if frame_time - tracked_blobs[i]['last_seen'] > BLOB_TRACK_TIMEOUT: # Deleta caso de timeout
                     print("Removing expired track {}".format(tracked_blobs[i]['id']))
-#                    abc = np.mean(tracked_blobs[i]['speed'])
-#                    teste.append(abc)
-                    if ave_speed != 0:
-                        file = open('results/speed.csv', 'a')
-                        file.write(f'ave_speed, {round(ave_speed, 2)} \n')
-                        file.close()
                     prev_speed = ave_speed
                     final_ave_speed = 0.0
                     del tracked_blobs[i]
 
         # ################ PRINTA OS BLOBS ####################################
         for blob in tracked_blobs:  # Desenha os pontos centrais
-            for (a, b) in t.pairwise(blob['trail']):
-                if SHOW_TRAIL:
-                    cv2.circle(frame, a, 3, t.BLUE, -1)
-                    cv2.line(frame, a, b, t.WHITE, 1)
+            if SHOW_TRAIL:
+                t.print_trail(blob['trail'], frame)
 
             if blob['speed'] and blob['speed'][0] != 0:
                 prev_len_speed.insert(0, len(blob['speed']))
@@ -382,16 +368,8 @@ while True:
 #                                             RESIZE_RATIO, VIDEO, dict_lane1, dict_lane2,
 #                                             dict_lane3, SAVE_FRAME_F1, SAVE_FRAME_F2, SAVE_FRAME_F3)
 
-                # SALVA VALORES DE VELOCIDADE EM ARQUIVOS CSV
-                # Ta ruim, nao tá salvando certinho
-#                t.save_real_speed_in_csv(total_cars, dict_lane1, real_speed_lane1, dict_lane2,
-#                                         real_speed_lane2, dict_lane3, real_speed_lane3)
-                # Ta ruim, nao tá salvando certinho
-                t.save_mea_speed_in_csv(blob, total_cars, prev_len_speed, final_ave_speed, lane,
-                                        dict_lane1, meas_speed_lane1, dict_lane2, meas_speed_lane2,
-                                        dict_lane3, meas_speed_lane3)
 
-        print('**************************************************************')
+        print('*************************************************')
         if SHOW_FRAME_COUNT:
             PERCE = str(int((100*frameCount)/vehicle['videoframes']))
             cv2.putText(frame, f'frame: {frameCount} {PERCE}%', (r(14), r(1071)), 0, .65, t.WHITE, 2)
@@ -420,19 +398,65 @@ while True:
     else:  # sai do while: ret == False
         break
 
+# ###### RESULTADOS ###########################################################
+abs_error_list1 = []
+abs_error_list2 = []
+abs_error_list3 = []
 
-for errors in keep_speeds:
+per_error_list1 = []
+per_error_list2 = []
+per_error_list3 = []
+
+for errors in results_lane1:
+    abs_error_list1.append(results_lane1[errors]['abs_error'])
+    per_error_list1.append(results_lane1[errors]['per_error'])
+ave_abs_error1 = round(np.mean(abs_error_list1), 3)
+ave_per_error1 = round(np.mean(per_error_list1), 3)
+
+for errors in results_lane2:
+    abs_error_list2.append(results_lane2[errors]['abs_error'])
+    per_error_list2.append(results_lane2[errors]['per_error'])
+ave_abs_error2 = round(np.mean(abs_error_list2), 3)
+ave_per_error2 = round(np.mean(per_error_list2), 3)
+
+for errors in results_lane3:
+    abs_error_list3.append(results_lane3[errors]['abs_error'])
+    per_error_list3.append(results_lane3[errors]['per_error'])
+ave_abs_error3 = round(np.mean(abs_error_list3), 3)
+ave_per_error3 = round(np.mean(per_error_list3), 3)
+
+# Medidas pelo código
+total_cars_lane1 = len(results_lane1)
+total_cars_lane2 = len(results_lane2)
+total_cars_lane3 = len(results_lane3)
+
+# Taxa de Detecção
+rate_detec_lane1 = round(total_cars_lane1/vehicle['total_cars_lane1']*100, 2)
+rate_detec_lane2 = round(total_cars_lane2/vehicle['total_cars_lane2']*100, 2)
+rate_detec_lane3 = round(total_cars_lane3/vehicle['total_cars_lane3']*100, 2)
+
+t.plot_graph(abs_error_list1, ave_abs_error1, ave_per_error1, rate_detec_lane1, 
+               vehicle['total_cars_lane1'], total_cars_lane1, DATE, 1, VIDEO, CF_LANE1, True) 
+
+t.plot_graph(abs_error_list2, ave_abs_error2, ave_per_error2, rate_detec_lane2, 
+               vehicle['total_cars_lane2'], total_cars_lane2, DATE, 2, VIDEO, CF_LANE2, True)
     
-    abs_error_list.append(keep_speeds[errors]['abs_errors'])
-    per_error_list.append(keep_speeds[errors]['per_errors'])
-    ave_abs_error = round(np.mean(abs_error_list), 3)
-    ave_per_error = round(np.mean(per_error_list), 3)
+t.plot_graph(abs_error_list3, ave_abs_error3, ave_per_error3, rate_detec_lane3, 
+               vehicle['total_cars_lane3'], total_cars_lane3, DATE, 3, VIDEO, CF_LANE3, True)
+
+# TOTAL
+total_abs_errors = abs_error_list1 + abs_error_list2 + abs_error_list3
+total_per_errors = per_error_list1 + per_error_list2 + per_error_list3
+
+total_ave_abs = round(np.mean(total_abs_errors), 3)
+total_ave_per = round(np.mean(total_per_errors), 3)
+total_cars = vehicle['total_cars_lane1']+vehicle['total_cars_lane2']+ vehicle['total_cars_lane3']
+total_rate_detec = round(len(total_abs_errors)/(total_cars)*100, 2)
 
 
-x2 = []
-y2 = []
-abs_error = []
-erro_3km = []
+t.plot_graph(total_abs_errors, total_ave_abs, total_ave_per, total_rate_detec, 
+               total_cars, len(total_abs_errors), DATE, 'total', VIDEO, '---', True)
+
 
 #for i in range(len(abs_error_list)):
 #    if x[i] > 50 and x[i] < 54:
@@ -441,36 +465,6 @@ erro_3km = []
         
 #    abs_error.append(round(x[i]-y[i], 4))
 #    erro_3km.append((3,-3))
-
-
-#fig = plt.figure(0)
-# the histogram of the data
-plt.plot(abs_error_list)
-
-plt.plot([0, len(abs_error_list) + 3], [0, 0], color='k', linestyle='-', linewidth=1)
-plt.plot([0, len(abs_error_list) + 3], [3, 3], color='k', linestyle=':', linewidth=2)
-plt.plot([0, len(abs_error_list) + 3], [-3, -3], color='k', linestyle=':', linewidth=2)
-plt.plot([0, len(abs_error_list) + 3], [5, 5], color='k', linestyle='--', linewidth=2)
-plt.plot([0, len(abs_error_list) + 3], [-5, -5], color='k', linestyle='--', linewidth=2)
-
-
-
-plt.xlabel('Medições')
-plt.ylabel('Erro Absoluto (km/h)')
-plt.title(f'Média dos erros absolutos =  {ave_abs_error}')
-#plt.text(0.05, 10, 'teste')
-plt.xlim(0, len(abs_error_list) + 3)
-plt.grid(False)
-date = f'{now.day}-{now.month}-{now.year}_{now.hour}-{now.minute}'
-plt.savefig(f'results/log/result_{date}.png')
-plt.show()
-
-
-
-
-
-
-
 
 cap.release()
 cv2.destroyAllWindows()
