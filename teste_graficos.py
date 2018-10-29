@@ -27,30 +27,36 @@ for i in range(len(x)):
 
 
 # the histogram of the data
-plt.figure(0)
-plt.plot(abs_error, 'o-')
+#plt.figure(0)
+#plt.plot(abs_error, 'o-')
 plt.figure(1)
 plt.plot(erro_3km, '.')
 
-
+a = 'start'
+b = 'dw231233'
+c = 'edw'
+d = 'Hisam of IQ'
 plt.xlabel('Smarts')
 plt.ylabel('Probability')
-plt.title(f'Histogram of IQ {round(np.mean(abs_error), 5)}')
-plt.text(0.05, 10, 'teste')
+plt.title('Histogram of IQ = ' + f'{a:>15}\n' +
+          f'{d:<14} = ' + f'{b:>15}\n' +
+          'Histogram of IQdsadasd = ' + f'{c:>15}\n' +
+          'kjjhk')
+#plt.text(0.05, 10, 'teste')
 plt.grid(True)
 plt.show()
 
-plt.figure(5, figsize=[9,6])
-x = [-0.7, 2.53, -0.41, 5.57, -0.43, 0.66, -8.86, -8.28, -11.6, 1.91, -8.69, -4.09, -0.14, 0.74, 3.71, 6.56, 4.14, 0.29, 2.4, 3.73, -6.23, 2.69]
-abs_list = []
-for value in x:
-    abs_list.append(abs(value))
-
-plt.plot([0, len(abs_list) + 3], [0, 0], color='k', linestyle='-', linewidth=1)
-plt.plot([0, len(abs_list) + 3], [3, 3], color='k', linestyle=':', linewidth=1)
-plt.plot([0, len(abs_list) + 3], [5, 5], color='k', linestyle='--', linewidth=1)
-
-plt.plot(sorted(abs_list), 'ro-')
+#plt.figure(5, figsize=[9,6])
+#x = [-0.7, 2.53, -0.41, 5.57, -0.43, 0.66, -8.86, -8.28, -11.6, 1.91, -8.69, -4.09, -0.14, 0.74, 3.71, 6.56, 4.14, 0.29, 2.4, 3.73, -6.23, 2.69]
+#abs_list = []
+#for value in x:
+#    abs_list.append(abs(value))
+#
+#plt.plot([0, len(abs_list) + 3], [0, 0], color='k', linestyle='-', linewidth=1)
+#plt.plot([0, len(abs_list) + 3], [3, 3], color='k', linestyle=':', linewidth=1)
+#plt.plot([0, len(abs_list) + 3], [5, 5], color='k', linestyle='--', linewidth=1)
+#
+#plt.plot(sorted(abs_list), 'ro-')
 #plt.savefig('results/asd.png')
 
 

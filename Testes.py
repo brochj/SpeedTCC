@@ -47,7 +47,7 @@ CF_LANE3 = 2.30683  # default 2.3068397
 # ----  Save Results Values ---------------------------------------------------
 SAVE_FRAME_F1 = False  # Faixa 1
 SAVE_FRAME_F2 = False  # Faixa 2
-SAVE_FRAME_F3 = True  # Faixa 3
+SAVE_FRAME_F3 = False  # Faixa 3
 # ####### END - CONSTANT VALUES ###############################################
 cap = cv2.VideoCapture(VIDEO_FILE)
 FPS = cap.get(cv2.CAP_PROP_FPS)
@@ -397,31 +397,57 @@ while True:
         break
 
 # ###### RESULTADOS ###########################################################
+# Listas com sinais + e -
 abs_error_list1 = []
 abs_error_list2 = []
 abs_error_list3 = []
-
+# Módulo das Listas acima ( sem sinal )
+abs_error_list1_mod = []
+abs_error_list2_mod = []
+abs_error_list3_mod = []
+# Listas para faixa de valores
+# faixa 1
+#list_3km1 = []  # erros até 3km/h
+#list_5km1 = []  # erros até 5km/h
+#list_maior5km1 = []  # maiores que 5km/h
+## faixa 2
+#list_3km2 = []  # erros até 3km/h
+#list_5km2 = []  # erros até 5km/h
+#list_maior5km2 = []  # maiores que 5km/h
+## faixa 3
+#list_3km3 = []  # erros até 3km/h
+#list_5km3 = []  # erros até 5km/h
+#list_maior5km3 = []  # maiores que 5km/h
+# lista erros percentuais
 per_error_list1 = []
 per_error_list2 = []
 per_error_list3 = []
 
 for errors in results_lane1:
     abs_error_list1.append(results_lane1[errors]['abs_error'])
+    abs_error_list1_mod.append(abs(results_lane1[errors]['abs_error']))
     per_error_list1.append(results_lane1[errors]['per_error'])
-ave_abs_error1 = round(np.mean(abs_error_list1), 3)
+ave_abs_error1 = round(np.mean(abs_error_list1_mod), 3)
 ave_per_error1 = round(np.mean(per_error_list1), 3)
+
 
 for errors in results_lane2:
     abs_error_list2.append(results_lane2[errors]['abs_error'])
+    abs_error_list2_mod.append(abs(results_lane2[errors]['abs_error']))
     per_error_list2.append(results_lane2[errors]['per_error'])
-ave_abs_error2 = round(np.mean(abs_error_list2), 3)
+ave_abs_error2 = round(np.mean(abs_error_list2_mod), 3)
 ave_per_error2 = round(np.mean(per_error_list2), 3)
 
 for errors in results_lane3:
     abs_error_list3.append(results_lane3[errors]['abs_error'])
-    per_error_list3.append(results_lane3[errors]['per_error'])
-ave_abs_error3 = round(np.mean(abs_error_list3), 3)
+    abs_error_list3_mod.append(abs(results_lane3[errors]['abs_error']))
+    per_error_list3.append(abs(results_lane3[errors]['per_error']))
+ave_abs_error3 = round(np.mean(abs_error_list3_mod), 3)
 ave_per_error3 = round(np.mean(per_error_list3), 3)
+
+list_3km1, list_5km1, list_maior5km1 = t.separar_por_kmh(abs_error_list1_mod)
+list_3km2, list_5km2, list_maior5km2 = t.separar_por_kmh(abs_error_list2_mod)
+list_3km3, list_5km3, list_maior5km3 = t.separar_por_kmh(abs_error_list3_mod)
 
 # Medidas pelo código
 total_cars_lane1 = len(results_lane1)
@@ -434,26 +460,34 @@ rate_detec_lane2 = round(total_cars_lane2/vehicle['total_cars_lane2']*100, 2)
 rate_detec_lane3 = round(total_cars_lane3/vehicle['total_cars_lane3']*100, 2)
 
 t.plot_graph(abs_error_list1, ave_abs_error1, ave_per_error1, rate_detec_lane1, 
-               vehicle['total_cars_lane1'], total_cars_lane1, DATE, 1, VIDEO, CF_LANE1, True) 
+               vehicle['total_cars_lane1'], total_cars_lane1, DATE, 1, VIDEO, CF_LANE1, True,
+               list_3km1, list_5km1, list_maior5km1) 
 
 t.plot_graph(abs_error_list2, ave_abs_error2, ave_per_error2, rate_detec_lane2, 
-               vehicle['total_cars_lane2'], total_cars_lane2, DATE, 2, VIDEO, CF_LANE2, True)
+               vehicle['total_cars_lane2'], total_cars_lane2, DATE, 2, VIDEO, CF_LANE2, True,
+               list_3km2, list_5km2, list_maior5km2)
     
 t.plot_graph(abs_error_list3, ave_abs_error3, ave_per_error3, rate_detec_lane3, 
-               vehicle['total_cars_lane3'], total_cars_lane3, DATE, 3, VIDEO, CF_LANE3, True)
+               vehicle['total_cars_lane3'], total_cars_lane3, DATE, 3, VIDEO, CF_LANE3, True,
+               list_3km3, list_5km3, list_maior5km3)
 
 # TOTAL
 total_abs_errors = abs_error_list1 + abs_error_list2 + abs_error_list3
+total_abs_errors_mod = abs_error_list1_mod + abs_error_list2_mod + abs_error_list3_mod
 total_per_errors = per_error_list1 + per_error_list2 + per_error_list3
 
-total_ave_abs = round(np.mean(total_abs_errors), 3)
+
+list_3km_tot, list_5km_tot, list_maior5km_tot = t.separar_por_kmh(total_abs_errors_mod)
+
+total_ave_abs = round(np.mean(total_abs_errors_mod), 3)
 total_ave_per = round(np.mean(total_per_errors), 3)
 total_cars = vehicle['total_cars_lane1']+vehicle['total_cars_lane2']+ vehicle['total_cars_lane3']
 total_rate_detec = round(len(total_abs_errors)/(total_cars)*100, 2)
 
 
 t.plot_graph(total_abs_errors, total_ave_abs, total_ave_per, total_rate_detec, 
-               total_cars, len(total_abs_errors), DATE, 'total', VIDEO, '---', True)
+               total_cars, len(total_abs_errors), DATE, 'total', VIDEO, '---', True,
+               list_3km_tot, list_5km_tot, list_maior5km_tot)
 
 
 #for i in range(len(abs_error_list)):
