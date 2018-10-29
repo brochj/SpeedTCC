@@ -75,8 +75,6 @@ results_lane1 = {}
 results_lane2 = {}
 results_lane3 = {}
 
-
-
 # ##############  FUNÇÕES #####################################################
 def r(numero):
     return int(numero*RESIZE_RATIO)
