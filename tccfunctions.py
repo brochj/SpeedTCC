@@ -316,16 +316,21 @@ def skip_video(frameCount, video, frame):
         if frameCount > 1053 and frameCount < 1101: skip = True  # Caminhão
         if frameCount > 1100 and frameCount < 1140: skip = True
         if frameCount > 1139 and frameCount < 1199: skip = True  # Carro parado
-    
-        
-        
-        
-#        if frameCount < 1200: skip = True
+        if frameCount > 1198 and frameCount < 2197: skip = True  # Carro baixa velocidade
+        if frameCount > 2689 and frameCount < 2715: skip = True
+        if frameCount > 2979 and frameCount < 3018: skip = True
+        if frameCount > 3060 and frameCount < 3090: skip = True
+        if frameCount > 3122 and frameCount < 3166: skip = True
+        if frameCount > 3279 and frameCount < 3328: skip = True
+        if frameCount > 3404 and frameCount < 3459: skip = True
+        if frameCount > 3450 and frameCount < 4612: skip = True
+        if frameCount > 5322 and frameCount < 5352: skip = True
+        if frameCount > 5401 and frameCount < 5507: skip = True # caminhao
+        if frameCount > 5554 and frameCount < 5604: skip = True # van no meio da faixa
+        if frameCount > 5667 and frameCount < 5698: skip = True
+        if frameCount > 5785 and frameCount < 5902: skip = True
+        if frameCount > 5934 and frameCount < 6918: skip = True # Carro parado           
     return skip
-
-
-# ########## FIM  FUNÇÕES ####################################################################
-    
 
 
 def write_results_on_image(frame, frameCount, ave_speed, lane, id_car, RESIZE_RATIO, VIDEO,
@@ -414,7 +419,7 @@ def plot_graph(abs_error_list, ave_abs_error, ave_per_error, rate_detec_lane,
     
     
     if SHOW_LIN:
-        plt.figure(5, figsize=[9,7])
+        plt.figure('Total', figsize=[9,7])
         abs_list = []
         for value in abs_error_list:
             abs_list.append(abs(value))

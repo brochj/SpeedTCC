@@ -32,7 +32,7 @@ SEE_CUTTED_VIDEO = False  # ver partes retiradas, needs SKIP_VIDEO = True
 # consider it a match to a previous scene's blob.
 BLOB_LOCKON_DIST_PX_MAX = 150  # default = 50 p/ ratio 0.35
 BLOB_LOCKON_DIST_PX_MIN = 5  # default 5
-MIN_AREA_FOR_DETEC = 40000  # Default 40000 (não detecta Moto)
+MIN_AREA_FOR_DETEC = 30000  # Default 40000 (não detecta Moto)
 # Limites da Área de Medição, área onde é feita o Tracking
 # Distancia de medição: default 915-430 = 485
 BOTTOM_LIMIT_TRACK = 915  # Default 915
@@ -43,10 +43,10 @@ BLOB_TRACK_TIMEOUT = 0.7  # Default 0.7
 # ---- Speed Values -----------------------------------------------------------
 CF_LANE1 = 2.5869977  # default 2.5869977 # Correction Factor
 CF_LANE2 = 2.5869977  # default 2.5869977
-CF_LANE3 = 2.30683  # default 2.3068397
+CF_LANE3 = 2.39683  # default 2.3068397
 # ----  Save Results Values ---------------------------------------------------
 SAVE_FRAME_F1 = False  # Faixa 1
-SAVE_FRAME_F2 = False  # Faixa 2
+SAVE_FRAME_F2 = True  # Faixa 2
 SAVE_FRAME_F3 = False  # Faixa 3
 # ####### END - CONSTANT VALUES ###############################################
 cap = cv2.VideoCapture(VIDEO_FILE)
@@ -144,6 +144,8 @@ while True:
     # Equalizar Contraste
     clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(7, 7))
     hist = clahe.apply(frameGray)
+#    cv2.imshow('img', np.vstack((frameGray,hist)))
+
     frameGray = hist
     
     if ret is True:
@@ -162,8 +164,8 @@ while True:
             hull.append(cv2.convexHull(contours[i], False))
         # create an empty black image
         drawing = np.zeros((dilatedmask.shape[0], dilatedmask.shape[1], 3), np.uint8)
-        area = []
-        areahull = []
+#        area = []
+#        areahull = []
         #draw contours and hull points
         for i in range(len(contours)):
             if cv2.contourArea(contours[i]) > r(MIN_AREA_FOR_DETEC):
@@ -171,8 +173,8 @@ while True:
                 #cv2.drawContours(drawing, contours, i, t.GREEN, 0, 8, hierarchy)
                 # draw ith convex hull object
                 out = cv2.drawContours(drawing, hull, i, t.WHITE, -1, 8)
-                area.append(cv2.contourArea(contours[i]))
-                areahull.append(cv2.contourArea(hull[i]))
+#                area.append(cv2.contourArea(contours[i]))
+#                areahull.append(cv2.contourArea(hull[i]))
                 (x, y, w, h) = cv2.boundingRect(hull[i])
 #                w -= r(50)
 #                h -= r(80)
@@ -252,7 +254,7 @@ while True:
                                     if SHOW_FRAME_COUNT:
                                         PERCE = str(int((100*frameCount)/vehicle['videoframes']))
                                         cv2.putText(frame, f'frame: {frameCount} {PERCE}%', (r(14), r(1071)), 0, .65, t.WHITE, 2)                                    
-                                    if SAVE_FRAME_F3:
+                                    if SAVE_FRAME_F1:
                                         cv2.imwrite('results/{}/imagens/faixa1/{}_{}_F{}_{}.png'.format(DATE, VIDEO, dict_lane3['frame_start'], lane, closest_blob['id']), frame)
                                     
                                     
@@ -277,7 +279,7 @@ while True:
                                     if SHOW_FRAME_COUNT:
                                         PERCE = str(int((100*frameCount)/vehicle['videoframes']))
                                         cv2.putText(frame, f'frame: {frameCount} {PERCE}%', (r(14), r(1071)), 0, .65, t.WHITE, 2)                                    
-                                    if SAVE_FRAME_F3:
+                                    if SAVE_FRAME_F2:
                                         cv2.imwrite('results/{}/imagens/faixa2/{}_{}_F{}_{}.png'.format(DATE, VIDEO, dict_lane3['frame_start'], lane, closest_blob['id']), frame)
                                     
                                     
@@ -384,7 +386,7 @@ while True:
 #        cv2.imshow('final', final)
 #        cv2.imshow('mask_eroded', np.concatenate((fgmask, dilatedmask),0))
 #        crop_img = outputFrame[70:320, 0:640]
-#        if frameCount > 100 and frameCount < 254:
+#        if frameCount > 3999 and frameCount < 6917:
 #        if frameCount == 114:
 #            cv2.imwrite('img/teste/{}.png'.format(frameCount), frame)
 #            cv2.imwrite('img/teste/{}.png'.format(frameCount), np.vstack((out,frame)))
