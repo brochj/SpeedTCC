@@ -348,6 +348,7 @@ def write_results_on_image(frame, frameCount, ave_speed, lane, id_car, RESIZE_RA
         dict_lane = dict_lane3
         positions = [(r(1350), r(120)), (r(1550), r(120)), (r(1550), r(180)), (r(1550), r(230))]
 
+    
     try:
         abs_error = ave_speed - float(dict_lane['speed'])
         per_error = (abs(ave_speed - float(dict_lane['speed']))/float(dict_lane['speed']))*100
@@ -413,7 +414,7 @@ def plot_graph(abs_error_list, ave_abs_error, ave_per_error, rate_detec_lane,
     plt.xlim(0, len(abs_error_list) + 3)
     plt.grid(False)
             
-    plt.savefig(f'results/{DATE}/graficos/result_{DATE}_F{lane}.jpg', bbox_inches='tight', pad_inches=0.3)
+    plt.savefig(f'results/{DATE}/graficos/result_{DATE}_F{lane}.png', bbox_inches='tight', pad_inches=0.3)
     plt.savefig(f'results/{DATE}/graficos/pdfs/result_{DATE}_F{lane}.pdf', bbox_inches='tight', pad_inches=0.3)
     plt.show()
     
@@ -441,7 +442,7 @@ def plot_graph(abs_error_list, ave_abs_error, ave_per_error, rate_detec_lane,
         plt.plot([0, len(abs_list) + 3], [5, 5], color='k', linestyle='--', linewidth=1)
         
         plt.plot(sorted(abs_list), 'ro-')
-        plt.savefig(f'results/{DATE}/graficos/result_{DATE}_F{lane}_lin.jpg', bbox_inches='tight', pad_inches=0.3)
+        plt.savefig(f'results/{DATE}/graficos/result_{DATE}_F{lane}_lin.png', bbox_inches='tight', pad_inches=0.3)
         plt.savefig(f'results/{DATE}/graficos/pdfs/result_{DATE}_F{lane}_lin.pdf', bbox_inches='tight', pad_inches=0.3)
 
 

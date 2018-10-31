@@ -7,13 +7,14 @@ import os
 import cv2
 import tccfunctions as t
 import datetime
+#import math
 # ########  CONSTANT VALUES ###################################################
 VIDEO = 1
 VIDEO_FILE = '../Dataset/video{}.avi'.format(VIDEO)
 XML_FILE = '../Dataset/video{}.xml'.format(VIDEO)
 
 RESIZE_RATIO = 0.35  # Resize, valores entre 0 e 1 | 1= ize original do video
-CLOSE_VIDEO = 6917  # 1-6917 # 5-36253
+CLOSE_VIDEO = 5934  # 1-6917 # 5-36253
 ARTG_FRAME = 0  # 254  # Frame q usei para exemplo no Artigo
 
 SHOW_ROI = True
@@ -37,6 +38,8 @@ MIN_AREA_FOR_DETEC = 30000  # Default 40000 (não detecta Moto)
 # Distancia de medição: default 915-430 = 485
 BOTTOM_LIMIT_TRACK = 915  # Default 915
 UPPER_LIMIT_TRACK = 430  # Default 430
+
+MIN_CENTRAL_POINTS = 10 # qnt mínima de pontos centrais para calcular a velocidade
 # The number of seconds a blob is allowed to sit around without having
 # any new blobs matching it.
 BLOB_TRACK_TIMEOUT = 0.7  # Default 0.7
@@ -96,6 +99,21 @@ def calculate_speed(trails, fps):
     dist_meter = dist_pixel*(med_area_meter/med_area_pixel)
     speed = (dist_meter*3.6*cf)/(qntd_frames*(1/fps))
     return speed
+
+#def calculate_speed (trails, fps):
+#	# distance: distance on the frame
+#	# location: x, y coordinates on the frame
+#	# fps: framerate
+#	# mmp: meter per pixel
+##	dist = cv2.norm(trails[0], trails[10])
+#	dist_x = trails[0][0] - trails[10][0]
+#	dist_y = trails[0][1] - trails[10][1]
+#
+#	mmp_y = 0.1305 / (3 * (1 + (3.22 / 432)) * trails[0][1])
+#	mmp_x = 0.1305 / (5 * (1 + (1.5 / 773)) * (WIDTH - trails[0][1]))
+#	real_dist = math.sqrt(dist_x * mmp_x * dist_x * mmp_x + dist_y * mmp_y * dist_y * mmp_y)
+#
+#	return real_dist * fps * 250 / 3.6
 # ########## FIM  FUNÇÕES #####################################################
 now = datetime.datetime.now()
 DATE = f'video{VIDEO}_{now.day}-{now.month}-{now.year}_{now.hour}-{now.minute}-{now.second}'
@@ -232,7 +250,7 @@ while True:
                         if center[1] < prev_center[1]:  # It's moving up
                             closest_blob['trail'].insert(0, center)  # Add point
                             closest_blob['last_seen'] = frame_time
-                            if len(closest_blob['trail']) > 10:
+                            if len(closest_blob['trail']) > MIN_CENTRAL_POINTS:
                                 if closest_blob['trail'][0][0] < r(570):
                                     cf = CF_LANE1
                                     closest_blob['speed'].insert(0, calculate_speed(closest_blob['trail'], FPS))
