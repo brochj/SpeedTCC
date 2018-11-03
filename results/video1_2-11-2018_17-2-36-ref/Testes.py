@@ -7,15 +7,14 @@ import os
 import cv2
 import tccfunctions as t
 import datetime
-from shutil import copy2
 #import math
 # ########  CONSTANT VALUES ###################################################
 VIDEO = 1
 VIDEO_FILE = '../Dataset/video{}.mp4'.format(VIDEO)
 XML_FILE = '../Dataset/video{}.xml'.format(VIDEO)
 
-RESIZE_RATIO = 0.7697 #0.7697  # Resize, valores entre 0 e 1 | 1= ize original do video
-CLOSE_VIDEO = 5934 #5934  # 1-6917 # 5-36253
+RESIZE_RATIO = 0.7697  # Resize, valores entre 0 e 1 | 1= ize original do video
+CLOSE_VIDEO = 5934  # 1-6917 # 5-36253
 ARTG_FRAME = 0  # 254  # Frame q usei para exemplo no Artigo
 
 SHOW_ROI = True
@@ -37,19 +36,18 @@ BLOB_LOCKON_DIST_PX_MIN = 5  # default 5
 MIN_AREA_FOR_DETEC = 30000  # Default 40000 (não detecta Moto)
 # Limites da Área de Medição, área onde é feita o Tracking
 # Distancia de medição: default 915-430 = 485
-BOTTOM_LIMIT_TRACK = 915 #1095  # Default 915
-UPPER_LIMIT_TRACK = 430 #408 # Default 430
+BOTTOM_LIMIT_TRACK = 1095  # Default 915
+UPPER_LIMIT_TRACK = 408 # Default 430
 
 MIN_CENTRAL_POINTS = 10 # qnt mínima de pontos centrais para calcular a velocidade
 # The number of seconds a blob is allowed to sit around without having
 # any new blobs matching it.
 BLOB_TRACK_TIMEOUT = 0.7  # Default 0.7
 # ---- Speed Values -----------------------------------------------------------
-CF_LANE1 = 3.15#2.964779465463  # default 2.5869977 # Correction Factor
+CF_LANE1 = 2.964779465463  # default 2.5869977 # Correction Factor
 CF_LANE2 = 4.018997787987  # default 2.5869977    3.758897 
 CF_LANE3 = 2.404837879578  # default 2.3068397
 # ----  Save Results Values ---------------------------------------------------
-SAVE_RESULTS = True
 SAVE_FRAME_F1 = False  # Faixa 1
 SAVE_FRAME_F2 = False  # Faixa 2
 SAVE_FRAME_F3 = False  # Faixa 3
@@ -91,11 +89,11 @@ def calculate_speed(trails, fps):
     med_area_meter = 3.5  # metros (Valor estimado)
     med_area_pixel = r(485)
     qntd_frames = len(trails)  # default 11
-#    initial_pt, final_pt = t.linearRegression(trails, qntd_frames)  # Usando Regressão Linear
-#    dist_pixel = cv2.norm(final_pt, initial_pt)
-    dist_pixel = cv2.norm(trails[0], trails[10])  # Sem usar Regressão linear
-#    if SHOW_LINEAR_REGRESSION:
-#        cv2.line(frame, initial_pt, final_pt, t.ORANGE, 5)
+    initial_pt, final_pt = t.linearRegression(trails, qntd_frames)  # Usando Regressão Linear
+    dist_pixel = cv2.norm(final_pt, initial_pt)
+#    dist_pixel1 = cv2.norm(trails[0], trails[10])  # Sem usar Regressão linear
+    if SHOW_LINEAR_REGRESSION:
+        cv2.line(frame, initial_pt, final_pt, t.ORANGE, 5)
 #    cv2.line(frame,trails[0],trails[10], t.GREEN, 2)
 #    cv2.imwrite('img/regressao1_{}.png'.format(frameCount), frame)
     dist_meter = dist_pixel*(med_area_meter/med_area_pixel)
@@ -127,11 +125,10 @@ if not os.path.exists(f"results/{DATE}"):
     os.makedirs(f"results/{DATE}/imagens/faixa3")
 
 
-
 vehicle = t.read_xml(XML_FILE, VIDEO, DATE)  # Dicionário que armazena todas as informações do xml
 
 KERNEL_ERODE = np.ones((r(9), r(9)), np.uint8)
-KERNEL_DILATE = np.ones((r(100), r(150)), np.uint8)  # Default (r(100), r(50))
+KERNEL_DILATE = np.ones((r(100), r(50)), np.uint8)  # Default (r(100), r(50))
 
 while True:
     ret, frame = t.get_frame(cap, RESIZE_RATIO)
@@ -169,10 +166,6 @@ while True:
 
     frameGray = hist
     
-    im1Reg = t.perpective(frameGray,RESIZE_RATIO)
-    
-    frameGray = im1Reg
-    
     if ret is True:
         t.update_info_xml(frameCount, vehicle, dict_lane1, dict_lane2, dict_lane3)
         if SHOW_REAL_SPEEDS:
@@ -201,11 +194,10 @@ while True:
 #                area.append(cv2.contourArea(contours[i]))
 #                areahull.append(cv2.contourArea(hull[i]))
                 (x, y, w, h) = cv2.boundingRect(hull[i])
+#                w -= r(50)
+#                h -= r(80)
+                
                 center = (int(x + w/2), int(y + h/2))
-
-           
-                
-                
                 #out = cv2.rectangle(out, (x, y), (x + w, y + h), t.t.GREEN, 2) # printa na mask
                 # CONDIÇÕES PARA CONTINUAR COM TRACKING
 #                if h > r(HEIGHT)*.80 or w > r(WIDTH)*.40:
@@ -264,9 +256,8 @@ while True:
                                     closest_blob['speed'].insert(0, calculate_speed(closest_blob['trail'], FPS))
                                     lane = 1
                                     abs_error, per_error = t.write_results_on_image(frame, frameCount, ave_speed, lane, closest_blob['id'], RESIZE_RATIO, VIDEO,
-                                                                                    dict_lane1, dict_lane2, dict_lane3)
-                                    try:
-                                        results_lane1[str(closest_blob['id'])] = dict(ave_speed = round(ave_speed, 2),
+                                                                                    dict_lane1, dict_lane2, dict_lane3)                                
+                                    results_lane1[str(closest_blob['id'])] = dict(ave_speed = round(ave_speed, 2),
                                                                                  speeds = closest_blob['speed'],
                                                                                  frame = frameCount, 
                                                                                  real_speed = float(dict_lane1['speed']),
@@ -274,8 +265,6 @@ while True:
                                                                                  per_error = round(per_error, 3),
                                                                                  trail = closest_blob['trail'],
                                                                                  car_id = closest_blob['id'])
-                                    except:
-                                        pass
                                     abs_error = []
                                     per_error = []
                                     if SHOW_TRAIL:
@@ -293,8 +282,7 @@ while True:
                                     lane = 2
                                     abs_error, per_error = t.write_results_on_image(frame, frameCount, ave_speed, lane, closest_blob['id'], RESIZE_RATIO, VIDEO,
                                                                                     dict_lane1, dict_lane2, dict_lane3)                                
-                                    try:
-                                        results_lane2[str(closest_blob['id'])] = dict(ave_speed = round(ave_speed, 2),
+                                    results_lane2[str(closest_blob['id'])] = dict(ave_speed = round(ave_speed, 2),
                                                                                  speeds = closest_blob['speed'],
                                                                                  frame = frameCount, 
                                                                                  real_speed = float(dict_lane2['speed']),
@@ -302,8 +290,6 @@ while True:
                                                                                  per_error = round(per_error, 3),
                                                                                  trail = closest_blob['trail'],
                                                                                  car_id = closest_blob['id'])
-                                    except:
-                                        pass
                                     abs_error = []
                                     per_error = []
                                     if SHOW_TRAIL:
@@ -320,8 +306,7 @@ while True:
                                     closest_blob['speed'].insert(0, calculate_speed(closest_blob['trail'], FPS))
                                     lane = 3
                                     abs_error, per_error = t.write_results_on_image(frame, frameCount, ave_speed, lane, closest_blob['id'], RESIZE_RATIO, VIDEO,
-                                                                                    dict_lane1, dict_lane2, dict_lane3)
-                                    
+                                                                                    dict_lane1, dict_lane2, dict_lane3)                                
                                     results_lane3[str(closest_blob['id'])] = dict(ave_speed = round(ave_speed, 2),
                                                                                  speeds = closest_blob['speed'],
                                                                                  frame = frameCount, 
@@ -403,24 +388,17 @@ while True:
 
 
         print('*************************************************')
-        
-#        cv2.line(frame, (, final_pt, t.ORANGE, 5)
-
-        
         if SHOW_FRAME_COUNT:
             PERCE = str(int((100*frameCount)/vehicle['videoframes']))
             cv2.putText(frame, f'frame: {frameCount} {PERCE}%', (r(14), r(1071)), 0, .65, t.WHITE, 2)
         # ########## MOSTRA OS VIDEOS  ########################################
 #        cv2.imshow('equ', equ)
 #        cv2.imshow('res', res)
-        cv2.imshow('fgmask', fgmask)
-        cv2.imshow('erodedmask',erodedmask)
-        cv2.imshow('dilatedmask', dilatedmask)
+#        cv2.imshow('fgmask', fgmask)
+#        cv2.imshow('erodedmask',erodedmask)
+#        cv2.imshow('dilatedmask', dilatedmask)
 #        cv2.imshow('contornos',contornos)
-        cv2.imshow('out',out)
-
-#        cv2.imshow('res', res)
-        cv2.imshow('im1Reg', im1Reg)
+#        cv2.imshow('out',out)
         cv2.imshow('frame', frame)
 #        final = np.hstack((erodedmask, dilatedmask))
 #        cv2.imshow('final', final)
@@ -439,98 +417,97 @@ while True:
         break
 
 # ###### RESULTADOS ###########################################################
-if SAVE_RESULTS:
-    # Listas com sinais + e -
-    abs_error_list1 = []
-    abs_error_list2 = []
-    abs_error_list3 = []
-    # Módulo das Listas acima ( sem sinal )
-    abs_error_list1_mod = []
-    abs_error_list2_mod = []
-    abs_error_list3_mod = []
-    # Listas para faixa de valores
-    # faixa 1
-    #list_3km1 = []  # erros até 3km/h
-    #list_5km1 = []  # erros até 5km/h
-    #list_maior5km1 = []  # maiores que 5km/h
-    ## faixa 2
-    #list_3km2 = []  # erros até 3km/h
-    #list_5km2 = []  # erros até 5km/h
-    #list_maior5km2 = []  # maiores que 5km/h
-    ## faixa 3
-    #list_3km3 = []  # erros até 3km/h
-    #list_5km3 = []  # erros até 5km/h
-    #list_maior5km3 = []  # maiores que 5km/h
-    # lista erros percentuais
-    per_error_list1 = []
-    per_error_list2 = []
-    per_error_list3 = []
+# Listas com sinais + e -
+abs_error_list1 = []
+abs_error_list2 = []
+abs_error_list3 = []
+# Módulo das Listas acima ( sem sinal )
+abs_error_list1_mod = []
+abs_error_list2_mod = []
+abs_error_list3_mod = []
+# Listas para faixa de valores
+# faixa 1
+#list_3km1 = []  # erros até 3km/h
+#list_5km1 = []  # erros até 5km/h
+#list_maior5km1 = []  # maiores que 5km/h
+## faixa 2
+#list_3km2 = []  # erros até 3km/h
+#list_5km2 = []  # erros até 5km/h
+#list_maior5km2 = []  # maiores que 5km/h
+## faixa 3
+#list_3km3 = []  # erros até 3km/h
+#list_5km3 = []  # erros até 5km/h
+#list_maior5km3 = []  # maiores que 5km/h
+# lista erros percentuais
+per_error_list1 = []
+per_error_list2 = []
+per_error_list3 = []
+
+for errors in results_lane1:
+    abs_error_list1.append(results_lane1[errors]['abs_error'])
+    abs_error_list1_mod.append(abs(results_lane1[errors]['abs_error']))
+    per_error_list1.append(results_lane1[errors]['per_error'])
+ave_abs_error1 = round(np.mean(abs_error_list1_mod), 3)
+ave_per_error1 = round(np.mean(per_error_list1), 3)
+
+
+for errors in results_lane2:
+    abs_error_list2.append(results_lane2[errors]['abs_error'])
+    abs_error_list2_mod.append(abs(results_lane2[errors]['abs_error']))
+    per_error_list2.append(results_lane2[errors]['per_error'])
+ave_abs_error2 = round(np.mean(abs_error_list2_mod), 3)
+ave_per_error2 = round(np.mean(per_error_list2), 3)
+
+for errors in results_lane3:
+    abs_error_list3.append(results_lane3[errors]['abs_error'])
+    abs_error_list3_mod.append(abs(results_lane3[errors]['abs_error']))
+    per_error_list3.append(abs(results_lane3[errors]['per_error']))
+ave_abs_error3 = round(np.mean(abs_error_list3_mod), 3)
+ave_per_error3 = round(np.mean(per_error_list3), 3)
+
+list_3km1, list_5km1, list_maior5km1 = t.separar_por_kmh(abs_error_list1_mod)
+list_3km2, list_5km2, list_maior5km2 = t.separar_por_kmh(abs_error_list2_mod)
+list_3km3, list_5km3, list_maior5km3 = t.separar_por_kmh(abs_error_list3_mod)
+
+# Medidas pelo código
+total_cars_lane1 = len(results_lane1)
+total_cars_lane2 = len(results_lane2)
+total_cars_lane3 = len(results_lane3)
+
+# Taxa de Detecção
+rate_detec_lane1 = round(total_cars_lane1/vehicle['total_cars_lane1']*100, 2)
+rate_detec_lane2 = round(total_cars_lane2/vehicle['total_cars_lane2']*100, 2)
+rate_detec_lane3 = round(total_cars_lane3/vehicle['total_cars_lane3']*100, 2)
+
+t.plot_graph(abs_error_list1, ave_abs_error1, ave_per_error1, rate_detec_lane1, 
+               vehicle['total_cars_lane1'], total_cars_lane1, DATE, 1, VIDEO, CF_LANE1, True,
+               list_3km1, list_5km1, list_maior5km1) 
+
+t.plot_graph(abs_error_list2, ave_abs_error2, ave_per_error2, rate_detec_lane2, 
+               vehicle['total_cars_lane2'], total_cars_lane2, DATE, 2, VIDEO, CF_LANE2, True,
+               list_3km2, list_5km2, list_maior5km2)
     
-    for errors in results_lane1:
-        abs_error_list1.append(results_lane1[errors]['abs_error'])
-        abs_error_list1_mod.append(abs(results_lane1[errors]['abs_error']))
-        per_error_list1.append(results_lane1[errors]['per_error'])
-    ave_abs_error1 = round(np.mean(abs_error_list1_mod), 3)
-    ave_per_error1 = round(np.mean(per_error_list1), 3)
-    
-    
-    for errors in results_lane2:
-        abs_error_list2.append(results_lane2[errors]['abs_error'])
-        abs_error_list2_mod.append(abs(results_lane2[errors]['abs_error']))
-        per_error_list2.append(results_lane2[errors]['per_error'])
-    ave_abs_error2 = round(np.mean(abs_error_list2_mod), 3)
-    ave_per_error2 = round(np.mean(per_error_list2), 3)
-    
-    for errors in results_lane3:
-        abs_error_list3.append(results_lane3[errors]['abs_error'])
-        abs_error_list3_mod.append(abs(results_lane3[errors]['abs_error']))
-        per_error_list3.append(abs(results_lane3[errors]['per_error']))
-    ave_abs_error3 = round(np.mean(abs_error_list3_mod), 3)
-    ave_per_error3 = round(np.mean(per_error_list3), 3)
-    
-    list_3km1, list_5km1, list_maior5km1 = t.separar_por_kmh(abs_error_list1_mod)
-    list_3km2, list_5km2, list_maior5km2 = t.separar_por_kmh(abs_error_list2_mod)
-    list_3km3, list_5km3, list_maior5km3 = t.separar_por_kmh(abs_error_list3_mod)
-    
-    # Medidas pelo código
-    total_cars_lane1 = len(results_lane1)
-    total_cars_lane2 = len(results_lane2)
-    total_cars_lane3 = len(results_lane3)
-    
-    # Taxa de Detecção
-    rate_detec_lane1 = round(total_cars_lane1/vehicle['total_cars_lane1']*100, 2)
-    rate_detec_lane2 = round(total_cars_lane2/vehicle['total_cars_lane2']*100, 2)
-    rate_detec_lane3 = round(total_cars_lane3/vehicle['total_cars_lane3']*100, 2)
-    
-    t.plot_graph(abs_error_list1, ave_abs_error1, ave_per_error1, rate_detec_lane1, 
-                   vehicle['total_cars_lane1'], total_cars_lane1, DATE, 1, VIDEO, CF_LANE1, True,
-                   list_3km1, list_5km1, list_maior5km1) 
-    
-    t.plot_graph(abs_error_list2, ave_abs_error2, ave_per_error2, rate_detec_lane2, 
-                   vehicle['total_cars_lane2'], total_cars_lane2, DATE, 2, VIDEO, CF_LANE2, True,
-                   list_3km2, list_5km2, list_maior5km2)
-        
-    t.plot_graph(abs_error_list3, ave_abs_error3, ave_per_error3, rate_detec_lane3, 
-                   vehicle['total_cars_lane3'], total_cars_lane3, DATE, 3, VIDEO, CF_LANE3, True,
-                   list_3km3, list_5km3, list_maior5km3)
-    
-    # TOTAL
-    total_abs_errors = abs_error_list1 + abs_error_list2 + abs_error_list3
-    total_abs_errors_mod = abs_error_list1_mod + abs_error_list2_mod + abs_error_list3_mod
-    total_per_errors = per_error_list1 + per_error_list2 + per_error_list3
-    
-    
-    list_3km_tot, list_5km_tot, list_maior5km_tot = t.separar_por_kmh(total_abs_errors_mod)
-    
-    total_ave_abs = round(np.mean(total_abs_errors_mod), 3)
-    total_ave_per = round(np.mean(total_per_errors), 3)
-    total_cars = vehicle['total_cars_lane1']+vehicle['total_cars_lane2']+ vehicle['total_cars_lane3']
-    total_rate_detec = round(len(total_abs_errors)/(total_cars)*100, 2)
-    
-    
-    t.plot_graph(total_abs_errors, total_ave_abs, total_ave_per, total_rate_detec, 
-                   total_cars, len(total_abs_errors), DATE, 'total', VIDEO, '---', True,
-                   list_3km_tot, list_5km_tot, list_maior5km_tot)
+t.plot_graph(abs_error_list3, ave_abs_error3, ave_per_error3, rate_detec_lane3, 
+               vehicle['total_cars_lane3'], total_cars_lane3, DATE, 3, VIDEO, CF_LANE3, True,
+               list_3km3, list_5km3, list_maior5km3)
+
+# TOTAL
+total_abs_errors = abs_error_list1 + abs_error_list2 + abs_error_list3
+total_abs_errors_mod = abs_error_list1_mod + abs_error_list2_mod + abs_error_list3_mod
+total_per_errors = per_error_list1 + per_error_list2 + per_error_list3
+
+
+list_3km_tot, list_5km_tot, list_maior5km_tot = t.separar_por_kmh(total_abs_errors_mod)
+
+total_ave_abs = round(np.mean(total_abs_errors_mod), 3)
+total_ave_per = round(np.mean(total_per_errors), 3)
+total_cars = vehicle['total_cars_lane1']+vehicle['total_cars_lane2']+ vehicle['total_cars_lane3']
+total_rate_detec = round(len(total_abs_errors)/(total_cars)*100, 2)
+
+
+t.plot_graph(total_abs_errors, total_ave_abs, total_ave_per, total_rate_detec, 
+               total_cars, len(total_abs_errors), DATE, 'total', VIDEO, '---', True,
+               list_3km_tot, list_5km_tot, list_maior5km_tot)
 
 
 #for i in range(len(abs_error_list)):
@@ -540,28 +517,6 @@ if SAVE_RESULTS:
         
 #    abs_error.append(round(x[i]-y[i], 4))
 #    erro_3km.append((3,-3))
-copy2('Testes.py', f'results/{DATE}/')
-copy2('tccfunctions.py', f'results/{DATE}/')
-
-file = open(f'results/{DATE}/constantes.txt', 'w')
-file.write(f'VIDEO_FILE = {VIDEO_FILE} \n'
-           f'XML_FILE = {XML_FILE} \n'
-           f'FPS = {FPS} \n'
-           f'RESIZE_RATIO = {RESIZE_RATIO} \n'
-           f'CLOSE_VIDEO = {CLOSE_VIDEO} \n\n'
-           f'BLOB_LOCKON_DIST_PX_MAX = {BLOB_LOCKON_DIST_PX_MAX} \n'
-           f'BLOB_LOCKON_DIST_PX_MIN = {BLOB_LOCKON_DIST_PX_MIN} \n'
-           f'MIN_AREA_FOR_DETEC = {MIN_AREA_FOR_DETEC} \n\n'
-           f'BOTTOM_LIMIT_TRACK = {BOTTOM_LIMIT_TRACK} \n'
-           f'UPPER_LIMIT_TRACK = {UPPER_LIMIT_TRACK} \n'
-           f'MIN_CENTRAL_POINTS = {MIN_CENTRAL_POINTS} \n\n'
-           f'BLOB_TRACK_TIMEOUT = {BLOB_TRACK_TIMEOUT} \n\n'
-           f'CF_LANE1 = {CF_LANE1} \n'
-           f'CF_LANE2 = {CF_LANE2} \n'
-           f'CF_LANE3 = {CF_LANE3} \n\n')
-file.close()
-
-
 
 cap.release()
 cv2.destroyAllWindows()

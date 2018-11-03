@@ -86,23 +86,6 @@ def region_of_interest(frame, resize_ratio):
     pts7 = np.array([[r(1310), r(1080)], [r(900), r(0)],
                      [r(990), r(0)], [r(1410), r(1080)]], np.int32)
     cv2.fillPoly(frame, [pts7], BLACK)
-    # Faixa 3
-#    pts8 = np.array([[r(1410), r(1080)], [r(990), r(0)],
-#                      [r(1320), r(0)], [r(1920), r(750)], [r(1920), r(1080)]], np.int32)
-#    cv2.fillPoly(frame, [pts8], RED)
-    # Faixa 2
-#    pts9 = np.array([[r(570), r(1080)], [r(640), r(0)],
-#                     [r(900), r(0)], [r(1310), r(1080)]], np.int32)
-#    cv2.fillPoly(frame, [pts9], GREEN)
-    # Faixa 1
-#    pts10 = np.array([[r(480), r(1080)], [r(560), r(0)],
-#                       [r(270), 0], [0, r(620)], [0, 1080]], np.int32)
-    # faixa 1 - 4 pontos
-#    points = np.array([[[r(-150), r(1080)], [r(480), r(1080)],
-#                       [r(560), r(0)], [r(270), 0] ]], np.int32) = np.array([[[r(-150), r(1080)], [r(480), r(1080)],
-#                       [r(560), r(0)], [r(270), 0] ]], np.int32)
-#    cv2.fillPoly(frame, [pts10], BLUE)
-    
     return frame
 
 
@@ -374,9 +357,7 @@ def write_results_on_image(frame, frameCount, ave_speed, lane, id_car, RESIZE_RA
     if lane == 3:
         dict_lane = dict_lane3
         positions = [(r(1350), r(120)), (r(1550), r(120)), (r(1550), r(180)), (r(1550), r(230))]
-        
-    abs_error = 0.0
-    per_error = 0.0
+
     
     try:
         abs_error = ave_speed - float(dict_lane['speed'])
@@ -487,35 +468,3 @@ def separar_por_kmh(abs_error_list_mod):
         else:
             list_maior5km.append(value)
     return list_3km, list_5km, list_maior5km
-
-def perpective(frame,RESIZE_RATIO):
-    def r(numero):  # Faz o ajuste de escala das posições de textos e retangulos
-        return int(numero*RESIZE_RATIO)
-    mask_h = frame.shape[0]
-    mask_w = frame.shape[1]
-    mask_crop = np.zeros((mask_h, mask_w), dtype=np.uint8)
-    # faixa 3
-#    points = np.array([[[r(1410), r(1080)], [r(1920), r(750)],
-#          [r(1320), r(50)], [r(990), r(0)]]])    
-    #faixa 2
-#    points = np.array([[[r(570), r(1080)],  [r(1310), r(1080)],
-#         [r(900), r(0)],[r(640), r(0)]]], np.int32)
-    # faixa 1
-    points = np.array([[[r(-150), r(1080)], [r(480), r(1080)],
-                       [r(560), r(0)], [r(270), 0] ]], np.int32)
-    cv2.fillPoly(mask_crop, points, RED)
-#    res = cv2.bitwise_and(frame,frame,mask=mask_crop)
-
-#    rect = cv2.boundingRect(points) # returns (x,y,w,h) of the rect
-#    cropped = res[rect[1]: rect[1] + rect[3], rect[0]: rect[0] + rect[2]]
-#                # faixa 3 crop
-#    frame_crop = frame[0:r(1079), r(990):r(1920)]
-                
-    pt4 = [0,0]
-    pt3 = [r(500),0]
-    pt2 = [r(500), r(1080)]
-    pt1 = [0, r(1080)]      
-    target_pts = np.array([pt1,pt2,pt3,pt4 ], np.float32)
-    H, mask_crop = cv2.findHomography(points, target_pts, cv2.RANSAC)
-    im1Reg = cv2.warpPerspective(frame, H, (r(500), r(1080)))
-    return im1Reg

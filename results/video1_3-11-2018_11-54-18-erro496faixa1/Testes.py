@@ -7,7 +7,6 @@ import os
 import cv2
 import tccfunctions as t
 import datetime
-from shutil import copy2
 #import math
 # ########  CONSTANT VALUES ###################################################
 VIDEO = 1
@@ -125,7 +124,6 @@ if not os.path.exists(f"results/{DATE}"):
     os.makedirs(f"results/{DATE}/imagens/faixa1")
     os.makedirs(f"results/{DATE}/imagens/faixa2")
     os.makedirs(f"results/{DATE}/imagens/faixa3")
-
 
 
 vehicle = t.read_xml(XML_FILE, VIDEO, DATE)  # Dicionário que armazena todas as informações do xml
@@ -540,28 +538,6 @@ if SAVE_RESULTS:
         
 #    abs_error.append(round(x[i]-y[i], 4))
 #    erro_3km.append((3,-3))
-copy2('Testes.py', f'results/{DATE}/')
-copy2('tccfunctions.py', f'results/{DATE}/')
-
-file = open(f'results/{DATE}/constantes.txt', 'w')
-file.write(f'VIDEO_FILE = {VIDEO_FILE} \n'
-           f'XML_FILE = {XML_FILE} \n'
-           f'FPS = {FPS} \n'
-           f'RESIZE_RATIO = {RESIZE_RATIO} \n'
-           f'CLOSE_VIDEO = {CLOSE_VIDEO} \n\n'
-           f'BLOB_LOCKON_DIST_PX_MAX = {BLOB_LOCKON_DIST_PX_MAX} \n'
-           f'BLOB_LOCKON_DIST_PX_MIN = {BLOB_LOCKON_DIST_PX_MIN} \n'
-           f'MIN_AREA_FOR_DETEC = {MIN_AREA_FOR_DETEC} \n\n'
-           f'BOTTOM_LIMIT_TRACK = {BOTTOM_LIMIT_TRACK} \n'
-           f'UPPER_LIMIT_TRACK = {UPPER_LIMIT_TRACK} \n'
-           f'MIN_CENTRAL_POINTS = {MIN_CENTRAL_POINTS} \n\n'
-           f'BLOB_TRACK_TIMEOUT = {BLOB_TRACK_TIMEOUT} \n\n'
-           f'CF_LANE1 = {CF_LANE1} \n'
-           f'CF_LANE2 = {CF_LANE2} \n'
-           f'CF_LANE3 = {CF_LANE3} \n\n')
-file.close()
-
-
 
 cap.release()
 cv2.destroyAllWindows()

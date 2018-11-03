@@ -4,14 +4,13 @@ Created on Tue Oct 23 18:31:55 2018
 
 @author: broch
 """
-#import cv2
-#import numpy as np
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+from shutil import copy2
+
 #import os
 
-#----- Colors -----------------------------------------------------------------
-ret = True
-while ret:
-#    for i in range(4):
-    if ret:
-        continue
-    print(ret)
+copy2('Testes.py', 'results/')
+copy2('teste_duvidas.py', 'results/')
+
