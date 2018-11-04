@@ -636,7 +636,7 @@ while True:
         cv2.imshow('frame_lane1', frame_lane1)
         cv2.imshow('frame_lane2', frame_lane2)
         cv2.imshow('frame_lane3', frame_lane3)
-#        cv2.imshow('frame', frame)
+        cv2.imshow('frame', frame)
         
 #        final = np.hstack((erodedmask, dilatedmask))
 #        cv2.imshow('final', final)
