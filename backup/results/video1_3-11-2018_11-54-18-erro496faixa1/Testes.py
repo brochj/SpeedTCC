@@ -7,14 +7,13 @@ import os
 import cv2
 import tccfunctions as t
 import datetime
-from shutil import copy2
 #import math
 # ########  CONSTANT VALUES ###################################################
 VIDEO = 1
 VIDEO_FILE = '../Dataset/video{}.mp4'.format(VIDEO)
 XML_FILE = '../Dataset/video{}.xml'.format(VIDEO)
 
-RESIZE_RATIO = 0.35 #0.7697  # Resize, valores entre 0 e 1 | 1= ize original do video
+RESIZE_RATIO = 0.7697 #0.7697  # Resize, valores entre 0 e 1 | 1= ize original do video
 CLOSE_VIDEO = 5934 #5934  # 1-6917 # 5-36253
 ARTG_FRAME = 0  # 254  # Frame q usei para exemplo no Artigo
 
@@ -49,7 +48,7 @@ CF_LANE1 = 3.15#2.964779465463  # default 2.5869977 # Correction Factor
 CF_LANE2 = 4.018997787987  # default 2.5869977    3.758897 
 CF_LANE3 = 2.404837879578  # default 2.3068397
 # ----  Save Results Values ---------------------------------------------------
-SAVE_RESULTS = False
+SAVE_RESULTS = True
 SAVE_FRAME_F1 = False  # Faixa 1
 SAVE_FRAME_F2 = False  # Faixa 2
 SAVE_FRAME_F3 = False  # Faixa 3
@@ -126,10 +125,11 @@ if not os.path.exists(f"results/{DATE}"):
     os.makedirs(f"results/{DATE}/imagens/faixa2")
     os.makedirs(f"results/{DATE}/imagens/faixa3")
 
+
 vehicle = t.read_xml(XML_FILE, VIDEO, DATE)  # Dicionário que armazena todas as informações do xml
 
 KERNEL_ERODE = np.ones((r(9), r(9)), np.uint8)
-KERNEL_DILATE = np.ones((r(100), r(300)), np.uint8)  # Default (r(100), r(50))
+KERNEL_DILATE = np.ones((r(100), r(150)), np.uint8)  # Default (r(100), r(50))
 
 while True:
     ret, frame = t.get_frame(cap, RESIZE_RATIO)
@@ -167,22 +167,14 @@ while True:
 
     frameGray = hist
     
-    frame_lane1 = t.perpective(frameGray, 1, RESIZE_RATIO)
-    frame_lane2 = t.perpective(frameGray, 2, RESIZE_RATIO)
-    frame_lane3 = t.perpective(frameGray, 3, RESIZE_RATIO)
+    im1Reg = t.perpective(frameGray,RESIZE_RATIO)
     
-    frameGray = frame_lane1
+    frameGray = im1Reg
     
     if ret is True:
         t.update_info_xml(frameCount, vehicle, dict_lane1, dict_lane2, dict_lane3)
         if SHOW_REAL_SPEEDS:
             t.print_xml_values(frame, RESIZE_RATIO, dict_lane1, dict_lane2, dict_lane3)
-            
-        fgmask_lane2 = bgsMOG.apply(frameGray, None, 0.01)
-        erodedmask_lane2 = cv2.erode(fgmask_lane2, KERNEL_ERODE, iterations=1)
-        dilatedmask_lane2 = cv2.dilate(erodedmask_lane2, KERNEL_DILATE, iterations=1)
-        _, contours_lane2, hierarchy = cv2.findContours(dilatedmask_lane2, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        
 
         fgmask = bgsMOG.apply(frameGray, None, 0.01)
         erodedmask = cv2.erode(fgmask, KERNEL_ERODE, iterations=1)
@@ -411,9 +403,6 @@ while True:
         print('*************************************************')
         
 #        cv2.line(frame, (, final_pt, t.ORANGE, 5)
-#        points = np.array([[[r(1410), r(1080)], [r(2170), r(1080)],
-#          [r(1320), r(0)], [r(990), r(0)]]])
-#        cv2.fillPoly(frame, points, t.RED)
 
         
         if SHOW_FRAME_COUNT:
@@ -429,9 +418,7 @@ while True:
         cv2.imshow('out',out)
 
 #        cv2.imshow('res', res)
-        cv2.imshow('frame_lane1', frame_lane1)
-        cv2.imshow('frame_lane2', frame_lane2)
-        cv2.imshow('frame_lane3', frame_lane3)
+        cv2.imshow('im1Reg', im1Reg)
         cv2.imshow('frame', frame)
 #        final = np.hstack((erodedmask, dilatedmask))
 #        cv2.imshow('final', final)
@@ -551,27 +538,6 @@ if SAVE_RESULTS:
         
 #    abs_error.append(round(x[i]-y[i], 4))
 #    erro_3km.append((3,-3))
-copy2('Testes.py', f'results/{DATE}/')
-copy2('tccfunctions.py', f'results/{DATE}/')
-
-file = open(f'results/{DATE}/constantes.txt', 'w')
-file.write(f'VIDEO_FILE = {VIDEO_FILE} \n'
-           f'XML_FILE = {XML_FILE} \n'
-           f'FPS = {FPS} \n'
-           f'RESIZE_RATIO = {RESIZE_RATIO} \n'
-           f'CLOSE_VIDEO = {CLOSE_VIDEO} \n\n'
-           f'BLOB_LOCKON_DIST_PX_MAX = {BLOB_LOCKON_DIST_PX_MAX} \n'
-           f'BLOB_LOCKON_DIST_PX_MIN = {BLOB_LOCKON_DIST_PX_MIN} \n'
-           f'MIN_AREA_FOR_DETEC = {MIN_AREA_FOR_DETEC} \n\n'
-           f'BOTTOM_LIMIT_TRACK = {BOTTOM_LIMIT_TRACK} \n'
-           f'UPPER_LIMIT_TRACK = {UPPER_LIMIT_TRACK} \n'
-           f'MIN_CENTRAL_POINTS = {MIN_CENTRAL_POINTS} \n\n'
-           f'BLOB_TRACK_TIMEOUT = {BLOB_TRACK_TIMEOUT} \n\n'
-           f'CF_LANE1 = {CF_LANE1} \n'
-           f'CF_LANE2 = {CF_LANE2} \n'
-           f'CF_LANE3 = {CF_LANE3} \n\n')
-file.close()
-
 
 cap.release()
 cv2.destroyAllWindows()
