@@ -322,7 +322,6 @@ def skip_video(frameCount, video, frame):
         if frameCount > 130 and frameCount < 176: skip = True
         if frameCount > 212 and frameCount < 235: skip = True
         if frameCount > 336 and frameCount < 361: skip = True
-        if frameCount > 394 and frameCount < 425: skip = True  # Caminhão
         if frameCount > 460 and frameCount < 467: skip = True
         if frameCount > 499 and frameCount < 563: skip = True
         if frameCount > 598 and frameCount < 614: skip = True
@@ -330,7 +329,6 @@ def skip_video(frameCount, video, frame):
         if frameCount > 731 and frameCount < 739: skip = True
         if frameCount > 781 and frameCount < 794: skip = True
         if frameCount > 829 and frameCount < 857: skip = True
-        if frameCount > 856 and frameCount < 895: skip = True # carro preto F3, da pra por (tava com erro altissimo)       
         if frameCount > 894 and frameCount < 925: skip = True
         if frameCount > 958 and frameCount < 1054: skip = True
         if frameCount > 1053 and frameCount < 1101: skip = True  # Caminhão

@@ -15,7 +15,7 @@ VIDEO = 1
 VIDEO_FILE = '../Dataset/video{}.avi'.format(VIDEO)
 XML_FILE = '../Dataset/video{}.xml'.format(VIDEO)
 
-RESIZE_RATIO = .6667 #0.7697  720p=.6667 480p=.4445
+RESIZE_RATIO = .7697 #0.7697  # Resize, valores entre 0 e 1 | 1= ize original do video
 if RESIZE_RATIO > 1:
     exit('ERRO: AJUSTE O RESIZE_RATIO')
 CLOSE_VIDEO = 5934 #5934  # 1-6917 # 5-36253
@@ -134,8 +134,8 @@ if not os.path.exists(f"results/{DATE}"):
 
 vehicle = t.read_xml(XML_FILE, VIDEO, DATE)  # Dicionário que armazena todas as informações do xml
 
-KERNEL_ERODE = np.ones((r(12), r(12)), np.uint8)  # Default (r(12), r(12))
-KERNEL_DILATE = np.ones((r(100), r(320)), np.uint8)  # Default (r(100), r(640))
+KERNEL_ERODE = np.ones((r(12), r(12)), np.uint8)  # Default (r(9), r(9))
+KERNEL_DILATE = np.ones((r(100), r(640)), np.uint8)  # Default (r(100), r(50))
 
 while True:
     ret, frame = t.get_frame(cap, RESIZE_RATIO)
@@ -643,13 +643,10 @@ while True:
 #        cv2.imshow('final', final)
 #        cv2.imshow('mask_eroded', np.concatenate((fgmask, dilatedmask),0))
 #        crop_img = outputFrame[70:320, 0:640]
-        if frameCount > 857 and frameCount < 894:
-##        if frameCount == 114:
-            cv2.imwrite('img/teste/{}.png'.format(frameCount), frame_lane3)
-            cv2.imwrite('img/teste/dilatedmask_L3_{}.png'.format(frameCount), dilatedmask_L3)
-            cv2.imwrite('img/teste/dilatedmask_L3_{}.png'.format(frameCount), dilatedmask_L3)
-            cv2.imwrite('img/teste/out_L3_{}.png'.format(frameCount), out_L3)
-#            cv2.imwrite('img/teste/L3_{}.png'.format(frameCount), np.hstack((erodedmask_L3, out_L3)))
+#        if frameCount > 3999 and frameCount < 6917:
+#        if frameCount == 114:
+#            cv2.imwrite('img/teste/{}.png'.format(frameCount), frame)
+#            cv2.imwrite('img/teste/{}.png'.format(frameCount), np.vstack((out,frame)))
         frameCount += 1    # Conta a quantidade de Frames
         if frameCount == CLOSE_VIDEO:  # fecha o video
             break

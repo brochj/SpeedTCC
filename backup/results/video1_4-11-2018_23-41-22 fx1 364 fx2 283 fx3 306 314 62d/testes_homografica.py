@@ -15,7 +15,7 @@ VIDEO = 1
 VIDEO_FILE = '../Dataset/video{}.avi'.format(VIDEO)
 XML_FILE = '../Dataset/video{}.xml'.format(VIDEO)
 
-RESIZE_RATIO = .6667 #0.7697  720p=.6667 480p=.4445
+RESIZE_RATIO = .7697 #0.7697  # Resize, valores entre 0 e 1 | 1= ize original do video
 if RESIZE_RATIO > 1:
     exit('ERRO: AJUSTE O RESIZE_RATIO')
 CLOSE_VIDEO = 5934 #5934  # 1-6917 # 5-36253
@@ -31,7 +31,7 @@ SHOW_REAL_SPEEDS = True
 SHOW_FRAME_COUNT = True
 
 SKIP_VIDEO = True
-SEE_CUTTED_VIDEO = False  # ver partes retiradas, precisa de SKIP_VIDEO = True
+SEE_CUTTED_VIDEO = False  # ver partes retiradas, needs SKIP_VIDEO = True
 # ---- Tracking Values --------------------------------------------------------
 # The maximum distance a blob centroid is allowed to move in order to
 # consider it a match to a previous scene's blob.
@@ -134,8 +134,8 @@ if not os.path.exists(f"results/{DATE}"):
 
 vehicle = t.read_xml(XML_FILE, VIDEO, DATE)  # Dicionário que armazena todas as informações do xml
 
-KERNEL_ERODE = np.ones((r(12), r(12)), np.uint8)  # Default (r(12), r(12))
-KERNEL_DILATE = np.ones((r(100), r(320)), np.uint8)  # Default (r(100), r(640))
+KERNEL_ERODE = np.ones((r(12), r(12)), np.uint8)  # Default (r(9), r(9))
+KERNEL_DILATE = np.ones((r(100), r(640)), np.uint8)  # Default (r(100), r(50))
 
 while True:
     ret, frame = t.get_frame(cap, RESIZE_RATIO)
@@ -503,25 +503,23 @@ while True:
                                 abs_error, per_error = t.write_results_on_image(frame, frameCount, ave_speed, lane, closest_blob_L3['id'], RESIZE_RATIO, VIDEO,
                                                                                 dict_lane1, dict_lane2, dict_lane3)
                                 
-                                try:
-                                    results_lane3[str(closest_blob_L3['id'])] = dict(ave_speed = round(ave_speed, 2),
-                                                                                 speeds = closest_blob_L3['speed'],
-                                                                                 frame = frameCount, 
-                                                                                 real_speed = float(dict_lane3['speed']),
-                                                                                 abs_error = round(abs_error, 2),
-                                                                                 per_error = round(per_error, 3),
-                                                                                 trail = closest_blob_L3['trail'],
-                                                                                 car_id = closest_blob_L3['id'])
-                                    abs_error = []
-                                    per_error = []
+                                results_lane3[str(closest_blob_L3['id'])] = dict(ave_speed = round(ave_speed, 2),
+                                                                             speeds = closest_blob_L3['speed'],
+                                                                             frame = frameCount, 
+                                                                             real_speed = float(dict_lane3['speed']),
+                                                                             abs_error = round(abs_error, 2),
+                                                                             per_error = round(per_error, 3),
+                                                                             trail = closest_blob_L3['trail'],
+                                                                             car_id = closest_blob_L3['id'])
+                                abs_error = []
+                                per_error = []
                                
-                                    if SHOW_FRAME_COUNT:
-                                        PERCE = str(int((100*frameCount)/vehicle['videoframes']))
-                                        cv2.putText(frame, f'frame: {frameCount} {PERCE}%', (r(14), r(1071)), 0, .65, t.WHITE, 2)                                    
-                                    if SAVE_FRAME_F3:
-                                        cv2.imwrite('results/{}/imagens/faixa3/{}_{}_F{}_{}.png'.format(DATE, VIDEO, dict_lane3['frame_start'], lane, closest_blob_L3['id']), frame)
-                                except:
-                                    pass
+                                if SHOW_FRAME_COUNT:
+                                    PERCE = str(int((100*frameCount)/vehicle['videoframes']))
+                                    cv2.putText(frame, f'frame: {frameCount} {PERCE}%', (r(14), r(1071)), 0, .65, t.WHITE, 2)                                    
+                                if SAVE_FRAME_F3:
+                                    cv2.imwrite('results/{}/imagens/faixa3/{}_{}_F{}_{}.png'.format(DATE, VIDEO, dict_lane3['frame_start'], lane, closest_blob_L3['id']), frame)
+                                    
     
                 if not closest_blob_L3: # Cria as variaves
                     # If we didn't find a blob, let's make a new one and add it to the list
@@ -643,13 +641,10 @@ while True:
 #        cv2.imshow('final', final)
 #        cv2.imshow('mask_eroded', np.concatenate((fgmask, dilatedmask),0))
 #        crop_img = outputFrame[70:320, 0:640]
-        if frameCount > 857 and frameCount < 894:
-##        if frameCount == 114:
-            cv2.imwrite('img/teste/{}.png'.format(frameCount), frame_lane3)
-            cv2.imwrite('img/teste/dilatedmask_L3_{}.png'.format(frameCount), dilatedmask_L3)
-            cv2.imwrite('img/teste/dilatedmask_L3_{}.png'.format(frameCount), dilatedmask_L3)
-            cv2.imwrite('img/teste/out_L3_{}.png'.format(frameCount), out_L3)
-#            cv2.imwrite('img/teste/L3_{}.png'.format(frameCount), np.hstack((erodedmask_L3, out_L3)))
+#        if frameCount > 3999 and frameCount < 6917:
+#        if frameCount == 114:
+#            cv2.imwrite('img/teste/{}.png'.format(frameCount), frame)
+#            cv2.imwrite('img/teste/{}.png'.format(frameCount), np.vstack((out,frame)))
         frameCount += 1    # Conta a quantidade de Frames
         if frameCount == CLOSE_VIDEO:  # fecha o video
             break
