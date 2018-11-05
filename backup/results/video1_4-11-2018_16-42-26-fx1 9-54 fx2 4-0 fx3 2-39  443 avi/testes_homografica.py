@@ -40,25 +40,17 @@ BLOB_LOCKON_DIST_PX_MIN = 5  # default 5
 MIN_AREA_FOR_DETEC = 30000  # Default 40000 (não detecta Moto)
 # Limites da Área de Medição, área onde é feita o Tracking
 # Distancia de medição: default 915-430 = 485
-
-# Faixa 1
-BOTTOM_LIMIT_TRACK = 900 #1095  # Default 915
-UPPER_LIMIT_TRACK = 400 #408 # Default 430
-# Faixa 2
-BOTTOM_LIMIT_TRACK_L2 = 930 #1095  # Default 915
-UPPER_LIMIT_TRACK_L2 = 430 #408 # Default 430
-# Faixa 3
-BOTTOM_LIMIT_TRACK_L3 = 930 #1095  # Default 915
-UPPER_LIMIT_TRACK_L3 = 430 #408 # Default 430
+BOTTOM_LIMIT_TRACK = 930 #1095  # Default 915
+UPPER_LIMIT_TRACK = 430 #408 # Default 430
 
 MIN_CENTRAL_POINTS = 10 # qnt mínima de pontos centrais para calcular a velocidade
 # The number of seconds a blob is allowed to sit around without having
 # any new blobs matching it.
 BLOB_TRACK_TIMEOUT = 0.1  # Default 0.7
 # ---- Speed Values -----------------------------------------------------------
-CF_LANE1 = 2.10 #2.964779465463  # default 2.5869977 # Correction Factor
+CF_LANE1 = 2.35 #2.964779465463  # default 2.5869977 # Correction Factor
 CF_LANE2 = 2.35  # default 2.5869977    3.758897 
-CF_LANE3 = 2.3048378 # default 2.304837879578
+CF_LANE3 = 2.304837879578  # default 2.3068397
 # ----  Save Results Values ---------------------------------------------------
 SAVE_RESULTS = True
 SAVE_FRAME_F1 = False  # Faixa 1
@@ -68,6 +60,7 @@ SAVE_FRAME_F3 = False  # Faixa 3
 cap = cv2.VideoCapture(VIDEO_FILE)
 #FPS = cap.get(cv2.CAP_PROP_FPS)
 FPS = 30.15
+#Fra = cap.get(cv2.CAP_PROP_FRAME_COUNT)     
 WIDTH = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))  # Retorna a largura do video
 HEIGHT = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))  # Retorna a largura do video
 
@@ -155,7 +148,7 @@ while True:
                 if frameCount == CLOSE_VIDEO:  # fecha o video
                     break
                 continue
-#    frame[np.where((frame == [64,64,64]).all(axis = 2))] = [200,200,200]        
+            
     frameGray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     t.region_of_interest(frameGray, RESIZE_RATIO)
     
@@ -245,13 +238,13 @@ while True:
                         # Check if the distance is close enough to "lock on"
                         if distance < r(BLOB_LOCKON_DIST_PX_MAX) and distance > r(BLOB_LOCKON_DIST_PX_MIN):
                             closest_blob = close_blob
-                            continue # retirar depois
+#                            continue # retirar depois
                             # If it's close enough, make sure the blob was moving in the expected direction
-#                            if close_blob['trail'][0][1] < center[1]:  # verifica se esta na dir up
-#                                continue
-#                            else:
-#                                closest_blob = close_blob
-#                                continue  # defalut break
+                            if close_blob['trail'][0][1] < center[1]:  # verifica se esta na dir up
+                                continue
+                            else:
+                                closest_blob = close_blob
+                                continue  # defalut break
 
                     if closest_blob:
                         # If we found a blob to attach this blob to, we should
@@ -334,7 +327,7 @@ while True:
                 if w_L2 < r(340) and h_L2 < r(340):  # ponto que da pra mudar
                     continue
                 # Área de medição do Tracking
-                if center_L2[1] > r(BOTTOM_LIMIT_TRACK_L2) or center_L2[1] < r(UPPER_LIMIT_TRACK_L2):
+                if center_L2[1] > r(BOTTOM_LIMIT_TRACK) or center_L2[1] < r(UPPER_LIMIT_TRACK):
                     continue
                 
                 
@@ -450,7 +443,7 @@ while True:
                 if w_L3 < r(340) and h_L3 < r(340):  # ponto que da pra mudar
                     continue
                 # Área de medição do Tracking
-                if center_L3[1] > r(BOTTOM_LIMIT_TRACK_L3) or center_L3[1] < r(UPPER_LIMIT_TRACK_L3):
+                if center_L3[1] > r(BOTTOM_LIMIT_TRACK) or center_L3[1] < r(UPPER_LIMIT_TRACK):
                     continue
                 
                 
@@ -635,7 +628,7 @@ while True:
         cv2.imshow('frame_lane1', frame_lane1)
         cv2.imshow('frame_lane2', frame_lane2)
         cv2.imshow('frame_lane3', frame_lane3)
-        cv2.imshow('frame', frame)
+#        cv2.imshow('frame', frame)
         
 #        final = np.hstack((erodedmask, dilatedmask))
 #        cv2.imshow('final', final)

@@ -341,17 +341,17 @@ def skip_video(frameCount, video, frame):
         if frameCount > 3230 and frameCount < 3242: skip = True
         if frameCount > 3100 and frameCount < 3115: skip = True
         if frameCount > 2979 and frameCount < 3018: skip = True
-#        if frameCount > 3030 and frameCount < 3050: skip = True
-#        if frameCount > 3060 and frameCount < 3090: skip = True
-#        if frameCount > 3122 and frameCount < 3166: skip = True
-#        if frameCount > 3279 and frameCount < 3328: skip = True
+        if frameCount > 3030 and frameCount < 3050: skip = True
+        if frameCount > 3060 and frameCount < 3090: skip = True
+        if frameCount > 3122 and frameCount < 3166: skip = True
+        if frameCount > 3279 and frameCount < 3328: skip = True
         if frameCount > 3404 and frameCount < 3459: skip = True
         if frameCount > 3450 and frameCount < 4900: skip = True
-#        if frameCount > 5270 and frameCount < 5285: skip = True
-#        if frameCount > 5375 and frameCount < 5390: skip = True
-#        if frameCount > 5525 and frameCount < 5540: skip = True
+        if frameCount > 5270 and frameCount < 5285: skip = True
+        if frameCount > 5375 and frameCount < 5390: skip = True
+        if frameCount > 5525 and frameCount < 5540: skip = True
         if frameCount > 5738 and frameCount < 5753: skip = True
-#        if frameCount > 5615 and frameCount < 5630: skip = True
+        if frameCount > 5615 and frameCount < 5630: skip = True
         if frameCount > 5322 and frameCount < 5352: skip = True
         if frameCount > 5401 and frameCount < 5507: skip = True # caminhao
         if frameCount > 5554 and frameCount < 5604: skip = True # van no meio da faixa
@@ -497,8 +497,8 @@ def perpective(frame, lane, RESIZE_RATIO):
     if lane == 1:
         points = np.array([[[r(-150), r(1080)], [r(480), r(1080)],
                            [r(560), r(0)], [r(270), 0] ]], np.int32)
-        pt4 = [r(35),0]
-        pt3 = [r(610),0]
+        pt4 = [r(70),0]
+        pt3 = [r(570),0]
         pt2 = [r(640), r(1080)]
         pt1 = [0, r(1080)]
         
@@ -512,12 +512,12 @@ def perpective(frame, lane, RESIZE_RATIO):
     elif lane == 2:
         points = np.array([[[r(570), r(1080)],  [r(1310), r(1080)],
                             [r(900), r(0)],[r(640), r(0)]]], np.int32)
-        pt4 = [r(50),0]
+        pt4 = [r(70),0]
         pt3 = [r(570),0]
         pt2 = [r(640), r(1080)]
         pt1 = [0, r(1080)]
         
-        width = r(640) # 640
+        width = r(640)
         height = r(1080)
         target_pts = np.array([pt1,pt2,pt3,pt4 ], np.float32)
         H, mask_crop = cv2.findHomography(points, target_pts, cv2.RANSAC)
@@ -528,8 +528,8 @@ def perpective(frame, lane, RESIZE_RATIO):
     elif lane == 3:
         points = np.array([[[r(1410), r(1080)], [r(2170), r(1080)],
                             [r(1320), r(0)], [r(990), r(0)]]], np.int32)
-        pt4 = [r(15),0]
-        pt3 = [r(670),0]
+        pt4 = [r(70),0]
+        pt3 = [r(570),0]
         pt2 = [r(640), r(1080)]
         pt1 = [0, r(1080)] 
         # dimensoes da output image    

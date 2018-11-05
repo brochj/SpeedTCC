@@ -56,9 +56,9 @@ MIN_CENTRAL_POINTS = 10 # qnt mínima de pontos centrais para calcular a velocid
 # any new blobs matching it.
 BLOB_TRACK_TIMEOUT = 0.1  # Default 0.7
 # ---- Speed Values -----------------------------------------------------------
-CF_LANE1 = 2.10 #2.964779465463  # default 2.5869977 # Correction Factor
+CF_LANE1 = 2.15 #2.964779465463  # default 2.5869977 # Correction Factor
 CF_LANE2 = 2.35  # default 2.5869977    3.758897 
-CF_LANE3 = 2.3048378 # default 2.304837879578
+CF_LANE3 = 2.304837879578  # default 2.3068397
 # ----  Save Results Values ---------------------------------------------------
 SAVE_RESULTS = True
 SAVE_FRAME_F1 = False  # Faixa 1
@@ -68,6 +68,7 @@ SAVE_FRAME_F3 = False  # Faixa 3
 cap = cv2.VideoCapture(VIDEO_FILE)
 #FPS = cap.get(cv2.CAP_PROP_FPS)
 FPS = 30.15
+#Fra = cap.get(cv2.CAP_PROP_FRAME_COUNT)     
 WIDTH = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))  # Retorna a largura do video
 HEIGHT = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))  # Retorna a largura do video
 
