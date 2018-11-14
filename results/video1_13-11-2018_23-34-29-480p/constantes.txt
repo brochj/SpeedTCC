@@ -1,0 +1,26 @@
+VIDEO_FILE = ../Dataset/video1.avi 
+XML_FILE = ../Dataset/video1.xml 
+FPS = 30.15 
+RESIZE_RATIO = 0.4445 
+CLOSE_VIDEO = 5934 
+
+BLOB_LOCKON_DIST_PX_MAX = 150 
+BLOB_LOCKON_DIST_PX_MIN = 5 
+MIN_AREA_FOR_DETEC = 30000 
+
+BOTTOM_LIMIT_TRACK = 910 
+UPPER_LIMIT_TRACK = 395 
+MIN_CENTRAL_POINTS = 10 
+
+BLOB_TRACK_TIMEOUT = 0.1 
+
+CF_LANE1 = 2.1 
+CF_LANE2 = 2.32 
+CF_LANE3 = 2.3048378 
+
+Tempo de processamento de cada frame 
+qndt de frames processados: 2197 
+valor máximo: 0.1649947166442871  segundos
+valor mínimo: 0.037998199462890625  segundos
+valor médio: 0.06093171362340803  segundos
+

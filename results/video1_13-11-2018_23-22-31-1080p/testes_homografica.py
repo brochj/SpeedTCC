@@ -2,7 +2,7 @@
 import time
 import uuid
 import numpy as np
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import os
 import cv2
 import tccfunctions as t
@@ -15,12 +15,11 @@ VIDEO = 1
 VIDEO_FILE = '../Dataset/video{}.avi'.format(VIDEO)
 XML_FILE = '../Dataset/video{}.xml'.format(VIDEO)
 
-RESIZE_RATIO = .6667 #0.7697  720p=.6667 480p=.4445
+RESIZE_RATIO = 1 #0.7697  720p=.6667 480p=.4445 360p=.33333 240p=.22222 144p=.13333
 if RESIZE_RATIO > 1:
     exit('ERRO: AJUSTE O RESIZE_RATIO')
-CLOSE_VIDEO = 196 #5934  # 1-6917 # 5-36253
+CLOSE_VIDEO = 5934 #2950 #5934  # 1-6917 # 5-36253
 ARTG_FRAME = 0  # 254  # Frame q usei para exemplo no Artigo
-IMAGES_TCC = 195
 
 SHOW_ROI = True
 SHOW_TRACKING_AREA = True
@@ -31,7 +30,7 @@ SHOW_CAR_RECTANGLE = True
 SHOW_REAL_SPEEDS = True
 SHOW_FRAME_COUNT = True
 
-SKIP_VIDEO = False
+SKIP_VIDEO = True
 SEE_CUTTED_VIDEO = False  # ver partes retiradas, precisa de SKIP_VIDEO = True
 # ---- Tracking Values --------------------------------------------------------
 # The maximum distance a blob centroid is allowed to move in order to
@@ -43,11 +42,11 @@ MIN_AREA_FOR_DETEC = 30000  # Default 40000
 # Distancia de medição: default 915-430 = 485
 
 # Faixa 1
-BOTTOM_LIMIT_TRACK = 900 #1095  # Default 915
-UPPER_LIMIT_TRACK = 400 #408 # Default 430
+BOTTOM_LIMIT_TRACK = 910  #850  # Default 900
+UPPER_LIMIT_TRACK = 395 #350  # Default 430
 # Faixa 2
-BOTTOM_LIMIT_TRACK_L2 = 930 #1095  # Default 915
-UPPER_LIMIT_TRACK_L2 = 430 #408 # Default 430
+BOTTOM_LIMIT_TRACK_L2 = 940 #1095  # Default 940
+UPPER_LIMIT_TRACK_L2 = 425 #408 # Default 420
 # Faixa 3
 BOTTOM_LIMIT_TRACK_L3 = 930 #1095  # Default 915
 UPPER_LIMIT_TRACK_L3 = 430 #408 # Default 430
@@ -58,13 +57,13 @@ MIN_CENTRAL_POINTS = 10 # qnt mínima de pontos centrais para calcular a velocid
 BLOB_TRACK_TIMEOUT = 0.1  # Default 0.7
 # ---- Speed Values -----------------------------------------------------------
 CF_LANE1 = 2.10 #2.10  # default 2.5869977 # Correction Factor
-CF_LANE2 = 2.28  # default 2.35    3.758897 
+CF_LANE2 = 2.32  # default 2.32    3.758897 
 CF_LANE3 = 2.3048378 # default 2.304837879578
 # ----  Save Results Values ---------------------------------------------------
-SAVE_RESULTS = True
-SAVE_FRAME_F1 = True  # Faixa 1
-SAVE_FRAME_F2 = True  # Faixa 2
-SAVE_FRAME_F3 = True  # Faixa 3
+SAVE_RESULTS = True  # Salva os Gráficos
+SAVE_FRAME_F1 = False  # Faixa 1
+SAVE_FRAME_F2 = False  # Faixa 2
+SAVE_FRAME_F3 = False  # Faixa 3
 # ####### END - CONSTANT VALUES ###############################################
 cap = cv2.VideoCapture(VIDEO_FILE)
 #FPS = cap.get(cv2.CAP_PROP_FPS)
@@ -98,6 +97,8 @@ area_L1 = []
 area_L2 = []
 area_L3 = []
 
+process_times = []
+
 
 # ##############  FUNÇÕES #####################################################
 def r(numero):
@@ -117,7 +118,7 @@ def calculate_speed(trails, fps):
 #    if SHOW_LINEAR_REGRESSION:
 #        cv2.line(frame, initial_pt, final_pt, t.ORANGE, 5)
 #    cv2.line(frame,trails[0],trails[10], t.GREEN, 2)
-#    cv2.imwrite('img/regressao1_{}.jpg'.format(frameCount), frame)
+#    cv2.imwrite('img/regressao1_{}.png'.format(frameCount), frame)
     dist_meter = dist_pixel*(med_area_meter/med_area_pixel)
     speed = (dist_meter*3.6*cf)/(qntd_frames*(1/fps))
     return speed
@@ -132,16 +133,14 @@ if not os.path.exists(f"results/{DATE}"):
     os.makedirs(f"results/{DATE}/imagens/faixa1")
     os.makedirs(f"results/{DATE}/imagens/faixa2")
     os.makedirs(f"results/{DATE}/imagens/faixa3")
-if not os.path.exists("img/tcc"):
-    os.makedirs("img/tcc")
 
 vehicle = t.read_xml(XML_FILE, VIDEO, DATE)  # Dicionário que armazena todas as informações do xml
 
 KERNEL_ERODE = np.ones((r(12), r(12)), np.uint8)  # Default (r(12), r(12))
-KERNEL_DILATE = np.ones((r(120), r(400)), np.uint8)  # Default (r(130), r(400))
+KERNEL_DILATE = np.ones((r(120), r(400)), np.uint8)  # Default (r(120), r(400))
 
-KERNEL_ERODE_L2 = np.ones((r(12), r(12)), np.uint8)  # Default (r(12), r(12))
-KERNEL_DILATE_L2 = np.ones((r(100), r(320)), np.uint8)  # Default (r(100), r(320))
+KERNEL_ERODE_L2 = np.ones((r(8), r(8)), np.uint8)  # Default (r(8), r(8))  np.ones((r(8), r(8)), np.uint8)
+KERNEL_DILATE_L2 = np.ones((r(100), r(400)), np.uint8)  # Default (r(100), r(400))
 
 KERNEL_ERODE_L3 = np.ones((r(12), r(12)), np.uint8)  # Default (r(12), r(12))
 KERNEL_DILATE_L3 = np.ones((r(100), r(320)), np.uint8)  # Default (r(100), r(320))
@@ -150,41 +149,28 @@ while True:
     ret, frame = t.get_frame(cap, RESIZE_RATIO)
     frame_time = time.time()
     
-    
-    if frameCount == 30:
-        cv2.imwrite('img/tcc/frameoriginal.jpg', frame)
     if SKIP_VIDEO:
         skip = t.skip_video(frameCount, VIDEO, frame)
         if SEE_CUTTED_VIDEO:
             if not skip:
-                
                 frameCount += 1
                 if frameCount == CLOSE_VIDEO:  # fecha o video
                     break
                 continue
         else:
             if skip:
-                if frameCount == 30:
-                    cv2.imwrite('img/tcc/frameoriginal.jpg', frame)
                 frameCount += 1
                 if frameCount == CLOSE_VIDEO:  # fecha o video
                     break
                 continue
+    start_frame_time = time.time()        
 #    frame[np.where((frame == [64,64,64]).all(axis = 2))] = [200,200,200]        
     frameGray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    
-    if frameCount == 30:
-        cv2.imwrite('img/tcc/frameGray.jpg', frameGray)
-        
     t.region_of_interest(frameGray, RESIZE_RATIO)
-    
-    if frameCount == 30:
-        cv2.imwrite('img/tcc/roi.jpg', frameGray)
     
     
     if SHOW_ROI:
         t.region_of_interest(frame, RESIZE_RATIO)
-        
     if SHOW_TRACKING_AREA:  # Desenha os Limites da Área de Tracking
         cv2.line(frame, (0, r(UPPER_LIMIT_TRACK)), (WIDTH, r(UPPER_LIMIT_TRACK)), t.WHITE, 2)
         cv2.line(frame, (0, r(BOTTOM_LIMIT_TRACK)), (WIDTH, r(BOTTOM_LIMIT_TRACK)), t.WHITE, 2)
@@ -192,23 +178,15 @@ while True:
     # Equalizar Contraste
     clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8,8))
     hist = clahe.apply(frameGray)
-
 #    cv2.imshow('img', np.vstack((frameGray,hist)))
-    
-    
-    frame_lane1 = t.perpective(hist, 1, RESIZE_RATIO)
-    frame_lane2 = t.perpective(hist, 2, RESIZE_RATIO)
-    frame_lane22 = t.perpective(frameGray, 2, RESIZE_RATIO)
-    frame_lane3 = t.perpective(hist, 3, RESIZE_RATIO)
-    
-    if frameCount == 30:
-        cv2.imwrite('img/tcc/hist.jpg', hist)
-        cv2.imwrite('img/tcc/frame_lane1.jpg', frame_lane1)
-        cv2.imwrite('img/tcc/frame_lane2.jpg', frame_lane2)
-        cv2.imwrite('img/tcc/frame_lane3.jpg', frame_lane3)
-        
 
+    frameGray = hist
     
+    frame_lane1 = t.perpective(frameGray, 1, RESIZE_RATIO)
+    frame_lane2 = t.perpective(frameGray, 2, RESIZE_RATIO)
+    frame_lane3 = t.perpective(frameGray, 3, RESIZE_RATIO)
+    
+    frameGray = frame_lane1
     
     if ret is True:
         t.update_info_xml(frameCount, vehicle, dict_lane1, dict_lane2, dict_lane3)
@@ -216,7 +194,7 @@ while True:
             t.print_xml_values(frame, RESIZE_RATIO, dict_lane1, dict_lane2, dict_lane3)
             
               
-        fgmask = bgsMOG.apply(frame_lane1, None, 0.01)
+        fgmask = bgsMOG.apply(frameGray, None, 0.01)
         erodedmask = cv2.erode(fgmask, KERNEL_ERODE, iterations=1)
         dilatedmask = cv2.dilate(erodedmask, KERNEL_DILATE, iterations=1)
         _, contours, hierarchy = cv2.findContours(dilatedmask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -315,7 +293,7 @@ while True:
                                         PERCE = str(int((100*frameCount)/vehicle['videoframes']))
                                         cv2.putText(frame, f'frame: {frameCount} {PERCE}%', (r(14), r(1071)), 0, .65, t.WHITE, 2)                                    
                                     if SAVE_FRAME_F1:
-                                        cv2.imwrite('results/{}/imagens/faixa1/{}_{}_F{}_{}.jpg'.format(DATE, VIDEO, dict_lane3['frame_start'], lane, closest_blob['id']), frame)
+                                        cv2.imwrite('results/{}/imagens/faixa1/{}_{}_F{}_{}.png'.format(DATE, VIDEO, dict_lane3['frame_start'], lane, closest_blob['id']), frame)
                                 except:
                                     pass
 
@@ -336,42 +314,12 @@ while True:
         erodedmask_lane2 = cv2.erode(fgmask_lane2, KERNEL_ERODE_L2, iterations=1)
         dilatedmask_lane2 = cv2.dilate(erodedmask_lane2, KERNEL_DILATE_L2, iterations=1)
         _, contours_L2, hierarchy = cv2.findContours(dilatedmask_lane2, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        
-        if frameCount == IMAGES_TCC:
-            font = {'size'   : 18}
-            plt.rc('font', **font)
-            plt.xlabel('Valor do pixel')
-            plt.ylabel('Quantidade de pixels')
-            plt.ylim(0, 6500)
-            plt.hist(frame_lane2.ravel(),256,[0,256])
-            plt.savefig('img/tcc/graphhist.pdf', bbox_inches='tight', pad_inches=0.3)
-            plt.close()
-            
-            
-            font = {'size'   : 18}
-            plt.rc('font', **font)
-            plt.xlabel('Valor do pixel')
-            plt.ylabel('Quantidade de pixels')
-            plt.ylim(0, 6500)
-            plt.hist(frame_lane22.ravel(),256,[0,256])
-            plt.savefig('img/tcc/graphhist_framegray.pdf', bbox_inches='tight', pad_inches=0.3)
-            plt.close()
-#            plt.show()
-            
+
+        #contornos =  cv2.drawContours(frame, contours, -1, BLUE, 2, 8, hierarchy)
         hull_L2 = []
         for i in range(len(contours_L2)):  # calculate points for each contour
             # creating convex hull object for each contour
             hull_L2.append(cv2.convexHull(contours_L2[i], False))
-            
-        contorno = np.zeros((dilatedmask_lane2.shape[0], dilatedmask_lane2.shape[1], 3), np.uint8)
-      
-        if frameCount == IMAGES_TCC:
-            xcontorno = np.zeros((dilatedmask_lane2.shape[0], dilatedmask_lane2.shape[1], 3), np.uint8)
-            contornos =  cv2.drawContours(xcontorno, contours_L2, i, t.GREEN, 5, 8)
-            cv2.imwrite('img/tcc/cont_line_lane2.jpg', xcontorno)
-            contornos =  cv2.drawContours(contorno, contours_L2, i, t.WHITE, -1, 8)
-            contornos =  cv2.drawContours(contorno, contours_L2, i, t.GREEN, 5, 8)
-            cv2.imwrite('img/tcc/contornos_lane2.jpg', contornos)
         # create an empty black image
         drawing_L2 = np.zeros((dilatedmask_lane2.shape[0], dilatedmask_lane2.shape[1], 3), np.uint8)
 #        area = []
@@ -380,20 +328,9 @@ while True:
         for i in range(len(contours_L2)):
             if cv2.contourArea(contours_L2[i]) > r(MIN_AREA_FOR_DETEC):
                 # draw ith contour
-                
+                #cv2.drawContours(drawing, contours, i, t.GREEN, 0, 8, hierarchy)
                 # draw ith convex hull object
                 out_L2 = cv2.drawContours(drawing_L2, hull_L2, i, t.WHITE, -1, 8)
-#                out_L2 = cv2.drawContours(drawing_L2, hull_L2, i, t.GREEN, 3, 8)
-                if frameCount == IMAGES_TCC:
-                    cont_line = np.zeros((dilatedmask_lane2.shape[0], dilatedmask_lane2.shape[1], 3), np.uint8)
-                    contornoswhite =  cv2.drawContours(drawing_L2, hull_L2, i, t.WHITE, -1, 8)
-#                    contornosx =  cv2.drawContours(cont_line, hull_L2, i, t.GREEN, 5, 8)
-#                    cv2.imwrite('img/tcc/chline_lane2.jpg', contornosx)
-                    contornos =  cv2.drawContours(drawing_L2, hull_L2, i, t.WHITE, -1, 8)
-                    cv2.imwrite('img/tcc/convexhull_lane2.jpg', contornos)
-#                    contornos =  cv2.drawContours(drawing_L2, hull_L2, i, t.GREEN, 5, 8)
-                    cv2.imwrite('img/tcc/ch_line_lane2.jpg', contornos)
-                    
 #                area.append(cv2.contourArea(contours_L2[i]))
 #                areahull.append(cv2.contourArea(hull[i]))
                 (x_L2, y_L2, w_L2, h_L2) = cv2.boundingRect(hull_L2[i])
@@ -415,9 +352,6 @@ while True:
                     if center_L2[1] > r(UPPER_LIMIT_TRACK):
                         cv2.rectangle(frame_lane2, (x_L2, y_L2), (x_L2+w_L2, y_L2+h_L2), t.GREEN, 2)
                         cv2.rectangle(frame, (x_L2+PADDING, y_L2), (x_L2+w_L2+PADDING, y_L2+h_L2), t.GREEN, 2)
-#                        if frameCount == IMAGES_TCC:
-#                            cv2.rectangle(contornoswhite, (x, y), (x+w, y+h), t.GREEN, 2)
-
                         area_L2.append(w_L2*h_L2)
                     else:
                         cv2.rectangle(frame, (x_L2, y_L2), (x_L2+w_L2, y_L2+h_L2), t.PINK, 2)
@@ -477,7 +411,7 @@ while True:
                                         PERCE = str(int((100*frameCount)/vehicle['videoframes']))
                                         cv2.putText(frame, f'frame: {frameCount} {PERCE}%', (r(14), r(1071)), 0, .65, t.WHITE, 2)                                    
                                     if SAVE_FRAME_F2:
-                                        cv2.imwrite('results/{}/imagens/faixa2/{}_{}_F{}_{}.jpg'.format(DATE, VIDEO, dict_lane3['frame_start'], lane, closest_blob_L2['id']), frame)
+                                        cv2.imwrite('results/{}/imagens/faixa2/{}_{}_F{}_{}.png'.format(DATE, VIDEO, dict_lane3['frame_start'], lane, closest_blob_L2['id']), frame)
                                 except:
                                     pass    
     
@@ -594,7 +528,7 @@ while True:
                                         PERCE = str(int((100*frameCount)/vehicle['videoframes']))
                                         cv2.putText(frame, f'frame: {frameCount} {PERCE}%', (r(14), r(1071)), 0, .65, t.WHITE, 2)                                    
                                     if SAVE_FRAME_F3:
-                                        cv2.imwrite('results/{}/imagens/faixa3/{}_{}_F{}_{}.jpg'.format(DATE, VIDEO, dict_lane3['frame_start'], lane, closest_blob_L3['id']), frame)
+                                        cv2.imwrite('results/{}/imagens/faixa3/{}_{}_F{}_{}.png'.format(DATE, VIDEO, dict_lane3['frame_start'], lane, closest_blob_L3['id']), frame)
                                 except:
                                     pass
     
@@ -648,15 +582,6 @@ while True:
             if SHOW_TRAIL:
 #                t.print_trail(blob2['trail'], frame)
                 t.print_trail(blob2['trail'], frame_lane2)
-                try:
-                    t.print_trail(blob2['trail'], contornoswhite)
-                    if frameCount == IMAGES_TCC:
-                        cv2.imwrite('img/tcc/trail_lane2.jpg', contornoswhite)
-                except:
-                    pass
-        
-        
-                
                 
         for blob3 in tracked_blobs_lane3:  # Desenha os pontos centrais
             if SHOW_TRAIL:
@@ -681,7 +606,7 @@ while True:
 #                if ave_speed == prev_speed and final_ave_speed != 1:
 #                    final_ave_speed = ave_speed
 #                    print('===== final_ave_speed =====', float("{0:.5f}".format(final_ave_speed)))
-#                    cv2.imwrite('img/{}speed_{}.jpg'.format(frameCount,final_ave_speed), frame)
+#                    cv2.imwrite('img/{}speed_{}.png'.format(frameCount,final_ave_speed), frame)
 
                 # ############### FIM PRINTA OS BLOBS  ########################
 
@@ -716,13 +641,10 @@ while True:
 #        cv2.imshow('out',out)
 #        cv2.imshow('out_L2',out_L2)
 #        cv2.imshow('out_L3',out_L3)
-        try:
-            cv2.imshow('res', contornos)
-        except:
-            pass
+
+#        cv2.imshow('res', res)
 #        cv2.imshow('frame_lane1', frame_lane1)
-        cv2.imshow('frame_lane2', frame_lane2)
-#        cv2.imshow('frame_lane22', frame_lane22)
+#        cv2.imshow('frame_lane2', frame_lane2)
 #        cv2.imshow('frame_lane3', frame_lane3)
 #        cv2.imshow('frame', frame)
         
@@ -730,22 +652,19 @@ while True:
 #        cv2.imshow('final', final)
 #        cv2.imshow('mask_eroded', np.concatenate((fgmask, dilatedmask),0))
 #        crop_img = outputFrame[70:320, 0:640]
-        if frameCount == IMAGES_TCC:
-            cv2.imwrite('img/tcc/fgmask_lane2.jpg', fgmask_lane2)
-            cv2.imwrite('img/tcc/erodedmask_lane2.jpg', erodedmask_lane2)
-            cv2.imwrite('img/tcc/dilatedmask_lane2.jpg', dilatedmask_lane2)
-#            cv2.imwrite('img/tcc/out_L2.jpg', out_L2)
-            frame_lane2 = cv2.cvtColor(frame_lane2, cv2.COLOR_GRAY2BGR)
-            cv2.imwrite(f'img/tcc/frame_lane2_{IMAGES_TCC}.jpg', frame_lane2)
-            
         if frameCount > 857 and frameCount < 894:
 ##        if frameCount == 114:
-            cv2.imwrite('img/teste/{}.jpg'.format(frameCount), frame_lane3)
-            cv2.imwrite('img/teste/dilatedmask_L3_{}.jpg'.format(frameCount), dilatedmask_L3)
-            cv2.imwrite('img/teste/dilatedmask_L3_{}.jpg'.format(frameCount), dilatedmask_L3)
-            cv2.imwrite('img/teste/out_L3_{}.jpg'.format(frameCount), out_L3)
-#            cv2.imwrite('img/teste/L3_{}.jpg'.format(frameCount), np.hstack((erodedmask_L3, out_L3)))
+            cv2.imwrite('img/teste/{}.png'.format(frameCount), frame_lane3)
+            cv2.imwrite('img/teste/dilatedmask_L3_{}.png'.format(frameCount), dilatedmask_L3)
+            cv2.imwrite('img/teste/dilatedmask_L3_{}.png'.format(frameCount), dilatedmask_L3)
+            cv2.imwrite('img/teste/out_L3_{}.png'.format(frameCount), out_L3)
+#            cv2.imwrite('img/teste/L3_{}.png'.format(frameCount), np.hstack((erodedmask_L3, out_L3)))
         frameCount += 1    # Conta a quantidade de Frames
+        
+        end_frame_time = time.time()
+#        process_times.append(process_end - process_start)
+        process_times.append(end_frame_time - start_frame_time)
+        
         if frameCount == CLOSE_VIDEO:  # fecha o video
             break
         if cv2.waitKey(1) & 0xFF == ord('q'):  # Tecla Q para fechar
@@ -873,7 +792,12 @@ file.write(f'VIDEO_FILE = {VIDEO_FILE} \n'
            f'BLOB_TRACK_TIMEOUT = {BLOB_TRACK_TIMEOUT} \n\n'
            f'CF_LANE1 = {CF_LANE1} \n'
            f'CF_LANE2 = {CF_LANE2} \n'
-           f'CF_LANE3 = {CF_LANE3} \n\n')
+           f'CF_LANE3 = {CF_LANE3} \n\n'
+           f'Tempo de processamento de cada frame \n'
+           f'qndt de frames processados: {len(process_times)} \n'
+           f'valor máximo: {max(process_times)}  segundos\n'
+           f'valor mínimo: {min(process_times)}  segundos\n'
+           f'valor médio: {np.mean(process_times)}  segundos\n\n' )
 file.close()
 
 cap.release()
