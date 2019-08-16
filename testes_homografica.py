@@ -12,8 +12,8 @@ from sys import exit
 #import math
 # ########  CONSTANT VALUES ###################################################
 VIDEO = 1
-VIDEO_FILE = '../Dataset/video{}.avi'.format(VIDEO)
-XML_FILE = '../Dataset/video{}.xml'.format(VIDEO)
+VIDEO_FILE = './Dataset/video{}.avi'.format(VIDEO)
+XML_FILE = './Dataset/video{}.xml'.format(VIDEO)
 
 RESIZE_RATIO = .13333 #0.7697  720p=.6667 480p=.4445 360p=.33333 240p=.22222 144p=.13333
 if RESIZE_RATIO > 1:
