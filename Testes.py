@@ -367,8 +367,8 @@ while True:
 
         # ################ PRINTA OS BLOBS ####################################
         for blob in tracked_blobs:  # Desenha os pontos centrais
-            if SHOW_TRAIL:
-                t.print_trail(blob['trail'], frame)
+            # if SHOW_TRAIL:
+            #     t.print_trail(blob['trail'], frame)
 
             if blob['speed'] and blob['speed'][0] != 0:
                 prev_len_speed.insert(0, len(blob['speed']))

@@ -12,25 +12,25 @@ from sys import exit
 #import math
 # ########  CONSTANT VALUES ###################################################
 VIDEO = 1
-VIDEO_FILE = './Dataset/video{}.avi'.format(VIDEO)
+VIDEO_FILE = './Dataset/video{}.mp4'.format(VIDEO)
 XML_FILE = './Dataset/video{}.xml'.format(VIDEO)
 
-RESIZE_RATIO = .13333 #0.7697  720p=.6667 480p=.4445 360p=.33333 240p=.22222 144p=.13333
+RESIZE_RATIO = .33333 #0.7697  720p=.6667 480p=.4445 360p=.33333 240p=.22222 144p=.13333
 if RESIZE_RATIO > 1:
     exit('ERRO: AJUSTE O RESIZE_RATIO')
 CLOSE_VIDEO = 5934 #2950 #5934  # 1-6917 # 5-36253
 ARTG_FRAME = 0  # 254  # Frame q usei para exemplo no Artigo
 
-SHOW_ROI = True
-SHOW_TRACKING_AREA = True
+SHOW_ROI = False
+SHOW_TRACKING_AREA = False
 SHOW_TRAIL = True
 SHOW_LINEAR_REGRESSION = True
-SHOW_CAR_RECTANGLE = True
+SHOW_CAR_RECTANGLE = False
 
-SHOW_REAL_SPEEDS = True
+SHOW_REAL_SPEEDS = False
 SHOW_FRAME_COUNT = True
 
-SKIP_VIDEO = True
+SKIP_VIDEO = False
 SEE_CUTTED_VIDEO = False  # ver partes retiradas, precisa de SKIP_VIDEO = True
 # ---- Tracking Values --------------------------------------------------------
 # The maximum distance a blob centroid is allowed to move in order to
@@ -60,7 +60,7 @@ CF_LANE1 = 2.10 #2.10  # default 2.5869977 # Correction Factor
 CF_LANE2 = 2.32  # default 2.32    3.758897 
 CF_LANE3 = 2.3048378 # default 2.304837879578
 # ----  Save Results Values ---------------------------------------------------
-SAVE_RESULTS = True  # Salva os Gráficos
+SAVE_RESULTS = False  # Salva os Gráficos
 SAVE_FRAME_F1 = False  # Faixa 1
 SAVE_FRAME_F2 = False  # Faixa 2
 SAVE_FRAME_F3 = False  # Faixa 3
@@ -115,10 +115,10 @@ def calculate_speed(trails, fps):
 #    dist_pixel = cv2.norm(final_pt, initial_pt)
 #    dist_pixel = cv2.norm(trails[0], trails[len(trails)-1])  # Sem usar Regressão linear
     dist_pixel = cv2.norm(trails[0], trails[10])  # Sem usar Regressão linear
-#    if SHOW_LINEAR_REGRESSION:
-#        cv2.line(frame, initial_pt, final_pt, t.ORANGE, 5)
-#    cv2.line(frame,trails[0],trails[10], t.GREEN, 2)
-#    cv2.imwrite('img/regressao1_{}.png'.format(frameCount), frame)
+    # if SHOW_LINEAR_REGRESSION:
+    #     cv2.line(frame, initial_pt, final_pt, t.ORANGE, 5)
+    #     cv2.line(frame,trails[0],trails[10], t.GREEN, 2)
+    # cv2.imwrite('img/regressao1_{}.png'.format(frameCount), frame)
     dist_meter = dist_pixel*(med_area_meter/med_area_pixel)
     speed = (dist_meter*3.6*cf)/(qntd_frames*(1/fps))
     return speed
@@ -127,6 +127,7 @@ def calculate_speed(trails, fps):
 # ########## FIM  FUNÇÕES #####################################################
 now = datetime.datetime.now()
 DATE = f'video{VIDEO}_{now.day}-{now.month}-{now.year}_{now.hour}-{now.minute}-{now.second}'
+# if SAVE_RESULTS:
 if not os.path.exists(f"results/{DATE}"):
     os.makedirs(f"results/{DATE}/graficos/pdfs")
     os.makedirs(f"results/{DATE}/planilhas/")
@@ -197,7 +198,7 @@ while True:
         fgmask = bgsMOG.apply(frameGray, None, 0.01)
         erodedmask = cv2.erode(fgmask, KERNEL_ERODE, iterations=1)
         dilatedmask = cv2.dilate(erodedmask, KERNEL_DILATE, iterations=1)
-        _, contours, hierarchy = cv2.findContours(dilatedmask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        contours, hierarchy = cv2.findContours(dilatedmask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         #contornos =  cv2.drawContours(frame, contours, -1, BLUE, 2, 8, hierarchy)
         hull = []
         for i in range(len(contours)):  # calculate points for each contour
@@ -313,7 +314,7 @@ while True:
         fgmask_lane2 = bgsMOG.apply(frame_lane2, None, 0.01)
         erodedmask_lane2 = cv2.erode(fgmask_lane2, KERNEL_ERODE_L2, iterations=1)
         dilatedmask_lane2 = cv2.dilate(erodedmask_lane2, KERNEL_DILATE_L2, iterations=1)
-        _, contours_L2, hierarchy = cv2.findContours(dilatedmask_lane2, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        contours_L2, hierarchy = cv2.findContours(dilatedmask_lane2, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
         #contornos =  cv2.drawContours(frame, contours, -1, BLUE, 2, 8, hierarchy)
         hull_L2 = []
@@ -430,7 +431,7 @@ while True:
         fgmask_L3 = bgsMOG.apply(frame_lane3, None, 0.01)
         erodedmask_L3 = cv2.erode(fgmask_L3, KERNEL_ERODE_L3, iterations=1)
         dilatedmask_L3 = cv2.dilate(erodedmask_L3, KERNEL_DILATE_L3, iterations=1)
-        _, contours_L3, hierarchy = cv2.findContours(dilatedmask_L3, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        contours_L3, hierarchy = cv2.findContours(dilatedmask_L3, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
         #contornos =  cv2.drawContours(frame, contours, -1, BLUE, 2, 8, hierarchy)
         hull_L3 = []
@@ -575,17 +576,17 @@ while True:
         # ################ PRINTA OS BLOBS ####################################
         for blob in tracked_blobs:  # Desenha os pontos centrais
             if SHOW_TRAIL:
-#                t.print_trail(blob['trail'], frame)
+                # t.print_trail(blob['trail'], frame)
                 t.print_trail(blob['trail'], frame_lane1)
 
         for blob2 in tracked_blobs_lane2:  # Desenha os pontos centrais
             if SHOW_TRAIL:
-#                t.print_trail(blob2['trail'], frame)
+                # t.print_trail(blob2['trail'], frame)
                 t.print_trail(blob2['trail'], frame_lane2)
                 
         for blob3 in tracked_blobs_lane3:  # Desenha os pontos centrais
             if SHOW_TRAIL:
-#                t.print_trail(blob3['trail'], frame)
+                # t.print_trail(blob3['trail'], frame)
                 t.print_trail(blob3['trail'], frame_lane3)
 
             if blob['speed'] and blob['speed'][0] != 0:
@@ -638,14 +639,14 @@ while True:
 #        cv2.imshow('dilatedmask_L3', dilatedmask_L3)
         
 #        cv2.imshow('contornos',contornos)
-#        cv2.imshow('out',out)
-#        cv2.imshow('out_L2',out_L2)
-#        cv2.imshow('out_L3',out_L3)
+        # cv2.imshow('out',out)
+        # cv2.imshow('out_L2',out_L2)
+        # cv2.imshow('out_L3',out_L3)
 
 #        cv2.imshow('res', res)
-#        cv2.imshow('frame_lane1', frame_lane1)
-#        cv2.imshow('frame_lane2', frame_lane2)
-#        cv2.imshow('frame_lane3', frame_lane3)
+        cv2.imshow('frame_lane1', frame_lane1)
+        cv2.imshow('frame_lane2', frame_lane2)
+        cv2.imshow('frame_lane3', frame_lane3)
         cv2.imshow('frame', frame)
         
 #        final = np.hstack((erodedmask, dilatedmask))
