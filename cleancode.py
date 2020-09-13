@@ -14,7 +14,8 @@ import cv2
 import cleanfunctions as t
 import datetime
 from image_processing import ImageProcessing
-import drawings as draw
+from tracking import Tracking
+# import drawings as draw
 from sys import exit
 # ########  CONSTANT VALUES ###################################################
 VIDEO = 1
@@ -24,7 +25,7 @@ XML_FILE = './Dataset/video{}.xml'.format(VIDEO)
 RESIZE_RATIO = .22222 #0.7697  720p=.6667 480p=.4445 360p=.33333 240p=.22222 144p=.13333
 if RESIZE_RATIO > 1:
     exit('ERRO: AJUSTE O RESIZE_RATIO')
-CLOSE_VIDEO = 5934 #2950 #5934  # 1-6917 # 5-36253
+CLOSE_VIDEO = 2950 #2950 #5934  # 1-6917 # 5-36253
 
 SHOW_ROI = True
 SHOW_TRACKING_AREA = True
@@ -110,7 +111,7 @@ def calculate_speed(trails, fps, correction_factor):
     dist_pixel = cv2.norm(trails[0], trails[10])  # Sem usar Regressão linear
     dist_meter = dist_pixel*(med_area_meter/med_area_pixel)
     speed = (dist_meter*3.6*correction_factor)/(qntd_frames*(1/fps))
-    return speed
+    return round(speed,1)
 
 
 # ########## FIM  FUNÇÕES #####################################################
@@ -127,6 +128,9 @@ KERNEL_DILATE_L2 = np.ones((r(100), r(400)), np.uint8)  # Default (r(100), r(400
 
 KERNEL_ERODE_L3 = np.ones((r(12), r(12)), np.uint8)  # Default (r(12), r(12))
 KERNEL_DILATE_L3 = np.ones((r(100), r(320)), np.uint8)  # Default (r(100), r(320))
+
+lane1_tracking = Tracking(RESIZE_RATIO, BLOB_LOCKON_DIST_PX_MAX, BLOB_LOCKON_DIST_PX_MIN)
+
 
 while True:
     ret, frame = t.get_frame(cap, RESIZE_RATIO)
@@ -173,44 +177,17 @@ while True:
         
         lane1 = ImageProcessing(frame_lane1, RESIZE_RATIO, bgsMOG, KERNEL_ERODE, KERNEL_DILATE)
         
-        # fgmask = lane1.apply_bg_subtractor()
-        # erodedmask = lane1.apply_erode()
-        # dilatedmask = lane1.apply_dilate()
-        # contours = lane1.apply_contourns()
-        #contornos =  cv2.drawContours(frame, contours, -1, BLUE, 2, 8, hierarchy)
-        
-        # fgmask = bgsMOG.apply(frame_lane1, None, 0.01)
-        # erodedmask = cv2.erode(fgmask, KERNEL_ERODE, iterations=1)
-        # dilatedmask = cv2.dilate(erodedmask, KERNEL_DILATE, iterations=1)
-        # contours, hierarchy = cv2.findContours(dilatedmask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        # #contornos =  cv2.drawContours(frame, contours, -1, BLUE, 2, 8, hierarchy)
-
-        # lane1.apply_convex_hull()
-
-        # hull = []
-        # for i in range(len(lane1.contours)):  # calculate points for each contour
-        #     # creating convex hull object for each contour
-        #     lane1.hull.append(cv2.convexHull(lane1.contours[i], False))
         # create an empty black image
         drawing = t.convert_to_black_image(frame_lane1)
         out = cv2.drawContours(drawing, lane1.hull, 0, t.WHITE, -1, 8)
-#        area = []
-#        areahull = []
-        #draw contours and hull points
+
         for i in range(len(lane1.contours)):
             if cv2.contourArea(lane1.contours[i]) > r(MIN_AREA_FOR_DETEC):
-                # draw ith contour
-                #cv2.drawContours(drawing, contours, i, t.GREEN, 0, 8, hierarchy)
-                # draw ith convex hull object
-                # out = cv2.drawContours(drawing, lane1.hull, i, t.WHITE, -1, 8)
-#                area.append(cv2.contourArea(contours[i]))
-#                areahull.append(cv2.contourArea(hull[i]))
+
                 (x, y, w, h) = cv2.boundingRect(lane1.hull[i])
                 center = (int(x + w/2), int(y + h/2))
                 # out = cv2.rectangle(out, (x, y), (x + w, y + h), t.GREEN, 2) # printa na mask
                 # CONDIÇÕES PARA CONTINUAR COM TRACKING
-#                if h > r(HEIGHT)*.80 or w > r(WIDTH)*.40:
-#                    continue
 
                 if w < r(340) and h < r(340):  # ponto que da pra mudar
                     continue
@@ -230,97 +207,45 @@ while True:
                         cv2.rectangle(frame, (x, y), (x+w, y+h), t.PINK, 2)
 
                 # ################## TRACKING #################################
-                # Look for existing blobs that match this one
-                closest_blob = None
-                if tracked_blobs:
-                    # Sort the blobs we have seen in previous frames by pixel distance from this one
-                    closest_blobs = sorted(tracked_blobs, key=lambda b: cv2.norm(b['trail'][0], center))
-
-                    # Starting from the closest blob, make sure the blob in question is in the expected direction
-                    distance = 0.0
-                    for close_blob in closest_blobs:
-                        distance = cv2.norm(center, close_blob['trail'][0])
-
-                        # Check if the distance is close enough to "lock on"
-                        if distance < r(BLOB_LOCKON_DIST_PX_MAX) and distance > r(BLOB_LOCKON_DIST_PX_MIN):
-                            closest_blob = close_blob
-                            # If it's close enough, make sure the blob was moving in the expected direction
-#                            if close_blob['trail'][0][1] < center[1]:  # verifica se esta na dir up
-#                                continue
-#                            else:
-#                                closest_blob = close_blob
-#                                continue  # defalut break
-
-                    if closest_blob:
-                        prev_center = closest_blob['trail'][0]
-                        if center[1] < prev_center[1]:  # It's moving up
-                            closest_blob['trail'].insert(0, center)  # Add point
-                            closest_blob['last_seen'] = frame_time
+                lane1_tracking.tracking(center, frame_time)
                             
-                            if len(closest_blob['trail']) > MIN_CENTRAL_POINTS:
-                                closest_blob['speed'].insert(0, calculate_speed(closest_blob['trail'], FPS, CF_LANE1))
-                                lane = 1
-                                ave_speed = np.mean(closest_blob['speed'])
-                                abs_error, per_error = t.write_results_on_image(frame, frameCount, ave_speed, lane, closest_blob['id'], RESIZE_RATIO, VIDEO,
-                                                                                dict_lane1, dict_lane2, dict_lane3)
-                                try:
-                                    results_lane1[str(closest_blob['id'])] = dict(ave_speed = round(ave_speed, 2),
-                                                                             speeds = closest_blob['speed'],
-                                                                             frame = frameCount, 
-                                                                             real_speed = float(dict_lane1['speed']),
-                                                                             abs_error = round(abs_error, 2),
-                                                                             per_error = round(per_error, 3),
-                                                                             trail = closest_blob['trail'],
-                                                                             car_id = closest_blob['id'])
-                                
-                                    abs_error = []
-                                    per_error = []
-                                except:
-                                    pass
-
-                if not closest_blob: # Cria as variaves
-                    # If we didn't find a blob, let's make a new one and add it to the list
-                    b = dict(id=str(uuid.uuid4())[:8], first_seen=frame_time,
-                             last_seen=frame_time, trail=[center], speed=[0],
-                             size=[0, 0],)
-                    tracked_blobs.append(b)  # Agora tracked_blobs não será False
-                # ################# END TRACKING ##############################
-                # ################# END FAIXA 3  ##############################
+                try:
+                    if len(lane1_tracking.closest_blob['trail']) > MIN_CENTRAL_POINTS:
+                        lane1_tracking.closest_blob['speed'].insert(0, calculate_speed(lane1_tracking.closest_blob['trail'], FPS, CF_LANE1))
+                        lane = 1
+                        ave_speed = np.mean(lane1_tracking.closest_blob['speed'])
+                        abs_error, per_error = t.write_results_on_image(frame, frameCount, ave_speed, lane, lane1_tracking.closest_blob['id'], RESIZE_RATIO, VIDEO,
+                                                                        dict_lane1, dict_lane2, dict_lane3)
+                        
+                        results_lane1[str(lane1_tracking.closest_blob['id'])] = dict(ave_speed = round(ave_speed, 2),
+                                                                 speeds = lane1_tracking.closest_blob['speed'],
+                                                                 frame = frameCount, 
+                                                                 real_speed = float(dict_lane1['speed']),
+                                                                 abs_error = round(abs_error, 2),
+                                                                 per_error = round(per_error, 3),
+                                                                 trail = lane1_tracking.closest_blob['trail'],
+                                                                 car_id = lane1_tracking.closest_blob['id'])
+                    
+                        abs_error = []
+                        per_error = []
+                except:
+                    pass
+              
+                # ################# END FAIXA 1  ##############################
 
 
         lane2 = ImageProcessing(frame_lane2, RESIZE_RATIO, bgsMOG, KERNEL_ERODE_L2, KERNEL_DILATE_L2)
 
-        # fgmask_lane2 = bgsMOG.apply(frame_lane2, None, 0.01)
-        # erodedmask_lane2 = cv2.erode(fgmask_lane2, KERNEL_ERODE_L2, iterations=1)
-        # dilatedmask_lane2 = cv2.dilate(erodedmask_lane2, KERNEL_DILATE_L2, iterations=1)
-        # contours_L2, hierarchy = cv2.findContours(dilatedmask_lane2, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-        #contornos =  cv2.drawContours(frame, contours, -1, BLUE, 2, 8, hierarchy)
-        # lane2.hull = []
-        # for i in range(len(lane2.contours)):  # calculate points for each contour
-        #     # creating convex hull object for each contour
-        #     hull_L2.append(cv2.convexHull(lane2.contours[i], False))
-        # create an empty black image
-        # drawing_L2 = np.zeros((dilatedmask_lane2.shape[0], dilatedmask_lane2.shape[1], 3), np.uint8)
         drawing_L2 = t.convert_to_black_image(frame_lane2)
         out_L2 = cv2.drawContours(drawing_L2, lane2.hull, 0, t.WHITE, -1, 8)
 
-#        area = []
-#        areahull = []
-        #draw contours and hull points
         for i in range(len(lane2.contours)):
             if cv2.contourArea(lane2.contours[i]) > r(MIN_AREA_FOR_DETEC):
-                # draw ith contour
-                #cv2.drawContours(drawing, contours, i, t.GREEN, 0, 8, hierarchy)
-                # draw ith convex hull object
-#                area.append(cv2.contourArea(contours_L2[i]))
-#                areahull.append(cv2.contourArea(hull[i]))
+              
                 (x_L2, y_L2, w_L2, h_L2) = cv2.boundingRect(lane2.hull[i])
                 center_L2 = (int(x_L2 + w_L2/2), int(y_L2 + h_L2/2))
                 #out_L2 = cv2.rectangle(out_L2, (x_L2, y_L2), (x_L2 + w_L2, y_L2 + h_L2), t.t.GREEN, 2) # printa na mask
                 # CONDIÇÕES PARA CONTINUAR COM TRACKING
-#                if h_L2 > r(HEIGHT)*.80 or w_L2 > r(WIDTH)*.40:
-#                    continue
 
                 if w_L2 < r(340) and h_L2 < r(340):  # ponto que da pra mudar
                     continue
@@ -367,26 +292,26 @@ while True:
                             closest_blob_L2['trail'].insert(0, center_L2)  # Add point
                             closest_blob_L2['last_seen'] = frame_time
 
-                            if len(closest_blob_L2['trail']) > MIN_CENTRAL_POINTS:                                                                    
-                                closest_blob_L2['speed'].insert(0, calculate_speed(closest_blob_L2['trail'], FPS, CF_LANE2))
-                                lane = 2
-                                ave_speed = np.mean(closest_blob_L2['speed'])
-                                abs_error, per_error = t.write_results_on_image(frame, frameCount, ave_speed, lane, closest_blob_L2['id'], RESIZE_RATIO, VIDEO,
-                                                                                dict_lane1, dict_lane2, dict_lane3)                                
-                                try:
-                                    results_lane2[str(closest_blob_L2['id'])] = dict(ave_speed = round(ave_speed, 2),
-                                                                             speeds = closest_blob_L2['speed'],
-                                                                             frame = frameCount, 
-                                                                             real_speed = float(dict_lane2['speed']),
-                                                                             abs_error = round(abs_error, 2),
-                                                                             per_error = round(per_error, 3),
-                                                                             trail = closest_blob_L2['trail'],
-                                                                             car_id = closest_blob_L2['id'])
-                                
-                                    abs_error = []
-                                    per_error = []
-                                except:
-                                    pass    
+                        if len(closest_blob_L2['trail']) > MIN_CENTRAL_POINTS:                                                                    
+                            closest_blob_L2['speed'].insert(0, calculate_speed(closest_blob_L2['trail'], FPS, CF_LANE2))
+                            lane = 2
+                            ave_speed = np.mean(closest_blob_L2['speed'])
+                            abs_error, per_error = t.write_results_on_image(frame, frameCount, ave_speed, lane, closest_blob_L2['id'], RESIZE_RATIO, VIDEO,
+                                                                            dict_lane1, dict_lane2, dict_lane3)                                
+                            try:
+                                results_lane2[str(closest_blob_L2['id'])] = dict(ave_speed = round(ave_speed, 2),
+                                                                         speeds = closest_blob_L2['speed'],
+                                                                         frame = frameCount, 
+                                                                         real_speed = float(dict_lane2['speed']),
+                                                                         abs_error = round(abs_error, 2),
+                                                                         per_error = round(per_error, 3),
+                                                                         trail = closest_blob_L2['trail'],
+                                                                         car_id = closest_blob_L2['id'])
+                            
+                                abs_error = []
+                                per_error = []
+                            except:
+                                pass    
     
                 if not closest_blob_L2: # Cria as variaves
                     # If we didn't find a blob, let's make a new one and add it to the list
@@ -399,18 +324,6 @@ while True:
 
         lane3 = ImageProcessing(frame_lane3, RESIZE_RATIO, bgsMOG, KERNEL_ERODE_L3, KERNEL_DILATE_L3)
 
-        # fgmask_L3 = bgsMOG.apply(frame_lane3, None, 0.01)
-        # erodedmask_L3 = cv2.erode(fgmask_L3, KERNEL_ERODE_L3, iterations=1)
-        # dilatedmask_L3 = cv2.dilate(erodedmask_L3, KERNEL_DILATE_L3, iterations=1)
-        # contours_L3, hierarchy = cv2.findContours(dilatedmask_L3, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-        #contornos =  cv2.drawContours(frame, contours, -1, BLUE, 2, 8, hierarchy)
-        # hull_L3 = []
-        # for i in range(len(contours_L3)):  # calculate points for each contour
-            # creating convex hull object for each contour
-            # hull_L3.append(cv2.convexHull(contours_L3[i], False))
-        # create an empty black image
-        # drawing_L3 = np.zeros((dilatedmask_L3.shape[0], dilatedmask_L3.shape[1], 3), np.uint8)
         drawing_L3 = t.convert_to_black_image(frame_lane3)
         out_L3 = cv2.drawContours(drawing_L3, lane3.hull, 0, t.WHITE, -1, 8)
 #        areahull = []
@@ -418,11 +331,7 @@ while True:
         for i in range(len(lane3.contours)):
             if cv2.contourArea(lane3.contours[i]) > r(MIN_AREA_FOR_DETEC):
                 # draw ith contour
-                #cv2.drawContours(drawing_L3, contours_L3, i, t.GREEN, 0, 8, hierarchy)
-                # draw ith convex hull object
-                # out_L3 = cv2.drawContours(drawing_L3, hull_L3, i, t.WHITE, -1, 8)
-                # area.append(cv2.contourArea(contours_L3[i]))
-#                areahull.append(cv2.contourArea(hull[i]))
+              
                 (x_L3, y_L3, w_L3, h_L3) = cv2.boundingRect(lane3.hull[i])
                 center_L3 = (int(x_L3 + w_L3/2), int(y_L3 + h_L3/2))
                 #out = cv2.rectangle(out, (x_L3, y_L3), (x_L3 + w_L3, y_L3 + h_L3), t.t.GREEN, 2) # printa na mask
@@ -451,6 +360,7 @@ while True:
                 # Look for existing blobs that match this one
                 closest_blob_L3 = None
                 if tracked_blobs_lane3:
+                    # print(tracked_blobs_lane3)
                     # Sort the blobs we have seen in previous frames by pixel distance from this one
                     closest_blobs_L3 = sorted(tracked_blobs_lane3, key=lambda b3: cv2.norm(b3['trail'][0], center_L3))
 
@@ -475,29 +385,32 @@ while True:
                             closest_blob_L3['trail'].insert(0, center_L3)  # Add point
                             closest_blob_L3['last_seen'] = frame_time
 
-                            if len(closest_blob_L3['trail']) > MIN_CENTRAL_POINTS:
-                                closest_blob_L3['speed'].insert(0, calculate_speed(closest_blob_L3['trail'], FPS, CF_LANE3))
-                                lane = 3
-                                ave_speed = np.mean(closest_blob_L3['speed'])
-                                abs_error, per_error = t.write_results_on_image(frame, frameCount, ave_speed, lane, closest_blob_L3['id'], RESIZE_RATIO, VIDEO,
-                                                                                dict_lane1, dict_lane2, dict_lane3)
-                                
-                                try:
-                                    results_lane3[str(closest_blob_L3['id'])] = dict(ave_speed = round(ave_speed, 2),
-                                                                                 speeds = closest_blob_L3['speed'],
-                                                                                 frame = frameCount, 
-                                                                                 real_speed = float(dict_lane3['speed']),
-                                                                                 abs_error = round(abs_error, 2),
-                                                                                 per_error = round(per_error, 3),
-                                                                                 trail = closest_blob_L3['trail'],
-                                                                                 car_id = closest_blob_L3['id'])
-                                    abs_error = []
-                                    per_error = []
-                               
-                                except:
-                                    pass
-    
+                        if len(closest_blob_L3['trail']) > MIN_CENTRAL_POINTS:
+                            closest_blob_L3['speed'].insert(0, calculate_speed(closest_blob_L3['trail'], FPS, CF_LANE3))
+                            lane = 3
+                            ave_speed = np.mean(closest_blob_L3['speed'])
+                            abs_error, per_error = t.write_results_on_image(frame, frameCount, ave_speed, lane, closest_blob_L3['id'], RESIZE_RATIO, VIDEO,
+                                                                            dict_lane1, dict_lane2, dict_lane3)
+                            
+                            try:
+                                results_lane3[str(closest_blob_L3['id'])] = dict(ave_speed = round(ave_speed, 2),
+                                                                             speeds = closest_blob_L3['speed'],
+                                                                             frame = frameCount, 
+                                                                             real_speed = float(dict_lane3['speed']),
+                                                                             abs_error = round(abs_error, 2),
+                                                                             per_error = round(per_error, 3),
+                                                                             trail = closest_blob_L3['trail'],
+                                                                             car_id = closest_blob_L3['id'])
+                                abs_error = []
+                                per_error = []
+                           
+                            except:
+                                pass
+                
+                # print(f'tracked_blob_L3 : {tracked_blobs_lane3}')
+                # print(f'closest_blob_L3 : {closest_blob_L3}')
                 if not closest_blob_L3: # Cria as variaves
+                    # print(f'entrou no if not self.closest_blob_L3 : {closest_blob_L3}')
                     # If we didn't find a blob, let's make a new one and add it to the list
                     b3 = dict(id=str(uuid.uuid4())[:8], first_seen=frame_time,
                              last_seen=frame_time, trail=[center_L3], speed=[0],
@@ -509,21 +422,14 @@ while True:
                 # #############################################################
                 # #############################################################
 
-
-        if tracked_blobs:
-            # Prune out the blobs that haven't been seen in some amount of time
-            for i in range(len(tracked_blobs) - 1, -1, -1):
-                if frame_time - tracked_blobs[i]['last_seen'] > BLOB_TRACK_TIMEOUT: # Deleta caso de timeout
-                    print("Removing expired track from lane 1 {}".format(tracked_blobs[i]['id']))
-#                    prev_speed = ave_speed
-                    del tracked_blobs[i]
-
+        lane1_tracking.remove_expired_track(BLOB_TRACK_TIMEOUT, 1, frame_time)
+        
         if tracked_blobs_lane2:
             # Prune out the blobs that haven't been seen in some amount of time
             for i in range(len(tracked_blobs_lane2) - 1, -1, -1):
                 if frame_time - tracked_blobs_lane2[i]['last_seen'] > BLOB_TRACK_TIMEOUT: # Deleta caso de timeout
                     print("Removing expired track from lane 2 {}".format(tracked_blobs_lane2[i]['id']))
-#                    prev_speed = ave_speed
+                    # prev_speed = ave_speed
                     del tracked_blobs_lane2[i]
 
         if tracked_blobs_lane3:
@@ -531,11 +437,11 @@ while True:
             for i in range(len(tracked_blobs_lane3) - 1, -1, -1):
                 if frame_time - tracked_blobs_lane3[i]['last_seen'] > BLOB_TRACK_TIMEOUT: # Deleta caso de timeout
                     print("Removing expired track from lane 3 {}".format(tracked_blobs_lane3[i]['id']))
-#                    prev_speed = ave_speed
+                    # prev_speed = ave_speed
                     del tracked_blobs_lane3[i]
 
         # ################ PRINTA OS BLOBS ####################################
-        for blob in tracked_blobs:  # Desenha os pontos centrais
+        for blob in lane1_tracking.tracked_blobs:  # Desenha os pontos centrais
             if SHOW_TRAIL:
                 # t.print_trail(blob['trail'], frame)
                 t.print_trail(blob['trail'], frame_lane1)
@@ -550,18 +456,18 @@ while True:
                 # t.print_trail(blob3['trail'], frame)
                 t.print_trail(blob3['trail'], frame_lane3)
 
-            if blob['speed'] and blob['speed'][0] != 0:
-                prev_len_speed.insert(0, len(blob['speed']))
-                if len(prev_len_speed) > 20:  # deixa no máx 20 valores
-                    while len(prev_len_speed) > 20:
-                        del prev_len_speed[19] # limpa prev_len_speed se estiver muito grande
-                # remove zero elements on the speed list
-                blob['speed'] = [item for item in blob['speed'] if item != 0.0]
-                print('========= speed list =========', blob['speed'])
-                prev_speed = ave_speed
-                ave_speed = np.mean(blob['speed'])
-                print('========= prev_speed =========', float("{0:.2f}".format(prev_speed)))
-                print('========= ave_speed ==========', float("{0:.2f}".format(ave_speed)))
+            # if blob['speed'] and blob['speed'][0] != 0:
+            #     prev_len_speed.insert(0, len(blob['speed']))
+            #     if len(prev_len_speed) > 20:  # deixa no máx 20 valores
+            #         while len(prev_len_speed) > 20:
+            #             del prev_len_speed[19] # limpa prev_len_speed se estiver muito grande
+            #     # remove zero elements on the speed list
+            #     blob['speed'] = [item for item in blob['speed'] if item != 0.0]
+            #     print('========= speed list =========', blob['speed'])
+            #     prev_speed = ave_speed
+            #     ave_speed = np.mean(blob['speed'])
+            #     print('========= prev_speed =========', float("{0:.2f}".format(prev_speed)))
+            #     print('========= ave_speed ==========', float("{0:.2f}".format(ave_speed)))
 
                 # ############### FIM PRINTA OS BLOBS  ########################
 
