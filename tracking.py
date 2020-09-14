@@ -7,7 +7,6 @@ Created on Sat Sep 12 21:26:30 2020
 import cv2 
 import uuid
 
-
 class Tracking:
     def __init__(self, resize_ratio, lock_on_max, lock_on_min):
         self.lock_on_max = lock_on_max
@@ -56,7 +55,7 @@ class Tracking:
         if self.tracked_blobs:
             print(f'self.tracked_blobs: {self.tracked_blobs}')
             # Sort the blobs we have seen in previous frames by pixel distance from this one
-            # sorted_blobs = sorted(self.tracked_blobs, key=lambda b: cv2.norm(b['trail'][0], center)) # Not working
+            # sorted_blobs = sorted(self.tracked_blobs, key=lambda b: cv2.norm(b['trail'][0], center)) # Sorted Not working
             sorted_blobs = self.tracked_blobs
             print(f'sorted_blobs: {sorted_blobs}')
 
@@ -65,9 +64,6 @@ class Tracking:
             self.__add_new_center_to_trail(center)
         else:            
             self.__create_tracked_blobs_dict(center)
-
-        # print(f'self.closest_blob : {self.closest_blob}')
-
 
 
     def remove_expired_track(self, blob_track_timeout, name, frame_time):

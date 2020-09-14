@@ -5,9 +5,7 @@ Created on Sat Sep 12 11:21:59 2020
 @author: broch
 """
 
-# ##############  FUNÇÕES ####################################################################
-
-
+# ##############  FUNÇÕES ###########
 import numpy as np
 #import os
 import itertools as it
@@ -15,8 +13,6 @@ import itertools as it
 import xml.etree.ElementTree as ET
 import matplotlib.pyplot as plt
 import cv2
-
-#from tccfunctions import *
 
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
@@ -95,17 +91,17 @@ def region_of_interest(frame, resize_ratio):
 #                      [r(1320), r(0)], [r(1920), r(750)], [r(1920), r(1080)]], np.int32)
 #    cv2.fillPoly(frame, [pts8], RED)
     # Faixa 2
-#    pts9 = np.array([[r(570), r(1080)], [r(640), r(0)],
-#                     [r(900), r(0)], [r(1310), r(1080)]], np.int32)
-#    cv2.fillPoly(frame, [pts9], GREEN)
+   # pts9 = np.array([[r(570), r(1080)], [r(640), r(0)],
+   #                  [r(900), r(0)], [r(1310), r(1080)]], np.int32)
+   # cv2.fillPoly(frame, [pts9], GREEN)
     # Faixa 1
-#    pts10 = np.array([[r(480), r(1080)], [r(560), r(0)],
-#                       [r(270), 0], [0, r(620)], [0, 1080]], np.int32)
-    # faixa 1 - 4 pontos
-#    points = np.array([[[r(-150), r(1080)], [r(480), r(1080)],
-#                       [r(560), r(0)], [r(270), 0] ]], np.int32) = np.array([[[r(-150), r(1080)], [r(480), r(1080)],
-#                       [r(560), r(0)], [r(270), 0] ]], np.int32)
-#    cv2.fillPoly(frame, [pts10], BLUE)
+    # pts10 = np.array([[r(480), r(1080)], [r(560), r(0)],
+    #                   [r(270), 0], [0, r(620)], [0, 1080]], np.int32)
+    # # faixa 1 - 4 pontos
+    # points = np.array([[[r(-150), r(1080)], [r(480), r(1080)],
+    #                   [r(560), r(0)], [r(270), 0] ]], np.int32), np.array([[[r(-150), r(1080)], [r(480), r(1080)],
+    #                   [r(560), r(0)], [r(270), 0] ]], np.int32)
+    # cv2.fillPoly(frame, [pts10], BLUE)
     
     return frame
 
@@ -584,15 +580,9 @@ def perspective(frame, lane, RESIZE_RATIO):
         warped_frame = cv2.warpPerspective(frame, H, (width, height))
         return warped_frame
     
-#    cv2.fillPoly(mask_crop, points, RED)
-#    res = cv2.bitwise_and(frame,frame,mask=mask_crop)
-#    rect = cv2.boundingRect(points) # returns (x,y,w,h) of the rect
-#    cropped = res[rect[1]: rect[1] + rect[3], rect[0]: rect[0] + rect[2]]
-#                # faixa 3 crop
-#    frame_crop = frame[0:r(1079), r(990):r(1920)]
         
 if __name__ == '__main__':
-    print('arquivo ERRADOOOOOOO')
+    print('arquivo ERRADO')
                 
           
         
