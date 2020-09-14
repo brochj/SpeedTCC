@@ -405,8 +405,8 @@ while True:
         end_frame_time = time.time()
         process_times.append(end_frame_time - start_frame_time)
         
-        if cv2.waitKey(1) & 0xFF == ord('w'):  
-            SHOW_ROI = not SHOW_ROI
+        # if cv2.waitKey(1) & 0xFF == ord('w'):  
+        #     SHOW_ROI = not SHOW_ROI
        
         if frameCount == CLOSE_VIDEO:  # fecha o video
             break
