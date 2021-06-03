@@ -348,14 +348,12 @@ while True:
                 # ################# END TRACKING ##############################
                 # ################# END FAIXA 3  ##############################
 
-        lane1_tracking.remove_expired_track(
-            BLOB_TRACK_TIMEOUT, "lane 1", frame_time)
-        lane2_tracking.remove_expired_track(
-            BLOB_TRACK_TIMEOUT, "lane 2", frame_time)
-        lane3_tracking.remove_expired_track(
-            BLOB_TRACK_TIMEOUT, "lane 3", frame_time)
+        # Remove timeout trails
+        lane1_tracking.remove_expired_track("lane 1", frame_time)
+        lane2_tracking.remove_expired_track("lane 2", frame_time)
+        lane3_tracking.remove_expired_track("lane 3", frame_time)
 
-        # Desenha os pontos centrais
+        # Draw center points (center of rectangle)
         draw.blobs(frame_lane1, lane1_tracking.tracked_blobs)
         draw.blobs(frame_lane2, lane2_tracking.tracked_blobs)
         draw.blobs(frame_lane3, lane3_tracking.tracked_blobs)
@@ -386,8 +384,7 @@ while True:
 
         frameCount += 1
 
-        end_frame_time = time.time()
-        process_times.append(end_frame_time - start_frame_time)
+        process_times.append(time.time() - start_frame_time)
 
         # if cv2.waitKey(1) & 0xFF == ord('w'):
         #     SHOW_ROI = not SHOW_ROI

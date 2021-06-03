@@ -67,7 +67,7 @@ class Tracking:
         else:
             self.__create_tracked_blobs_dict(center)
 
-    def remove_expired_track(self, blob_track_timeout, name, frame_time):
+    def remove_expired_track(self, name, frame_time, blob_track_timeout=config.BLOB_TRACK_TIMEOUT):
         if self.tracked_blobs:
             # Prune out the blobs that haven't been seen in some amount of time
             for i in range(len(self.tracked_blobs) - 1, -1, -1):

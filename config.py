@@ -16,3 +16,7 @@ BLOB_LOCKON_DIST_PX_MIN = 5  # default 5
 MIN_AREA_FOR_DETEC = 30000  # Default 40000
 # Limites da Área de Medição, área onde é feita o Tracking
 # Distancia de medição: default 915-430 = 485
+
+# The number of seconds a blob is allowed to sit around without having
+# any new blobs matching it.
+BLOB_TRACK_TIMEOUT = 0.1  # Default 0.7
