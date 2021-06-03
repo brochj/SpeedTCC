@@ -38,7 +38,7 @@ SHOW_CAR_RECTANGLE = config.SHOW_CAR_RECTANGLE
 SHOW_REAL_SPEEDS = False
 SHOW_FRAME_COUNT = True
 
-SKIP_VIDEO = False
+SKIP_VIDEO = True
 SEE_CUTTED_VIDEO = False  # ver partes retiradas, precisa de SKIP_VIDEO = True
 # ---- Tracking Values --------------------------------------------------------
 # The maximum distance a blob centroid is allowed to move in order to
@@ -125,7 +125,7 @@ lane3_tracking = Tracking()
 
 
 while True:
-    ret, frame = t.get_frame(cap, RESIZE_RATIO)
+    ret, frame = t.get_frame(cap)
     frame_time = time.time()
 
     if SKIP_VIDEO:
@@ -385,9 +385,6 @@ while True:
         frameCount += 1
 
         process_times.append(time.time() - start_frame_time)
-
-        # if cv2.waitKey(1) & 0xFF == ord('w'):
-        #     SHOW_ROI = not SHOW_ROI
 
         if frameCount == CLOSE_VIDEO:  # fecha o video
             break

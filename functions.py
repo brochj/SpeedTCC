@@ -21,46 +21,14 @@ def r(number):  # Faz o ajuste de escala
     return int(number*config.RESIZE_RATIO)
 
 
-def rotate_bound(image, angle):
-    # grab the dimensions of the image and then determine the
-    # center
-    (h, w) = image.shape[:2]
-    (cX, cY) = (w // 2, h // 2)
-
-    # grab the rotation matrix (applying the negative of the
-    # angle to rotate clockwise), then grab the sine and cosine
-    # (i.e., the rotation components of the matrix)
-    M = cv2.getRotationMatrix2D((cX, cY), -angle, 1.0)
-    cos = np.abs(M[0, 0])
-    sin = np.abs(M[0, 1])
-
-    # compute the new bounding dimensions of the image
-    nW = int((h * sin) + (w * cos))
-    nH = int((h * cos) + (w * sin))
-
-    # adjust the rotation matrix to take into account translation
-    M[0, 2] += (nW / 2) - cX
-    M[1, 2] += (nH / 2) - cY
-
-    # perform the actual rotation and return the image
-    return cv2.warpAffine(image, M, (nW, nH))
-
-
-def get_frame(cap, RESIZE_RATIO):
+def get_frame(cap, resize_ratio=config.RESIZE_RATIO):
     #" Grabs a frame from the video vcture and resizes it. "
     ret, frame = cap.read()
     if ret:
         (h, w) = frame.shape[:2]
-        frame = cv2.resize(frame, (int(w*RESIZE_RATIO),
-                                   int(h*RESIZE_RATIO)), interpolation=cv2.INTER_CUBIC)
+        frame = cv2.resize(frame, (int(w*resize_ratio),
+                                   int(h*resize_ratio)), interpolation=cv2.INTER_CUBIC)
     return ret, frame
-
-
-# def pairwise(iterable):
-#     r"s -> (s0, s1), (s1, s2), (s2, s3), ..."
-#     a, b = it.tee(iterable)
-#     next(b, None)
-#     return zip(a, b)
 
 
 def region_of_interest(frame, resize_ratio):
