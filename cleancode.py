@@ -370,21 +370,10 @@ while True:
         lane3_tracking.remove_expired_track(
             BLOB_TRACK_TIMEOUT, "lane 3", frame_time)
 
-        # ################ PRINTA OS BLOBS ####################################
-        for blob in lane1_tracking.tracked_blobs:  # Desenha os pontos centrais
-            if SHOW_TRAIL:
-                # t.print_trail(blob['trail'], frame)
-                t.print_trail(blob['trail'], frame_lane1)
-
-        for blob2 in lane2_tracking.tracked_blobs:  # Desenha os pontos centrais
-            if SHOW_TRAIL:
-                # t.print_trail(blob2['trail'], frame)
-                t.print_trail(blob2['trail'], frame_lane2)
-
-        for blob3 in lane3_tracking.tracked_blobs:  # Desenha os pontos centrais
-            if SHOW_TRAIL:
-                # t.print_trail(blob3['trail'], frame)
-                t.print_trail(blob3['trail'], frame_lane3)
+        # Desenha os pontos centrais
+        draw.blobs(frame_lane1, lane1_tracking.tracked_blobs)
+        draw.blobs(frame_lane2, lane2_tracking.tracked_blobs)
+        draw.blobs(frame_lane3, lane3_tracking.tracked_blobs)
 
         print(f'************** FIM DO FRAME {frameCount} **************')
 
