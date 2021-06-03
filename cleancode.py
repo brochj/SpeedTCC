@@ -14,8 +14,10 @@ import cv2
 import functions as t
 import datetime
 import colors
+import config
 from image_processing import ImageProcessing
 from tracking import Tracking
+import drawings as draw
 # import drawings as draw
 from sys import exit
 # ########  CONSTANT VALUES ###################################################
@@ -23,15 +25,15 @@ VIDEO = 1
 VIDEO_FILE = './Dataset/video{}.mp4'.format(VIDEO)
 XML_FILE = './Dataset/video{}.xml'.format(VIDEO)
 
-RESIZE_RATIO = .22222  # 0.7697  720p=.6667 480p=.4445 360p=.33333 240p=.22222 144p=.13333
+RESIZE_RATIO = config.RESIZE_RATIO
 if RESIZE_RATIO > 1:
     exit('ERRO: AJUSTE O RESIZE_RATIO')
 CLOSE_VIDEO = 2950  # 2950 #5934  # 1-6917 # 5-36253
 
-SHOW_ROI = True
-SHOW_TRACKING_AREA = True
-SHOW_TRAIL = True
-SHOW_CAR_RECTANGLE = True
+SHOW_ROI = config.SHOW_ROI
+SHOW_TRACKING_AREA = config.SHOW_TRACKING_AREA
+SHOW_TRAIL = config.SHOW_TRAIL
+SHOW_CAR_RECTANGLE = config.SHOW_CAR_RECTANGLE
 
 SHOW_REAL_SPEEDS = False
 SHOW_FRAME_COUNT = True
@@ -49,7 +51,7 @@ MIN_AREA_FOR_DETEC = 30000  # Default 40000
 
 # Faixa 1
 BOTTOM_LIMIT_TRACK = 910  # 850  # Default 900
-UPPER_LIMIT_TRACK = 395  # 350  # Default 430
+UPPER_LIMIT_TRACK = config.UPPER_LIMIT_TRACK  # 350  # Default 430
 # Faixa 2
 BOTTOM_LIMIT_TRACK_L2 = 940  # 1095  # Default 940
 UPPER_LIMIT_TRACK_L2 = 425  # 408 # Default 420
@@ -92,10 +94,6 @@ frameCount = 0  # Armazena a contagem de frames processados do video
 results_lane1 = {}
 results_lane2 = {}
 results_lane3 = {}
-
-area_L1 = []
-area_L2 = []
-area_L3 = []
 
 process_times = []
 
@@ -209,27 +207,14 @@ while True:
                 if center[1] > r(BOTTOM_LIMIT_TRACK) or center[1] < r(UPPER_LIMIT_TRACK):
                     continue
 
-                if SHOW_CAR_RECTANGLE:
-                    if center[1] > r(UPPER_LIMIT_TRACK):
-                        area_L1.append(w*h)
-                        cv2.rectangle(frame_lane1, (x, y),
-                                      (x+w, y+h), colors.GREEN, 2)
-                        cv2.rectangle(frame, (x, y), (x+w, y+h),
-                                      colors.GREEN, 2)
-                        cv2.rectangle(
-                            out, (x, y), (x + w, y + h), colors.GREEN, 2)
-                    else:
-                        cv2.rectangle(frame_lane1, (x, y),
-                                      (x+w, y+h), colors.PINK, 2)
-                        cv2.rectangle(frame, (x, y), (x+w, y+h),
-                                      colors.PINK, 2)
+                draw.car_rectangle(center, frame, frame_lane1, x, y, w, h)
 
                 # ################## TRACKING #################################
                 lane1_tracking.tracking(center, frame_time)
 
                 try:
                     if len(lane1_tracking.closest_blob['trail']) > MIN_CENTRAL_POINTS:
-                        lane1_tracking.closest_blob['speed'].insert(0, calculate_speed(
+                        lane1_tracking.closest_blob['speed'].insert(0, t.calculate_speed(
                             lane1_tracking.closest_blob['trail'], FPS, CF_LANE1))
                         lane = 1
                         ave_speed = np.mean(
@@ -279,25 +264,14 @@ while True:
                 if center_L2[1] > r(BOTTOM_LIMIT_TRACK_L2) or center_L2[1] < r(UPPER_LIMIT_TRACK_L2):
                     continue
 
-                if SHOW_CAR_RECTANGLE:
-                    PADDING = r(600)
-                    if center_L2[1] > r(UPPER_LIMIT_TRACK):
-                        cv2.rectangle(frame_lane2, (x_L2, y_L2),
-                                      (x_L2+w_L2, y_L2+h_L2), colors.GREEN, 2)
-                        cv2.rectangle(frame, (x_L2+PADDING, y_L2),
-                                      (x_L2+w_L2+PADDING, y_L2+h_L2), colors.GREEN, 2)
-                        area_L2.append(w_L2*h_L2)
-                    else:
-                        cv2.rectangle(frame, (x_L2, y_L2),
-                                      (x_L2+w_L2, y_L2+h_L2), colors.PINK, 2)
-                        cv2.rectangle(frame, (x_L2+PADDING, y_L2),
-                                      (x_L2+w_L2+PADDING, y_L2+h_L2), colors.PINK, 2)
+                draw.car_rectangle(center_L2, frame, frame_lane2,
+                                   x_L2, y_L2, w_L2, h_L2, left_padding=600)
 
                 # ################## TRACKING #################################
                 lane2_tracking.tracking(center_L2, frame_time)
                 try:
                     if len(lane2_tracking.closest_blob['trail']) > MIN_CENTRAL_POINTS:
-                        lane2_tracking.closest_blob['speed'].insert(0, calculate_speed(
+                        lane2_tracking.closest_blob['speed'].insert(0, t.calculate_speed(
                             lane2_tracking.closest_blob['trail'], FPS, CF_LANE2))
                         lane = 2
                         ave_speed = np.mean(
@@ -342,7 +316,7 @@ while True:
                 (x_L3, y_L3, w_L3, h_L3) = cv2.boundingRect(lane3.hull[i])
                 center_L3 = (int(x_L3 + w_L3/2), int(y_L3 + h_L3/2))
                 # out = cv2.rectangle(out, (x_L3, y_L3), (x_L3 + w_L3, y_L3 + h_L3), colors.GREEN, 2) # printa na mask
-                # CONDIÇÕES PARA CONTINUAR COM TRACKING
+                #  PARA CONTINUAR COM TRACKING
 #                if h_L3 > r(HEIGHT)*.80 or w_L3 > r(WIDTH)*.40:
 #                    continue
 
@@ -352,19 +326,8 @@ while True:
                 if center_L3[1] > r(BOTTOM_LIMIT_TRACK_L3) or center_L3[1] < r(UPPER_LIMIT_TRACK_L3):
                     continue
 
-                if SHOW_CAR_RECTANGLE:
-                    PADDING = r(1270)
-                    if center_L3[1] > r(UPPER_LIMIT_TRACK):
-                        cv2.rectangle(frame_lane3, (x_L3, y_L3),
-                                      (x_L3+w_L3, y_L3+h_L3), colors.GREEN, 2)
-                        cv2.rectangle(frame, (x_L3+PADDING, y_L3),
-                                      (x_L3+w_L3+PADDING, y_L3+h_L3), colors.GREEN, 2)
-                        area_L3.append(w_L3*h_L3)
-                    else:
-                        cv2.rectangle(frame_lane3, (x_L3, y_L3),
-                                      (x_L3+w_L3, y_L3+h_L3), colors.PINK, 2)
-                        cv2.rectangle(frame, (x_L3+PADDING, y_L3),
-                                      (x_L3+w_L3+PADDING, y_L3+h_L3), colors.PINK, 2)
+                draw.car_rectangle(center_L3, frame, frame_lane3,
+                                   x_L3, y_L3, w_L3, h_L3, left_padding=1270)
 
                 # ################## TRACKING #################################
                 lane3_tracking.tracking(center_L3, frame_time)

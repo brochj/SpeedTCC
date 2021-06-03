@@ -10,19 +10,15 @@ import numpy as np
 #import os
 import itertools as it
 #import math
+import colors
 import xml.etree.ElementTree as ET
 import matplotlib.pyplot as plt
 import cv2
+import config
 
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
-BLUE = (255, 0, 0)
-GREEN = (0, 255, 0)
-RED = (0, 0, 255)
-YELLOW = (0, 255, 255)
-CIAN = (255, 255, 0)
-PINK = (255, 0, 255)
-ORANGE = (0, 90, 255)
+
+def r(number):  # Faz o ajuste de escala
+    return int(number*config.RESIZE_RATIO)
 
 
 def rotate_bound(image, angle):
@@ -71,21 +67,21 @@ def region_of_interest(frame, resize_ratio):
     def r(numero):  # Faz o ajuste de escala
         return int(numero*resize_ratio)
     # Retângulo superior
-#    cv2.rectangle(frame, (0, 0), (r(1920), r(120)), BLACK, -1)
+#    cv2.rectangle(frame, (0, 0), (r(1920), r(120)), colors.BLACK, -1)
     # triângulo lado direito
     pts = np.array([[r(1920), r(790)], [r(1290), 0], [r(1920), 0]], np.int32)
-    cv2.fillPoly(frame, [pts], BLACK)
+    cv2.fillPoly(frame, [pts], colors.BLACK)
     # triângulo lado esquerdo
     pts3 = np.array([[0, r(620)], [r(270), 0], [0, 0]], np.int32)
-    cv2.fillPoly(frame, [pts3], BLACK)
+    cv2.fillPoly(frame, [pts3], colors.BLACK)
     # Linha entre faixas 1 e 2
     pts1 = np.array([[r(480), r(1080)], [r(560), r(0)],
                      [r(640), r(0)], [r(570), r(1080)]], np.int32)
-    cv2.fillPoly(frame, [pts1], BLACK)
+    cv2.fillPoly(frame, [pts1], colors.BLACK)
     # Linha entre faixas 2 e 3
     pts7 = np.array([[r(1310), r(1080)], [r(900), r(0)],
                      [r(990), r(0)], [r(1410), r(1080)]], np.int32)
-    cv2.fillPoly(frame, [pts7], BLACK)
+    cv2.fillPoly(frame, [pts7], colors.BLACK)
     # Faixa 3
     return frame
 
@@ -100,6 +96,17 @@ def convert_to_black_image(frame):
     return np.zeros((frame.shape[0], frame.shape[1], 3), np.uint8)
 
 #### SPEED FUNCTIONS ########################################################################
+
+
+def calculate_speed(trails, fps, correction_factor):
+
+    med_area_meter = 3.9  # metros (Valor estimado)
+    med_area_pixel = r(485)
+    qntd_frames = 11  # len(trails)  # default 11
+    dist_pixel = cv2.norm(trails[0], trails[10])  # Sem usar Regressão linear
+    dist_meter = dist_pixel*(med_area_meter/med_area_pixel)
+    speed = (dist_meter*3.6*correction_factor)/(qntd_frames*(1/fps))
+    return round(speed, 1)
 
 
 def linearRegression(pts, frames):
@@ -146,7 +153,7 @@ def show_results_on_screen(frame, frameCount, ave_speed, lane, blob, total_cars,
                            dict_lane1, dict_lane2, dict_lane3, SAVE_FRAME_F1, SAVE_FRAME_F2, SAVE_FRAME_F3):
     def r(numero):  # Faz o ajuste de escala das posições de textos e retangulos
         return int(numero*RESIZE_RATIO)
-    color = WHITE
+    color = colors.WHITE
     if lane == 1:
         dict_lane = dict_lane1
         positions = [(r(350), r(120)), (r(550), r(120)),
@@ -161,7 +168,7 @@ def show_results_on_screen(frame, frameCount, ave_speed, lane, blob, total_cars,
                      (r(1550), r(180)), (r(1550), r(230))]
 
 #    cv2.putText(frame, str(float("{0:.2f}".format(ave_speed))), (blob['trail'][0][0] + r(57), blob['trail'][0][1] + r(143)),
-#                cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, YELLOW, thickness=1, lineType=2)
+#                cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, colors.YELLOW, thickness=1, lineType=2)
     # Texto da que fica embaixo da velocidade real
     try:
         dif_lane = ave_speed - float(dict_lane['speed'])
@@ -171,13 +178,13 @@ def show_results_on_screen(frame, frameCount, ave_speed, lane, blob, total_cars,
         pass
     try:
         if abs(dif_lane) <= 3:
-            color = GREEN
+            color = colors.GREEN
         elif abs(dif_lane) > 3 and abs(dif_lane) <= 5:
-            color = YELLOW
+            color = colors.YELLOW
         elif abs(dif_lane) > 5 and abs(dif_lane) <= 10:
-            color = ORANGE
+            color = colors.ORANGE
         elif abs(dif_lane) > 10:
-            color = RED
+            color = colors.RED
 
         cv2.putText(frame, str(float("{0:.2f}".format(ave_speed))), positions[0],
                     2, .6, color, thickness=1, lineType=2)  # Velocidade Medida
@@ -202,7 +209,7 @@ def show_results_on_screen(frame, frameCount, ave_speed, lane, blob, total_cars,
 
     # PRINTA FAIXA 2
 #    cv2.putText(frame, 'Faixa {}'.format(lane), (blob['trail'][0][0] - r(29), blob['trail'][0][1] + r(200)),
-#                cv2.FONT_HERSHEY_COMPLEX_SMALL, .8, WHITE, thickness=1, lineType=2)
+#                cv2.FONT_HERSHEY_COMPLEX_SMALL, .8, colors.WHITE, thickness=1, lineType=2)
 
 ##### XML FUNCTIONS ###########################################################
 
@@ -409,7 +416,7 @@ def write_results_on_image(frame, frameCount, ave_speed, lane, id_car, RESIZE_RA
                            dict_lane1, dict_lane2, dict_lane3):
     def r(numero):  # Faz o ajuste de escala das posições de textos e retangulos
         return int(numero*RESIZE_RATIO)
-    color = WHITE
+    color = colors.WHITE
     if lane == 1:
         dict_lane = dict_lane1
         positions = [(r(350), r(120)), (r(550), r(120)),
@@ -433,13 +440,13 @@ def write_results_on_image(frame, frameCount, ave_speed, lane, id_car, RESIZE_RA
         pass
     try:
         if abs(abs_error) <= 3:
-            color = GREEN
+            color = colors.GREEN
         elif abs(abs_error) > 3 and abs(abs_error) <= 5:
-            color = YELLOW
+            color = colors.YELLOW
         elif abs(abs_error) > 5 and abs(abs_error) <= 10:
-            color = ORANGE
+            color = colors.ORANGE
         elif abs(abs_error) > 10:
-            color = RED
+            color = colors.RED
 
         cv2.putText(frame, str(float("{0:.2f}".format(ave_speed))), positions[0],
                     2, .6, color, thickness=1, lineType=2)  # Velocidade Medida
@@ -457,10 +464,10 @@ def write_results_on_image(frame, frameCount, ave_speed, lane, id_car, RESIZE_RA
 
 def print_trail(trail, frame):
     for (a, b) in pairwise(trail):
-        #        cv2.circle(frame, a, 3, BLUE, -1)
-        #        cv2.line(frame, a, b, WHITE, 1)
-        cv2.line(frame, a, b, GREEN, 3)
-        cv2.circle(frame, a, 5, RED, -1)
+        #        cv2.circle(frame, a, 3, colors.BLUE, -1)
+        #        cv2.line(frame, a, b, colors.WHITE, 1)
+        cv2.line(frame, a, b, colors.GREEN, 3)
+        cv2.circle(frame, a, 5, colors.RED, -1)
 
 
 def plot_graph(abs_error_list, ave_abs_error, ave_per_error, rate_detec_lane,
