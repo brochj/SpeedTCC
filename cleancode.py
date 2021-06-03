@@ -98,22 +98,10 @@ results_lane3 = {}
 process_times = []
 
 
-# ##############  FUNÇÕES #####################################################
 def r(numero):
     return int(numero*RESIZE_RATIO)
 
 
-def calculate_speed(trails, fps, correction_factor):
-    med_area_meter = 3.9  # metros (Valor estimado)
-    med_area_pixel = r(485)
-    qntd_frames = 11  # len(trails)  # default 11
-    dist_pixel = cv2.norm(trails[0], trails[10])  # Sem usar Regressão linear
-    dist_meter = dist_pixel*(med_area_meter/med_area_pixel)
-    speed = (dist_meter*3.6*correction_factor)/(qntd_frames*(1/fps))
-    return round(speed, 1)
-
-
-# ########## FIM  FUNÇÕES #####################################################
 now = datetime.datetime.now()
 DATE = f'video{VIDEO}_{now.day}-{now.month}-{now.year}_{now.hour}-{now.minute}-{now.second}'
 
@@ -131,12 +119,9 @@ KERNEL_ERODE_L3 = np.ones((r(12), r(12)), np.uint8)  # Default (r(12), r(12))
 # Default (r(100), r(320))
 KERNEL_DILATE_L3 = np.ones((r(100), r(320)), np.uint8)
 
-lane1_tracking = Tracking(
-    RESIZE_RATIO, BLOB_LOCKON_DIST_PX_MAX, BLOB_LOCKON_DIST_PX_MIN)
-lane2_tracking = Tracking(
-    RESIZE_RATIO, BLOB_LOCKON_DIST_PX_MAX, BLOB_LOCKON_DIST_PX_MIN)
-lane3_tracking = Tracking(
-    RESIZE_RATIO, BLOB_LOCKON_DIST_PX_MAX, BLOB_LOCKON_DIST_PX_MIN)
+lane1_tracking = Tracking()
+lane2_tracking = Tracking()
+lane3_tracking = Tracking()
 
 
 while True:
@@ -333,7 +318,7 @@ while True:
                 lane3_tracking.tracking(center_L3, frame_time)
                 try:
                     if len(lane3_tracking.closest_blob['trail']) > MIN_CENTRAL_POINTS:
-                        lane3_tracking.closest_blob['speed'].insert(0, calculate_speed(
+                        lane3_tracking.closest_blob['speed'].insert(0, t.calculate_speed(
                             lane3_tracking.closest_blob['trail'], FPS, CF_LANE3))
                         lane = 3
                         ave_speed = np.mean(

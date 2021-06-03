@@ -56,11 +56,11 @@ def get_frame(cap, RESIZE_RATIO):
     return ret, frame
 
 
-def pairwise(iterable):
-    r"s -> (s0, s1), (s1, s2), (s2, s3), ..."
-    a, b = it.tee(iterable)
-    next(b, None)
-    return zip(a, b)
+# def pairwise(iterable):
+#     r"s -> (s0, s1), (s1, s2), (s2, s3), ..."
+#     a, b = it.tee(iterable)
+#     next(b, None)
+#     return zip(a, b)
 
 
 def region_of_interest(frame, resize_ratio):
