@@ -1,5 +1,6 @@
 import xml.etree.ElementTree as ET
 from functions import r
+import cv2
 
 
 def read_xml(xml_file, video, DATE):

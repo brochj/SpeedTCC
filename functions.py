@@ -57,12 +57,7 @@ def histogram_equalization(frame_gray):
     return hist_equalization
 
 
-def convert_to_black_image(frame):
-    return np.zeros((frame.shape[0], frame.shape[1], 3), np.uint8)
-
 #### SPEED FUNCTIONS ########################################################################
-
-
 def calculate_speed(trails, fps, correction_factor):
 
     med_area_meter = 3.9  # metros (Valor estimado)
@@ -303,14 +298,6 @@ def write_results_on_image(frame, frameCount, ave_speed, lane, id_car, RESIZE_RA
         pass
 
     return abs_error, per_error
-
-
-def print_trail(trail, frame):
-    for (a, b) in pairwise(trail):
-        #        cv2.circle(frame, a, 3, colors.BLUE, -1)
-        #        cv2.line(frame, a, b, colors.WHITE, 1)
-        cv2.line(frame, a, b, colors.GREEN, 3)
-        cv2.circle(frame, a, 5, colors.RED, -1)
 
 
 def plot_graph(abs_error_list, ave_abs_error, ave_per_error, rate_detec_lane,

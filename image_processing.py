@@ -4,9 +4,10 @@ Created on Sat Sep 12 14:50:08 2020
 
 @author: broch
 """
-# import numpy as np
 import cv2
+import numpy as np
 
+import colors
 from functions import r
 
 
@@ -54,6 +55,13 @@ class ImageProcessing:
         for i in range(len(self.contours)):  # calculate points for each contour
             # creating convex hull object for each contour
             self.hull.append(cv2.convexHull(self.contours[i], False))
+
+    def convert_to_black_image(self, frame):
+        return np.zeros((frame.shape[0], frame.shape[1], 3), np.uint8)
+
+    def draw_contours(self):
+        black_image = self.convert_to_black_image(self.frame)
+        return cv2.drawContours(black_image, self.hull, 0, colors.WHITE, -1, 8)
 
 
 if __name__ == '__main__':

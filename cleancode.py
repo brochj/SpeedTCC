@@ -175,10 +175,6 @@ while True:
         lane1 = ImageProcessing(frame_lane1, RESIZE_RATIO,
                                 bgsMOG, KERNEL_ERODE, KERNEL_DILATE)
 
-        # create an empty black image
-        drawing = t.convert_to_black_image(frame_lane1)
-        out = cv2.drawContours(drawing, lane1.hull, 0, colors.WHITE, -1, 8)
-
         for i in range(len(lane1.contours)):
             if cv2.contourArea(lane1.contours[i]) > r(MIN_AREA_FOR_DETEC):
 
@@ -231,10 +227,6 @@ while True:
 
         lane2 = ImageProcessing(frame_lane2, RESIZE_RATIO,
                                 bgsMOG, KERNEL_ERODE_L2, KERNEL_DILATE_L2)
-
-        drawing_L2 = t.convert_to_black_image(frame_lane2)
-        out_L2 = cv2.drawContours(
-            drawing_L2, lane2.hull, 0, colors.WHITE, -1, 8)
 
         for i in range(len(lane2.contours)):
             if cv2.contourArea(lane2.contours[i]) > r(MIN_AREA_FOR_DETEC):
@@ -290,10 +282,6 @@ while True:
         lane3 = ImageProcessing(frame_lane3, RESIZE_RATIO,
                                 bgsMOG, KERNEL_ERODE_L3, KERNEL_DILATE_L3)
 
-        drawing_L3 = t.convert_to_black_image(frame_lane3)
-        out_L3 = cv2.drawContours(
-            drawing_L3, lane3.hull, 0, colors.WHITE, -1, 8)
-#        areahull = []
         # draw contours_L3 and hull points
         for i in range(len(lane3.contours)):
             if cv2.contourArea(lane3.contours[i]) > r(MIN_AREA_FOR_DETEC):
@@ -374,9 +362,9 @@ while True:
         cv2.imshow('erodedmask_L3', lane3.eroded_mask)
         cv2.imshow('dilatedmask_L3', lane3.dilated_mask)
 
-        cv2.imshow('out', out)
-        cv2.imshow('out_L2', out_L2)
-        cv2.imshow('out_L3', out_L3)
+        cv2.imshow('out', lane1.draw_contours())
+        cv2.imshow('out_L2', lane2.draw_contours())
+        cv2.imshow('out_L3', lane3.draw_contours())
 
         cv2.imshow('frame_lane1', frame_lane1)
         cv2.imshow('frame_lane2', frame_lane2)
