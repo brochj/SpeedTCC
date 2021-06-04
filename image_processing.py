@@ -8,12 +8,13 @@ import cv2
 import numpy as np
 
 import colors
+import config
 from functions import r
 
 
 class ImageProcessing:
-    def __init__(self, frame, resize_ratio, background_subtractor, kernel_erode, kernel_dilate):
-        self.resize_ratio = resize_ratio
+    def __init__(self, frame, background_subtractor, kernel_erode, kernel_dilate, resize_ratio=None):
+        self.resize_ratio = resize_ratio or config.RESIZE_RATIO
         self.frame = frame
         self.bg_subtractor = background_subtractor
         self.kernel_erode = kernel_erode

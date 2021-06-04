@@ -172,7 +172,7 @@ while True:
             xml_processing.print_xml_values(
                 frame, dict_lane1, dict_lane2, dict_lane3)
 
-        lane1 = ImageProcessing(frame_lane1, RESIZE_RATIO,
+        lane1 = ImageProcessing(frame_lane1,
                                 bgsMOG, KERNEL_ERODE, KERNEL_DILATE)
 
         for i in range(len(lane1.contours)):
@@ -199,10 +199,12 @@ while True:
                         lane1_tracking.closest_blob['speed'].insert(0, t.calculate_speed(
                             lane1_tracking.closest_blob['trail'], FPS, CF_LANE1))
                         lane = 1
-                        ave_speed = np.mean(
+                        ave_speed = t.calculate_avg_speed(
                             lane1_tracking.closest_blob['speed'])
-                        abs_error, per_error = t.write_results_on_image(frame, frameCount, ave_speed, lane, lane1_tracking.closest_blob['id'], RESIZE_RATIO, VIDEO,
-                                                                        dict_lane1, dict_lane2, dict_lane3)
+                        abs_error, per_error = t.calculate_errors(
+                            ave_speed, dict_lane1['speed'])
+                        draw.result(frame, ave_speed, abs_error, per_error,
+                                    lane1_tracking.closest_blob['id'], (350, 120))
 
                         results_lane1[str(lane1_tracking.closest_blob['id'])] = dict(ave_speed=round(ave_speed, 2),
                                                                                      speeds=lane1_tracking.closest_blob[
@@ -225,7 +227,7 @@ while True:
 
                 # ################# END FAIXA 1  ##############################
 
-        lane2 = ImageProcessing(frame_lane2, RESIZE_RATIO,
+        lane2 = ImageProcessing(frame_lane2,
                                 bgsMOG, KERNEL_ERODE_L2, KERNEL_DILATE_L2)
 
         for i in range(len(lane2.contours)):
@@ -252,10 +254,12 @@ while True:
                         lane2_tracking.closest_blob['speed'].insert(0, t.calculate_speed(
                             lane2_tracking.closest_blob['trail'], FPS, CF_LANE2))
                         lane = 2
-                        ave_speed = np.mean(
+                        ave_speed = t.calculate_avg_speed(
                             lane2_tracking.closest_blob['speed'])
-                        abs_error, per_error = t.write_results_on_image(frame, frameCount, ave_speed, lane, lane2_tracking.closest_blob['id'], RESIZE_RATIO, VIDEO,
-                                                                        dict_lane1, dict_lane2, dict_lane3)
+                        abs_error, per_error = t.calculate_errors(
+                            ave_speed, dict_lane2['speed'])
+                        draw.result(frame, ave_speed, abs_error, per_error,
+                                    lane2_tracking.closest_blob['id'], (830, 120))
 
                         results_lane2[str(lane2_tracking.closest_blob['id'])] = dict(ave_speed=round(ave_speed, 2),
                                                                                      speeds=lane2_tracking.closest_blob[
@@ -279,8 +283,8 @@ while True:
                 # ################# END TRACKING ##############################
                 # ################# END FAIXA 2  ##############################
 
-        lane3 = ImageProcessing(frame_lane3, RESIZE_RATIO,
-                                bgsMOG, KERNEL_ERODE_L3, KERNEL_DILATE_L3)
+        lane3 = ImageProcessing(frame_lane3, bgsMOG,
+                                KERNEL_ERODE_L3, KERNEL_DILATE_L3)
 
         # draw contours_L3 and hull points
         for i in range(len(lane3.contours)):
@@ -310,10 +314,12 @@ while True:
                         lane3_tracking.closest_blob['speed'].insert(0, t.calculate_speed(
                             lane3_tracking.closest_blob['trail'], FPS, CF_LANE3))
                         lane = 3
-                        ave_speed = np.mean(
+                        ave_speed = t.calculate_avg_speed(
                             lane3_tracking.closest_blob['speed'])
-                        abs_error, per_error = t.write_results_on_image(frame, frameCount, ave_speed, lane, lane3_tracking.closest_blob['id'], RESIZE_RATIO, VIDEO,
-                                                                        dict_lane1, dict_lane2, dict_lane3)
+                        abs_error, per_error = t.calculate_errors(
+                            ave_speed, dict_lane3['speed'])
+                        draw.result(frame, ave_speed, abs_error, per_error,
+                                    lane3_tracking.closest_blob['id'], (1350, 120))
 
                         results_lane3[str(lane3_tracking.closest_blob['id'])] = dict(ave_speed=round(ave_speed, 2),
                                                                                      speeds=lane3_tracking.closest_blob[

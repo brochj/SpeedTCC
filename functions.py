@@ -69,43 +69,21 @@ def calculate_speed(trails, fps, correction_factor):
     return round(speed, 1)
 
 
-def linearRegression(pts, frames):
-    sqrs_x = []
-    sqrs_y = []
-    ms_xy = []
-    x_values = []
-    y_values = []
-    for x, y in pts:
-        sqr_x = x**2
-        sqr_y = y**2
-        m_xy = x*y
+def calculate_avg_speed(speed_array):
+    return np.mean(speed_array)
 
-        x_values.append(x)
-        y_values.append(y)
 
-        ms_xy.append(m_xy)
-        sqrs_x.append(sqr_x)
-        sqrs_y.append(sqr_y)
+def calculate_errors(calculated_speed, measured_speed):
+    try:
+        abs_error = calculated_speed - float(measured_speed)
+        per_error = (
+            abs(calculated_speed - float(measured_speed))/float(measured_speed))*100
+        return abs_error, per_error
+    except Exception as e:
+        print('Erro dentro de calculate_errors()')
+        print(e)
 
-        sum_x_values = sum(x_values)
-        sum_y_values = sum(y_values)
-        sum_ms_xy = sum(ms_xy)
-        sum_sqrs_x = sum(sqrs_x)
 
-        ave_x = sum_x_values/len(pts)
-        ave_y = sum_y_values/len(pts)
-
-    b = (sum_ms_xy - (len(pts)*ave_x*ave_y)) / \
-        (sum_sqrs_x - (len(pts)*(ave_x**2)))
-    a = ave_y - b*ave_x
-
-    predicted_final_y = a + b*x_values[0]
-    predicted_initial_y = a + b*x_values[frames-1]
-
-    final_pt = (x_values[0], int(predicted_final_y))
-    initial_pt = (x_values[frames-1], int(predicted_initial_y))
-
-    return initial_pt, final_pt
 ##### END - SPEED FUNTIONS #####################################################
 
 
@@ -248,56 +226,6 @@ def skip_video(frameCount, video, frame):
         if frameCount > 5934 and frameCount < 6918:
             skip = True  # Carro parado
     return skip
-
-
-def write_results_on_image(frame, frameCount, ave_speed, lane, id_car, RESIZE_RATIO, VIDEO,
-                           dict_lane1, dict_lane2, dict_lane3):
-    def r(numero):  # Faz o ajuste de escala das posições de textos e retangulos
-        return int(numero*RESIZE_RATIO)
-    color = colors.WHITE
-    if lane == 1:
-        dict_lane = dict_lane1
-        positions = [(r(350), r(120)), (r(550), r(120)),
-                     (r(550), r(180)), (r(550), r(230))]
-    if lane == 2:
-        dict_lane = dict_lane2
-        positions = [(r(830), r(120)), (r(1030), r(120)),
-                     (r(1030), r(180)), (r(1030), r(230))]
-    if lane == 3:
-        dict_lane = dict_lane3
-        positions = [(r(1350), r(120)), (r(1550), r(120)),
-                     (r(1550), r(180)), (r(1550), r(230))]
-
-    abs_error = 0.0
-    per_error = 0.0
-    try:
-        abs_error = ave_speed - float(dict_lane['speed'])
-        per_error = (
-            abs(ave_speed - float(dict_lane['speed']))/float(dict_lane['speed']))*100
-    except:
-        pass
-    try:
-        if abs(abs_error) <= 3:
-            color = colors.GREEN
-        elif abs(abs_error) > 3 and abs(abs_error) <= 5:
-            color = colors.YELLOW
-        elif abs(abs_error) > 5 and abs(abs_error) <= 10:
-            color = colors.ORANGE
-        elif abs(abs_error) > 10:
-            color = colors.RED
-
-        cv2.putText(frame, str(float("{0:.2f}".format(ave_speed))), positions[0],
-                    2, .6, color, thickness=1, lineType=2)  # Velocidade Medida
-        cv2.putText(frame, str(float("{0:.2f} ".format(abs_error))), positions[1],
-                    2, .6, color, thickness=1, lineType=2)  # erro absoluto
-        cv2.putText(frame, str(float("{0:.2f}".format(per_error)))+'%', positions[2],
-                    2, .6, color, thickness=1, lineType=2)  # erro percentual
-        cv2.putText(frame, f'id: {id_car}', positions[3],
-                    2, .6, color, thickness=1, lineType=2)
-    except:
-        pass
-
-    return abs_error, per_error
 
 
 def plot_graph(abs_error_list, ave_abs_error, ave_per_error, rate_detec_lane,
