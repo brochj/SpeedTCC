@@ -16,6 +16,7 @@ import datetime
 import colors
 import config
 from image_processing import ImageProcessing
+import xml_processing
 from tracking import Tracking
 import drawings as draw
 # import drawings as draw
@@ -28,14 +29,14 @@ XML_FILE = './Dataset/video{}.xml'.format(VIDEO)
 RESIZE_RATIO = config.RESIZE_RATIO
 if RESIZE_RATIO > 1:
     exit('ERRO: AJUSTE O RESIZE_RATIO')
-CLOSE_VIDEO = 2950  # 2950 #5934  # 1-6917 # 5-36253
+CLOSE_VIDEO = 957  # 2950 #5934  # 1-6917 # 5-36253
 
 SHOW_ROI = config.SHOW_ROI
 SHOW_TRACKING_AREA = config.SHOW_TRACKING_AREA
 SHOW_TRAIL = config.SHOW_TRAIL
 SHOW_CAR_RECTANGLE = config.SHOW_CAR_RECTANGLE
 
-SHOW_REAL_SPEEDS = False
+SHOW_REAL_SPEEDS = True
 SHOW_FRAME_COUNT = True
 
 SKIP_VIDEO = True
@@ -106,7 +107,7 @@ now = datetime.datetime.now()
 DATE = f'video{VIDEO}_{now.day}-{now.month}-{now.year}_{now.hour}-{now.minute}-{now.second}'
 
 # Dicionário que armazena todas as informações do xml
-vehicle = t.read_xml(XML_FILE, VIDEO, DATE)
+vehicle = xml_processing.read_xml(XML_FILE, VIDEO, DATE)
 
 KERNEL_ERODE = np.ones((r(12), r(12)), np.uint8)  # Default (r(12), r(12))
 KERNEL_DILATE = np.ones((r(120), r(400)), np.uint8)  # Default (r(120), r(400))
@@ -165,11 +166,11 @@ while True:
             14), r(1071)), 0, .65, colors.WHITE, 2)
 
     if ret is True:
-        t.update_info_xml(frameCount, vehicle, dict_lane1,
-                          dict_lane2, dict_lane3)
+        xml_processing.update_info_xml(frameCount, vehicle, dict_lane1,
+                                       dict_lane2, dict_lane3)
         if SHOW_REAL_SPEEDS:
-            t.print_xml_values(frame, RESIZE_RATIO,
-                               dict_lane1, dict_lane2, dict_lane3)
+            xml_processing.print_xml_values(
+                frame, dict_lane1, dict_lane2, dict_lane3)
 
         lane1 = ImageProcessing(frame_lane1, RESIZE_RATIO,
                                 bgsMOG, KERNEL_ERODE, KERNEL_DILATE)
