@@ -11,6 +11,27 @@ import config
 import colors
 from functions import r
 
+# if SHOW_ROI:
+#     t.region_of_interest(frame, RESIZE_RATIO)
+
+
+def frame_count(frame, frame_count, total_frames=None):
+    if config.SHOW_FRAME_COUNT:
+        if total_frames:
+            pct = str(int((100*frame_count)/total_frames)) + "%"
+        else:
+            pct = ""
+        cv2.putText(frame, f'frame: {frame_count} {pct}', (r(
+            14), r(1071)), 0, .65, colors.WHITE, 2)
+
+
+def tracking_area(frame):
+    if config.SHOW_TRACKING_AREA:  # Desenha os Limites da Área de Tracking
+        cv2.line(frame, (0, r(config.UPPER_LIMIT_TRACK)),
+                 (r(1920), r(config.UPPER_LIMIT_TRACK)), colors.WHITE, 2)
+        cv2.line(frame, (0, r(config.BOTTOM_LIMIT_TRACK)),
+                 (r(1920), r(config.BOTTOM_LIMIT_TRACK)), colors.WHITE, 2)
+
 
 def car_rectangle(center, frame, frame_lane, x, y, w, h, left_padding=0):
     if config.SHOW_CAR_RECTANGLE:

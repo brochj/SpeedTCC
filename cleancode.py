@@ -155,15 +155,8 @@ while True:
 
     if SHOW_ROI:
         t.region_of_interest(frame, RESIZE_RATIO)
-    if SHOW_TRACKING_AREA:  # Desenha os Limites da Área de Tracking
-        cv2.line(frame, (0, r(UPPER_LIMIT_TRACK)),
-                 (WIDTH, r(UPPER_LIMIT_TRACK)), colors.WHITE, 2)
-        cv2.line(frame, (0, r(BOTTOM_LIMIT_TRACK)),
-                 (WIDTH, r(BOTTOM_LIMIT_TRACK)), colors.WHITE, 2)
-    if SHOW_FRAME_COUNT:
-        PERCE = str(int((100*frameCount)/vehicle['videoframes']))
-        cv2.putText(frame, f'frame: {frameCount} {PERCE}%', (r(
-            14), r(1071)), 0, .65, colors.WHITE, 2)
+    draw.tracking_area(frame)
+    draw.frame_count(frame, frameCount, vehicle['videoframes'])
 
     if ret is True:
         xml_processing.update_info_xml(frameCount, vehicle, dict_lane1,
