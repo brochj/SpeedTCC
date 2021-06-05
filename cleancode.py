@@ -149,9 +149,9 @@ while True:
 
     hist = t.histogram_equalization(frameGray)
 
-    frame_lane1 = t.perspective(hist, 1, RESIZE_RATIO)
-    frame_lane2 = t.perspective(hist, 2, RESIZE_RATIO)
-    frame_lane3 = t.perspective(hist, 3, RESIZE_RATIO)
+    frame_lane1 = t.perspective(hist, 1)
+    frame_lane2 = t.perspective(hist, 2)
+    frame_lane3 = t.perspective(hist, 3)
 
     if SHOW_ROI:
         t.region_of_interest(frame, RESIZE_RATIO)
@@ -161,9 +161,19 @@ while True:
     if ret is True:
         xml_processing.update_info_xml(frameCount, vehicle, dict_lane1,
                                        dict_lane2, dict_lane3)
-        if SHOW_REAL_SPEEDS:
-            xml_processing.print_xml_values(
-                frame, dict_lane1, dict_lane2, dict_lane3)
+
+        try:
+            draw.xml_speed_values(frame, dict_lane1['speed'], (143, 43))
+        except KeyError:
+            pass
+        try:
+            draw.xml_speed_values(frame, dict_lane2['speed'], (628, 43))
+        except KeyError:
+            pass
+        try:
+            draw.xml_speed_values(frame, dict_lane3['speed'], (1143, 43))
+        except KeyError:
+            pass
 
         lane1 = ImageProcessing(frame_lane1,
                                 bgsMOG, KERNEL_ERODE, KERNEL_DILATE)

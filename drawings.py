@@ -15,6 +15,16 @@ from functions import r
 #     t.region_of_interest(frame, RESIZE_RATIO)
 
 
+def xml_speed_values(frame, speed, position):
+    # Mostra no video os valores das velocidades do arquivo xml
+    text_pos = (r(position[0]), r(position[1]))
+    if config.SHOW_REAL_SPEEDS:
+        cv2.rectangle(frame, (text_pos[0] - 10, text_pos[1] - 20),
+                      (text_pos[0] + 135, text_pos[1] + 10), (0, 0, 0), -1)
+        cv2.putText(frame, 'speed: {}'.format(speed),
+                    text_pos, 2, .6, colors.CIAN, 1)
+
+
 def frame_count(frame, frame_count, total_frames=None):
     if config.SHOW_FRAME_COUNT:
         if total_frames:

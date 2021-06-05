@@ -77,33 +77,3 @@ def update_info_xml(frameCount, vehicle, dict_lane1, dict_lane2, dict_lane3):
                 save_value(dict_lane3)
     except KeyError:
         pass
-
-
-def print_xml_values(frame, dict_lane1, dict_lane2, dict_lane3):
-    # Mostra no video os valores das velocidades das 3 Faixas.
-    try:  # Posição do texto da FAIXA 1
-        text_pos = (r(143), r(43))
-        cv2.rectangle(frame, (text_pos[0] - 10, text_pos[1] - 20),
-                      (text_pos[0] + 135, text_pos[1] + 10), (0, 0, 0), -1)
-        cv2.putText(frame, 'speed: {}'.format(
-            dict_lane1['speed']), text_pos, 2, .6, (255, 255, 0), 1)
-    except:
-        pass
-
-    try:  # Posição do texto da FAIXA 2
-        text_pos = (r(628), r(43))
-        cv2.rectangle(frame, (text_pos[0] - 10, text_pos[1] - 20),
-                      (text_pos[0] + 135, text_pos[1] + 10), (0, 0, 0), -1)
-        cv2.putText(frame, 'speed: {}'.format(
-            str(dict_lane2['speed'])), text_pos, 2, .6, (255, 255, 0), 1)
-    except:
-        pass
-
-    try:  # Posição do texto da FAIXA 3
-        text_pos = (r(1143), r(43))
-        cv2.rectangle(frame, (text_pos[0] - 10, text_pos[1] - 20),
-                      (text_pos[0] + 135, text_pos[1] + 10), (0, 0, 0), -1)
-        cv2.putText(frame, 'speed: {}'.format(
-            dict_lane3['speed']), text_pos, 2, .6, (255, 255, 0), 1)
-    except:
-        pass

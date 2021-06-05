@@ -349,12 +349,7 @@ def separar_por_kmh(abs_error_list_mod):
     return list_3km, list_5km, list_maior5km
 
 
-def perspective(frame, lane, RESIZE_RATIO):
-    def r(numero):  # Faz o ajuste de escala das posições de textos e retangulos
-        return int(numero*RESIZE_RATIO)
-#    mask_h = frame.shape[0]
-#    mask_w = frame.shape[1]
-#    mask_crop = np.zeros((mask_h, mask_w), dtype=np.uint8)
+def perspective(frame, lane):
     if lane == 1:
         points = np.array([[[r(-150), r(1080)], [r(480), r(1080)],
                             [r(560), r(0)], [r(270), 0]]], np.int32)
