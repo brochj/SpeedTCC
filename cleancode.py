@@ -8,10 +8,10 @@ Created on Sat Sep 12 10:02:46 2020
 import time
 import uuid
 import numpy as np
-#import matplotlib.pyplot as plt
 import os
 import cv2
 import functions as t
+from functions import r
 import datetime
 import colors
 import config
@@ -19,51 +19,18 @@ from image_processing import ImageProcessing
 import xml_processing
 from tracking import Tracking
 import drawings as draw
-# import drawings as draw
 from sys import exit
 # ########  CONSTANT VALUES ###################################################
 VIDEO = 1
 VIDEO_FILE = './Dataset/video{}.mp4'.format(VIDEO)
 XML_FILE = './Dataset/video{}.xml'.format(VIDEO)
 
-RESIZE_RATIO = config.RESIZE_RATIO
-if RESIZE_RATIO > 1:
+if config.RESIZE_RATIO > 1:
     exit('ERRO: AJUSTE O RESIZE_RATIO')
-CLOSE_VIDEO = 957  # 2950 #5934  # 1-6917 # 5-36253
+# config.CLOSE_VIDEO = 957  # 2950 #5934  # 1-6917 # 5-36253
 
-SHOW_ROI = config.SHOW_ROI
-SHOW_TRACKING_AREA = config.SHOW_TRACKING_AREA
-SHOW_TRAIL = config.SHOW_TRAIL
-SHOW_CAR_RECTANGLE = config.SHOW_CAR_RECTANGLE
-
-SHOW_REAL_SPEEDS = True
-SHOW_FRAME_COUNT = True
-
-SKIP_VIDEO = True
-SEE_CUTTED_VIDEO = False  # ver partes retiradas, precisa de SKIP_VIDEO = True
-# ---- Tracking Values --------------------------------------------------------
-# The maximum distance a blob centroid is allowed to move in order to
-# consider it a match to a previous scene's blob.
-BLOB_LOCKON_DIST_PX_MAX = 150  # default = 50 p/ ratio 0.35
-BLOB_LOCKON_DIST_PX_MIN = 5  # default 5
-MIN_AREA_FOR_DETEC = 30000  # Default 40000
-# Limites da Área de Medição, área onde é feita o Tracking
-# Distancia de medição: default 915-430 = 485
-
-# Faixa 1
-BOTTOM_LIMIT_TRACK = 910  # 850  # Default 900
-UPPER_LIMIT_TRACK = config.UPPER_LIMIT_TRACK  # 350  # Default 430
-# Faixa 2
-BOTTOM_LIMIT_TRACK_L2 = 940  # 1095  # Default 940
-UPPER_LIMIT_TRACK_L2 = 425  # 408 # Default 420
-# Faixa 3
-BOTTOM_LIMIT_TRACK_L3 = 930  # 1095  # Default 915
-UPPER_LIMIT_TRACK_L3 = 430  # 408 # Default 430
-
-MIN_CENTRAL_POINTS = 10  # Minimum number of points needed to calculate speed
-# The number of seconds a blob is allowed to sit around without having
-# any new blobs matching it.
-BLOB_TRACK_TIMEOUT = 0.1  # Default 0.7
+# config.SKIP_VIDEO = True
+# config.SEE_CUTTED_VIDEO = False  # ver partes retiradas, precisa de config.SKIP_VIDEO = True
 # ---- Speed Values -----------------------------------------------------------
 CF_LANE1 = 2.10  # 2.10  # default 2.5869977 # Correction Factor
 CF_LANE2 = 2.32  # default 2.32    3.758897
@@ -87,21 +54,10 @@ tracked_blobs = []  # Lista que salva os dicionários dos tracked_blobs
 tracked_blobs_lane2 = []  # Lista que salva os dicionários dos tracked_blobs
 tracked_blobs_lane3 = []
 
-prev_len_speed = []
-prev_speed = 1.0
 
-frameCount = 0  # Armazena a contagem de frames processados do video
-
-results_lane1 = {}
-results_lane2 = {}
-results_lane3 = {}
+frame_count = 0  # Armazena a contagem de frames processados do video
 
 process_times = []
-
-
-def r(numero):
-    return int(numero*RESIZE_RATIO)
-
 
 now = datetime.datetime.now()
 DATE = f'video{VIDEO}_{now.day}-{now.month}-{now.year}_{now.hour}-{now.minute}-{now.second}'
@@ -129,23 +85,23 @@ while True:
     ret, frame = t.get_frame(cap)
     frame_time = time.time()
 
-    if SKIP_VIDEO:
-        skip = t.skip_video(frameCount, VIDEO, frame)
-        if SEE_CUTTED_VIDEO:
+    if config.SKIP_VIDEO:
+        skip = t.skip_video(frame_count, VIDEO, frame)
+        if config.SEE_CUTTED_VIDEO:
             if not skip:
-                frameCount += 1
-                if frameCount == CLOSE_VIDEO:  # fecha o video
+                frame_count += 1
+                if frame_count == config.CLOSE_VIDEO:  # fecha o video
                     break
                 continue
         else:
             if skip:
-                frameCount += 1
-                if frameCount == CLOSE_VIDEO:  # fecha o video
+                frame_count += 1
+                if frame_count == config.CLOSE_VIDEO:  # fecha o video
                     break
                 continue
     start_frame_time = time.time()
     frameGray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    t.region_of_interest(frameGray, RESIZE_RATIO)
+    t.region_of_interest(frameGray, config.RESIZE_RATIO)
 
     hist = t.histogram_equalization(frameGray)
 
@@ -153,13 +109,13 @@ while True:
     frame_lane2 = t.perspective(hist, 2)
     frame_lane3 = t.perspective(hist, 3)
 
-    if SHOW_ROI:
-        t.region_of_interest(frame, RESIZE_RATIO)
+    if config.SHOW_ROI:
+        t.region_of_interest(frame, config.RESIZE_RATIO)
     draw.tracking_area(frame)
-    draw.frame_count(frame, frameCount, vehicle['videoframes'])
+    draw.frame_count(frame, frame_count, vehicle['videoframes'])
 
     if ret is True:
-        xml_processing.update_info_xml(frameCount, vehicle, dict_lane1,
+        xml_processing.update_info_xml(frame_count, vehicle, dict_lane1,
                                        dict_lane2, dict_lane3)
 
         try:
@@ -179,7 +135,7 @@ while True:
                                 bgsMOG, KERNEL_ERODE, KERNEL_DILATE)
 
         for i in range(len(lane1.contours)):
-            if cv2.contourArea(lane1.contours[i]) > r(MIN_AREA_FOR_DETEC):
+            if cv2.contourArea(lane1.contours[i]) > r(config.MIN_AREA_FOR_DETEC):
 
                 (x, y, w, h) = cv2.boundingRect(lane1.hull[i])
                 center = (int(x + w/2), int(y + h/2))
@@ -187,7 +143,7 @@ while True:
                 if w < r(340) and h < r(340):  # ponto que da pra mudar
                     continue
                 # Área de medição do Tracking
-                if center[1] > r(BOTTOM_LIMIT_TRACK) or center[1] < r(UPPER_LIMIT_TRACK):
+                if center[1] > r(config.BOTTOM_LIMIT_TRACK) or center[1] < r(config.UPPER_LIMIT_TRACK):
                     continue
 
                 draw.car_rectangle(center, frame, frame_lane1, x, y, w, h)
@@ -196,7 +152,7 @@ while True:
                 lane1_tracking.tracking(center, frame_time)
 
                 try:
-                    if len(lane1_tracking.closest_blob['trail']) > MIN_CENTRAL_POINTS:
+                    if len(lane1_tracking.closest_blob['trail']) > config.MIN_CENTRAL_POINTS:
                         lane1_tracking.closest_blob['speed'].insert(0, t.calculate_speed(
                             lane1_tracking.closest_blob['trail'], FPS, CF_LANE1))
                         ave_speed = t.calculate_avg_speed(
@@ -217,7 +173,7 @@ while True:
                                 bgsMOG, KERNEL_ERODE_L2, KERNEL_DILATE_L2)
 
         for i in range(len(lane2.contours)):
-            if cv2.contourArea(lane2.contours[i]) > r(MIN_AREA_FOR_DETEC):
+            if cv2.contourArea(lane2.contours[i]) > r(config.MIN_AREA_FOR_DETEC):
 
                 (x_L2, y_L2, w_L2, h_L2) = cv2.boundingRect(lane2.hull[i])
                 center_L2 = (int(x_L2 + w_L2/2), int(y_L2 + h_L2/2))
@@ -225,7 +181,7 @@ while True:
                 if w_L2 < r(340) and h_L2 < r(340):  # ponto que da pra mudar
                     continue
                 # Área de medição do Tracking
-                if center_L2[1] > r(BOTTOM_LIMIT_TRACK_L2) or center_L2[1] < r(UPPER_LIMIT_TRACK_L2):
+                if center_L2[1] > r(config.BOTTOM_LIMIT_TRACK_L2) or center_L2[1] < r(config.UPPER_LIMIT_TRACK_L2):
                     continue
 
                 draw.car_rectangle(center_L2, frame, frame_lane2,
@@ -234,7 +190,7 @@ while True:
                 # ################## TRACKING #################################
                 lane2_tracking.tracking(center_L2, frame_time)
                 try:
-                    if len(lane2_tracking.closest_blob['trail']) > MIN_CENTRAL_POINTS:
+                    if len(lane2_tracking.closest_blob['trail']) > config.MIN_CENTRAL_POINTS:
                         lane2_tracking.closest_blob['speed'].insert(0, t.calculate_speed(
                             lane2_tracking.closest_blob['trail'], FPS, CF_LANE2))
                         ave_speed = t.calculate_avg_speed(
@@ -257,7 +213,7 @@ while True:
 
         # draw contours_L3 and hull points
         for i in range(len(lane3.contours)):
-            if cv2.contourArea(lane3.contours[i]) > r(MIN_AREA_FOR_DETEC):
+            if cv2.contourArea(lane3.contours[i]) > r(config.MIN_AREA_FOR_DETEC):
                 # draw ith contour
 
                 (x_L3, y_L3, w_L3, h_L3) = cv2.boundingRect(lane3.hull[i])
@@ -266,7 +222,7 @@ while True:
                 if w_L3 < r(340) and h_L3 < r(340):  # ponto que da pra mudar
                     continue
                 # Área de medição do Tracking
-                if center_L3[1] > r(BOTTOM_LIMIT_TRACK_L3) or center_L3[1] < r(UPPER_LIMIT_TRACK_L3):
+                if center_L3[1] > r(config.BOTTOM_LIMIT_TRACK_L3) or center_L3[1] < r(config.UPPER_LIMIT_TRACK_L3):
                     continue
 
                 draw.car_rectangle(center_L3, frame, frame_lane3,
@@ -275,7 +231,7 @@ while True:
                 # ################## TRACKING #################################
                 lane3_tracking.tracking(center_L3, frame_time)
                 try:
-                    if len(lane3_tracking.closest_blob['trail']) > MIN_CENTRAL_POINTS:
+                    if len(lane3_tracking.closest_blob['trail']) > config.MIN_CENTRAL_POINTS:
                         lane3_tracking.closest_blob['speed'].insert(0, t.calculate_speed(
                             lane3_tracking.closest_blob['trail'], FPS, CF_LANE3))
                         ave_speed = t.calculate_avg_speed(
@@ -304,7 +260,7 @@ while True:
         draw.blobs(frame_lane2, lane2_tracking.tracked_blobs)
         draw.blobs(frame_lane3, lane3_tracking.tracked_blobs)
 
-        print(f'************** FIM DO FRAME {frameCount} **************')
+        print(f'************** FIM DO FRAME {frame_count} **************')
 
         # ########## MOSTRA OS VIDEOS  ########################################
         cv2.imshow('fgmask', lane1.foreground_mask)
@@ -328,11 +284,11 @@ while True:
         cv2.imshow('frame_lane3', frame_lane3)
         cv2.imshow('frame', frame)
 
-        frameCount += 1
+        frame_count += 1
 
         process_times.append(time.time() - start_frame_time)
 
-        if frameCount == CLOSE_VIDEO:  # fecha o video
+        if frame_count == config.CLOSE_VIDEO:  # fecha o video
             break
         if cv2.waitKey(1) & 0xFF == ord('q'):  # Tecla Q para fechar
             break

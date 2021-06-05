@@ -1,3 +1,9 @@
+
+CLOSE_VIDEO = 957  # 2950 #5934  # 1-6917 # 5-36253
+
+SKIP_VIDEO = True
+SEE_CUTTED_VIDEO = False  # ver partes retiradas, precisa de SKIP_VIDEO = True
+
 RESIZE_RATIO = .22222  # 0.7697  720p=.6667 480p=.4445 360p=.33333 240p=.22222 144p=.13333
 
 # Faixa 1
@@ -26,7 +32,7 @@ BLOB_LOCKON_DIST_PX_MIN = 5  # default 5
 MIN_AREA_FOR_DETEC = 30000  # Default 40000
 # Limites da Área de Medição, área onde é feita o Tracking
 # Distancia de medição: default 915-430 = 485
-
+MIN_CENTRAL_POINTS = 10  # Minimum number of points needed to calculate speed
 # The number of seconds a blob is allowed to sit around without having
 # any new blobs matching it.
 BLOB_TRACK_TIMEOUT = 0.1  # Default 0.7
