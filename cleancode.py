@@ -183,9 +183,7 @@ while True:
 
                 (x, y, w, h) = cv2.boundingRect(lane1.hull[i])
                 center = (int(x + w/2), int(y + h/2))
-                # out = cv2.rectangle(out, (x, y), (x + w, y + h), colors.GREEN, 2) # printa na mask
                 # CONDIÇÕES PARA CONTINUAR COM TRACKING
-
                 if w < r(340) and h < r(340):  # ponto que da pra mudar
                     continue
                 # Área de medição do Tracking
@@ -201,27 +199,12 @@ while True:
                     if len(lane1_tracking.closest_blob['trail']) > MIN_CENTRAL_POINTS:
                         lane1_tracking.closest_blob['speed'].insert(0, t.calculate_speed(
                             lane1_tracking.closest_blob['trail'], FPS, CF_LANE1))
-                        lane = 1
                         ave_speed = t.calculate_avg_speed(
                             lane1_tracking.closest_blob['speed'])
                         abs_error, per_error = t.calculate_errors(
                             ave_speed, dict_lane1['speed'])
                         draw.result(frame, ave_speed, abs_error, per_error,
                                     lane1_tracking.closest_blob['id'], (350, 120))
-
-                        results_lane1[str(lane1_tracking.closest_blob['id'])] = dict(ave_speed=round(ave_speed, 2),
-                                                                                     speeds=lane1_tracking.closest_blob[
-                                                                                         'speed'],
-                                                                                     frame=frameCount,
-                                                                                     real_speed=float(
-                                                                                         dict_lane1['speed']),
-                                                                                     abs_error=round(
-                                                                                         abs_error, 2),
-                                                                                     per_error=round(
-                                                                                         per_error, 3),
-                                                                                     trail=lane1_tracking.closest_blob[
-                                                                                         'trail'],
-                                                                                     car_id=lane1_tracking.closest_blob['id'])
 
                         abs_error = []
                         per_error = []
@@ -238,8 +221,6 @@ while True:
 
                 (x_L2, y_L2, w_L2, h_L2) = cv2.boundingRect(lane2.hull[i])
                 center_L2 = (int(x_L2 + w_L2/2), int(y_L2 + h_L2/2))
-                # out_L2 = cv2.rectangle(out_L2, (x_L2, y_L2), (x_L2 + w_L2, y_L2 + h_L2), colors.GREEN, 2) # printa na mask
-                # CONDIÇÕES PARA CONTINUAR COM TRACKING
 
                 if w_L2 < r(340) and h_L2 < r(340):  # ponto que da pra mudar
                     continue
@@ -256,27 +237,12 @@ while True:
                     if len(lane2_tracking.closest_blob['trail']) > MIN_CENTRAL_POINTS:
                         lane2_tracking.closest_blob['speed'].insert(0, t.calculate_speed(
                             lane2_tracking.closest_blob['trail'], FPS, CF_LANE2))
-                        lane = 2
                         ave_speed = t.calculate_avg_speed(
                             lane2_tracking.closest_blob['speed'])
                         abs_error, per_error = t.calculate_errors(
                             ave_speed, dict_lane2['speed'])
                         draw.result(frame, ave_speed, abs_error, per_error,
                                     lane2_tracking.closest_blob['id'], (830, 120))
-
-                        results_lane2[str(lane2_tracking.closest_blob['id'])] = dict(ave_speed=round(ave_speed, 2),
-                                                                                     speeds=lane2_tracking.closest_blob[
-                                                                                         'speed'],
-                                                                                     frame=frameCount,
-                                                                                     real_speed=float(
-                                                                                         dict_lane2['speed']),
-                                                                                     abs_error=round(
-                                                                                         abs_error, 2),
-                                                                                     per_error=round(
-                                                                                         per_error, 3),
-                                                                                     trail=lane2_tracking.closest_blob[
-                                                                                         'trail'],
-                                                                                     car_id=lane2_tracking.closest_blob['id'])
 
                         abs_error = []
                         per_error = []
@@ -296,10 +262,6 @@ while True:
 
                 (x_L3, y_L3, w_L3, h_L3) = cv2.boundingRect(lane3.hull[i])
                 center_L3 = (int(x_L3 + w_L3/2), int(y_L3 + h_L3/2))
-                # out = cv2.rectangle(out, (x_L3, y_L3), (x_L3 + w_L3, y_L3 + h_L3), colors.GREEN, 2) # printa na mask
-                #  PARA CONTINUAR COM TRACKING
-#                if h_L3 > r(HEIGHT)*.80 or w_L3 > r(WIDTH)*.40:
-#                    continue
 
                 if w_L3 < r(340) and h_L3 < r(340):  # ponto que da pra mudar
                     continue
@@ -316,7 +278,6 @@ while True:
                     if len(lane3_tracking.closest_blob['trail']) > MIN_CENTRAL_POINTS:
                         lane3_tracking.closest_blob['speed'].insert(0, t.calculate_speed(
                             lane3_tracking.closest_blob['trail'], FPS, CF_LANE3))
-                        lane = 3
                         ave_speed = t.calculate_avg_speed(
                             lane3_tracking.closest_blob['speed'])
                         abs_error, per_error = t.calculate_errors(
@@ -324,19 +285,6 @@ while True:
                         draw.result(frame, ave_speed, abs_error, per_error,
                                     lane3_tracking.closest_blob['id'], (1350, 120))
 
-                        results_lane3[str(lane3_tracking.closest_blob['id'])] = dict(ave_speed=round(ave_speed, 2),
-                                                                                     speeds=lane3_tracking.closest_blob[
-                                                                                         'speed'],
-                                                                                     frame=frameCount,
-                                                                                     real_speed=float(
-                                                                                         dict_lane3['speed']),
-                                                                                     abs_error=round(
-                                                                                         abs_error, 2),
-                                                                                     per_error=round(
-                                                                                         per_error, 3),
-                                                                                     trail=lane3_tracking.closest_blob[
-                                                                                         'trail'],
-                                                                                     car_id=lane3_tracking.closest_blob['id'])
                         abs_error = []
                         per_error = []
 
