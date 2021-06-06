@@ -20,28 +20,12 @@ import xml_processing
 from tracking import Tracking
 import drawings as draw
 from sys import exit
-# ########  CONSTANT VALUES ###################################################
-VIDEO = 1
-VIDEO_FILE = './Dataset/video{}.mp4'.format(VIDEO)
-XML_FILE = './Dataset/video{}.xml'.format(VIDEO)
 
 if config.RESIZE_RATIO > 1:
     exit('ERRO: AJUSTE O RESIZE_RATIO')
-# config.CLOSE_VIDEO = 957  # 2950 #5934  # 1-6917 # 5-36253
 
-# config.SKIP_VIDEO = True
-# config.SEE_CUTTED_VIDEO = False  # ver partes retiradas, precisa de config.SKIP_VIDEO = True
-# ---- Speed Values -----------------------------------------------------------
-CF_LANE1 = 2.10  # 2.10  # default 2.5869977 # Correction Factor
-CF_LANE2 = 2.32  # default 2.32    3.758897
-CF_LANE3 = 2.3048378  # default 2.304837879578
-# ----  Save Results Values ---------------------------------------------------
-# ####### END - CONSTANT VALUES ###############################################
-cap = cv2.VideoCapture(VIDEO_FILE)
-#FPS = cap.get(cv2.CAP_PROP_FPS)
-FPS = 30.15
-WIDTH = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))  # Retorna a largura do video
-HEIGHT = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))  # Retorna a largura do video
+cap = cv2.VideoCapture(config.VIDEO_FILE)
+FPS = 30.15  # cap.get(cv2.CAP_PROP_FPS)
 
 bgsMOG = cv2.createBackgroundSubtractorMOG2(
     history=10, varThreshold=50, detectShadows=0)
@@ -54,16 +38,14 @@ tracked_blobs = []  # Lista que salva os dicionários dos tracked_blobs
 tracked_blobs_lane2 = []  # Lista que salva os dicionários dos tracked_blobs
 tracked_blobs_lane3 = []
 
-
 frame_count = 0  # Armazena a contagem de frames processados do video
-
 process_times = []
+avg_fps = 0
 
 now = datetime.datetime.now()
-DATE = f'video{VIDEO}_{now.day}-{now.month}-{now.year}_{now.hour}-{now.minute}-{now.second}'
 
 # Dicionário que armazena todas as informações do xml
-vehicle = xml_processing.read_xml(XML_FILE, VIDEO, DATE)
+vehicle = xml_processing.read_xml(config.XML_FILE, config.VIDEO)
 
 KERNEL_ERODE = np.ones((r(12), r(12)), np.uint8)  # Default (r(12), r(12))
 KERNEL_DILATE = np.ones((r(120), r(400)), np.uint8)  # Default (r(120), r(400))
@@ -86,7 +68,7 @@ while True:
     frame_time = time.time()
 
     if config.SKIP_VIDEO:
-        skip = t.skip_video(frame_count, VIDEO, frame)
+        skip = t.skip_video(frame_count, config.VIDEO, frame)
         if config.SEE_CUTTED_VIDEO:
             if not skip:
                 frame_count += 1
@@ -154,7 +136,7 @@ while True:
                 try:
                     if len(lane1_tracking.closest_blob['trail']) > config.MIN_CENTRAL_POINTS:
                         lane1_tracking.closest_blob['speed'].insert(0, t.calculate_speed(
-                            lane1_tracking.closest_blob['trail'], FPS, CF_LANE1))
+                            lane1_tracking.closest_blob['trail'], FPS, config.CF_LANE1))
                         ave_speed = t.calculate_avg_speed(
                             lane1_tracking.closest_blob['speed'])
                         abs_error, per_error = t.calculate_errors(
@@ -162,9 +144,7 @@ while True:
                         draw.result(frame, ave_speed, abs_error, per_error,
                                     lane1_tracking.closest_blob['id'], (350, 120))
 
-                        abs_error = []
-                        per_error = []
-                except:
+                except (TypeError, KeyError):
                     pass
 
                 # ################# END FAIXA 1  ##############################
@@ -192,7 +172,7 @@ while True:
                 try:
                     if len(lane2_tracking.closest_blob['trail']) > config.MIN_CENTRAL_POINTS:
                         lane2_tracking.closest_blob['speed'].insert(0, t.calculate_speed(
-                            lane2_tracking.closest_blob['trail'], FPS, CF_LANE2))
+                            lane2_tracking.closest_blob['trail'], FPS, config.CF_LANE2))
                         ave_speed = t.calculate_avg_speed(
                             lane2_tracking.closest_blob['speed'])
                         abs_error, per_error = t.calculate_errors(
@@ -200,9 +180,7 @@ while True:
                         draw.result(frame, ave_speed, abs_error, per_error,
                                     lane2_tracking.closest_blob['id'], (830, 120))
 
-                        abs_error = []
-                        per_error = []
-                except:
+                except (TypeError, KeyError):
                     pass
 
                 # ################# END TRACKING ##############################
@@ -233,7 +211,7 @@ while True:
                 try:
                     if len(lane3_tracking.closest_blob['trail']) > config.MIN_CENTRAL_POINTS:
                         lane3_tracking.closest_blob['speed'].insert(0, t.calculate_speed(
-                            lane3_tracking.closest_blob['trail'], FPS, CF_LANE3))
+                            lane3_tracking.closest_blob['trail'], FPS, config.CF_LANE3))
                         ave_speed = t.calculate_avg_speed(
                             lane3_tracking.closest_blob['speed'])
                         abs_error, per_error = t.calculate_errors(
@@ -241,10 +219,7 @@ while True:
                         draw.result(frame, ave_speed, abs_error, per_error,
                                     lane3_tracking.closest_blob['id'], (1350, 120))
 
-                        abs_error = []
-                        per_error = []
-
-                except:
+                except (TypeError, KeyError):
                     pass
 
                 # ################# END TRACKING ##############################
@@ -260,33 +235,39 @@ while True:
         draw.blobs(frame_lane2, lane2_tracking.tracked_blobs)
         draw.blobs(frame_lane3, lane3_tracking.tracked_blobs)
 
+        draw.avg_fps(frame, avg_fps)
+
         print(f'************** FIM DO FRAME {frame_count} **************')
 
         # ########## MOSTRA OS VIDEOS  ########################################
-        cv2.imshow('fgmask', lane1.foreground_mask)
-        cv2.imshow('erodedmask', lane1.eroded_mask)
-        cv2.imshow('dilatedmask', lane1.dilated_mask)
+        # cv2.imshow('fgmask', lane1.foreground_mask)
+        # cv2.imshow('erodedmask', lane1.eroded_mask)
+        # cv2.imshow('dilatedmask', lane1.dilated_mask)
 
-        cv2.imshow('fgmask_lane2', lane2.foreground_mask)
-        cv2.imshow('erodedmask_lane2', lane2.eroded_mask)
-        cv2.imshow('dilatedmask_lane2', lane2.dilated_mask)
+        # cv2.imshow('fgmask_lane2', lane2.foreground_mask)
+        # cv2.imshow('erodedmask_lane2', lane2.eroded_mask)
+        # cv2.imshow('dilatedmask_lane2', lane2.dilated_mask)
 
-        cv2.imshow('fgmask_L3', lane3.foreground_mask)
-        cv2.imshow('erodedmask_L3', lane3.eroded_mask)
-        cv2.imshow('dilatedmask_L3', lane3.dilated_mask)
+        # cv2.imshow('fgmask_L3', lane3.foreground_mask)
+        # cv2.imshow('erodedmask_L3', lane3.eroded_mask)
+        # cv2.imshow('dilatedmask_L3', lane3.dilated_mask)
 
-        cv2.imshow('out', lane1.draw_contours())
-        cv2.imshow('out_L2', lane2.draw_contours())
-        cv2.imshow('out_L3', lane3.draw_contours())
+        # cv2.imshow('out', lane1.draw_contours())
+        # cv2.imshow('out_L2', lane2.draw_contours())
+        # cv2.imshow('out_L3', lane3.draw_contours())
 
-        cv2.imshow('frame_lane1', frame_lane1)
-        cv2.imshow('frame_lane2', frame_lane2)
-        cv2.imshow('frame_lane3', frame_lane3)
+        # cv2.imshow('frame_lane1', frame_lane1)
+        # cv2.imshow('frame_lane2', frame_lane2)
+        # cv2.imshow('frame_lane3', frame_lane3)
         cv2.imshow('frame', frame)
 
         frame_count += 1
 
-        process_times.append(time.time() - start_frame_time)
+        end_frame_time = time.time()
+        process_times.append(end_frame_time - start_frame_time)
+        calculated_fps = int(1 / (end_frame_time - start_frame_time))
+        process_times.append(calculated_fps)
+        avg_fps = int(np.mean(process_times[-24:]))
 
         if frame_count == config.CLOSE_VIDEO:  # fecha o video
             break

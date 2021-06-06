@@ -74,6 +74,8 @@ bgsMOG = cv2.createBackgroundSubtractorMOG2(
 )
 
 # ##############  FUNCTIONS #####################################################
+
+
 def r(numero):
     return int(numero * RESIZE_RATIO)
 
@@ -92,7 +94,8 @@ def calculate_speed(trails, fps, correction_factor):
 now = datetime.datetime.now()
 
 KERNEL_ERODE = np.ones((r(5), r(5)), np.uint8)  # Default (r(12), r(12))
-KERNEL_DILATE = np.ones((r(120), r(1280)), np.uint8)  # Default (r(120), r(400))
+# Default (r(120), r(400))
+KERNEL_DILATE = np.ones((r(120), r(1280)), np.uint8)
 
 object_tracking = Tracking(
     RESIZE_RATIO, BLOB_LOCKON_DIST_PX_MAX, BLOB_LOCKON_DIST_PX_MIN
@@ -105,7 +108,8 @@ while True:
     start_frame_time = time.time()
     frame = cv2.flip(frame, 1)
     frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    t.region_of_interest(frame_gray, RESIZE_RATIO, WIDTH, HEIGHT, FIRST_PCT, SECND_PCT)
+    t.region_of_interest(frame_gray, RESIZE_RATIO, WIDTH,
+                         HEIGHT, FIRST_PCT, SECND_PCT)
 
     hist = t.histogram_equalization(frame_gray)
 
@@ -113,7 +117,8 @@ while True:
         t.region_of_interest(frame, RESIZE_RATIO, FIRST_PCT, SECND_PCT)
     if SHOW_TRACKING_AREA:  # Draw the limits of Tracking Area
         cv2.line(
-            frame, (0, r(UPPER_LIMIT_TRACK)), (WIDTH, r(UPPER_LIMIT_TRACK)), t.WHITE, 2
+            frame, (0, r(UPPER_LIMIT_TRACK)), (WIDTH,
+                                               r(UPPER_LIMIT_TRACK)), t.WHITE, 2
         )
         cv2.line(
             frame,
@@ -124,9 +129,11 @@ while True:
         )
     if ret is True:
 
-        lane1 = ImageProcessing(hist, RESIZE_RATIO, bgsMOG, KERNEL_ERODE, KERNEL_DILATE)
+        lane1 = ImageProcessing(
+            hist, RESIZE_RATIO, bgsMOG, KERNEL_ERODE, KERNEL_DILATE)
 
-        drawing = t.convert_to_black_image(frame)  # create an empty black image
+        drawing = t.convert_to_black_image(
+            frame)  # create an empty black image
         convex_hull = cv2.drawContours(drawing, lane1.hull, 0, t.WHITE, -1, 8)
 
         for i in range(len(lane1.contours)):
@@ -145,8 +152,10 @@ while True:
                 if SHOW_CAR_RECTANGLE:
                     if center[1] > r(UPPER_LIMIT_TRACK):
                         object_area.append(w * h)
-                        cv2.rectangle(frame, (x, y), (x + w, y + h), t.GREEN, 2)
-                        cv2.rectangle(convex_hull, (x, y), (x + w, y + h), t.GREEN, 2)
+                        cv2.rectangle(
+                            frame, (x, y), (x + w, y + h), t.GREEN, 2)
+                        cv2.rectangle(convex_hull, (x, y),
+                                      (x + w, y + h), t.GREEN, 2)
                     else:
                         cv2.rectangle(frame, (x, y), (x + w, y + h), t.PINK, 2)
                 # ################## START TRACKING #################################
@@ -169,7 +178,8 @@ while True:
                 except:
                     pass
                 # ################# END TRACKING  ##############################
-        object_tracking.remove_expired_track(BLOB_TRACK_TIMEOUT, "lane 1", frame_time)
+        object_tracking.remove_expired_track(
+            BLOB_TRACK_TIMEOUT, "lane 1", frame_time)
         cv2.putText(
             frame,
             f"speed {avg_speed}",

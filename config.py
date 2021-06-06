@@ -1,10 +1,14 @@
 
+VIDEO = 1
+VIDEO_FILE = './Dataset/video{}.mp4'.format(VIDEO)
+XML_FILE = './Dataset/video{}.xml'.format(VIDEO)
+
 CLOSE_VIDEO = 957  # 2950 #5934  # 1-6917 # 5-36253
 
 SKIP_VIDEO = True
 SEE_CUTTED_VIDEO = False  # ver partes retiradas, precisa de SKIP_VIDEO = True
 
-RESIZE_RATIO = .22222  # 0.7697  720p=.6667 480p=.4445 360p=.33333 240p=.22222 144p=.13333
+RESIZE_RATIO = .33333  # 0.7697  720p=.6667 480p=.4445 360p=.33333 240p=.22222 144p=.13333
 
 # Faixa 1
 BOTTOM_LIMIT_TRACK = 910  # 850  # Default 900
@@ -36,3 +40,7 @@ MIN_CENTRAL_POINTS = 10  # Minimum number of points needed to calculate speed
 # The number of seconds a blob is allowed to sit around without having
 # any new blobs matching it.
 BLOB_TRACK_TIMEOUT = 0.1  # Default 0.7
+# ---- Speed Values -----------------------------------------------------------
+CF_LANE1 = 2.10  # 2.10  # default 2.5869977 # Correction Factor
+CF_LANE2 = 2.32  # default 2.32    3.758897
+CF_LANE3 = 2.3048378  # default 2.304837879578

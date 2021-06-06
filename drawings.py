@@ -35,6 +35,11 @@ def frame_count(frame, frame_count, total_frames=None):
             14), r(1071)), 0, .65, colors.WHITE, 2)
 
 
+def avg_fps(frame, avg_fps):
+    cv2.putText(frame, f"FPS {avg_fps}", (r(1600), r(1061)),
+                0, 0.6, colors.WHITE, 2)
+
+
 def tracking_area(frame):
     if config.SHOW_TRACKING_AREA:  # Desenha os Limites da Área de Tracking
         cv2.line(frame, (0, r(config.UPPER_LIMIT_TRACK)),

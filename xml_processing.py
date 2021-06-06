@@ -3,7 +3,7 @@ from functions import r
 import cv2
 
 
-def read_xml(xml_file, video, DATE):
+def read_xml(xml_file, video):
     # Funcão que lê o .xml e guarda as informações em um dicionário "iframe"
     tree = ET.parse(xml_file)
     root = tree.getroot()
@@ -34,18 +34,6 @@ def read_xml(xml_file, video, DATE):
                     if child.get('lane') == '3':
                         lane3_count += 1
 
-                    # if iframe[child.get('iframe')]['lane'] == '1':
-                    #     file = open(f'results/{DATE}/planilhas/video{video}_real_lane1.csv', 'a')
-                    #     file.write(f'frame_start, {frame_start}, frame_end, {frame_end}, speed, {speed} \n')
-                    #     file.close()
-                    # if iframe[child.get('iframe')]['lane'] == '2':
-                    #     file = open(f'results/{DATE}/planilhas/video{video}_real_lane2.csv', 'a')
-                    #     file.write(f'frame_start, {frame_start}, frame_end, {frame_end}, speed, {speed} \n')
-                    #     file.close()
-                    # if iframe[child.get('iframe')]['lane'] == '3':
-                    #     file = open(f'results/{DATE}/planilhas/video{video}_real_lane3.csv', 'a')
-                    #     file.write(f'frame_start, {frame_start}, frame_end, {frame_end}, speed, {speed} \n')
-                    #     file.close()
         if child.tag == 'videoframes':
             iframe[child.tag] = int(child.get('total'))
 
