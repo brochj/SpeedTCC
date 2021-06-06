@@ -3,6 +3,8 @@ VIDEO = 1
 VIDEO_FILE = './Dataset/video{}.mp4'.format(VIDEO)
 XML_FILE = './Dataset/video{}.xml'.format(VIDEO)
 
+FPS = 30.15
+
 CLOSE_VIDEO = 957  # 2950 #5934  # 1-6917 # 5-36253
 
 SKIP_VIDEO = True

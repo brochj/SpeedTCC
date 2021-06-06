@@ -27,7 +27,7 @@ if config.RESIZE_RATIO > 1:
     exit('ERROR: O RESIZE_RATIO não pode ser maior que 1')
 
 cap = cv2.VideoCapture(config.VIDEO_FILE)
-FPS = 30.15  # cap.get(cv2.CAP_PROP_FPS)
+FPS = config.FPS  # cap.get(cv2.CAP_PROP_FPS)
 
 bgsMOG = cv2.createBackgroundSubtractorMOG2(
     history=10, varThreshold=50, detectShadows=0)
@@ -124,15 +124,15 @@ while True:
         if lane1_detection.detected:
             lane1_tracking.tracking(lane1_detection.center, frame_time)
             try:
-                if len(lane1_tracking.closest_blob['trail']) > config.MIN_CENTRAL_POINTS:
-                    lane1_tracking.closest_blob['speed'].insert(0, t.calculate_speed(
-                        lane1_tracking.closest_blob['trail'], FPS, config.CF_LANE1))
+                if len(lane1_tracking.tracked_blobs['trail']) > config.MIN_CENTRAL_POINTS:
+                    lane1_tracking.tracked_blobs['speed'].insert(0, t.calculate_speed(
+                        lane1_tracking.tracked_blobs['trail'], FPS, config.CF_LANE1))
                     ave_speed = t.calculate_avg_speed(
-                        lane1_tracking.closest_blob['speed'])
+                        lane1_tracking.tracked_blobs['speed'])
                     abs_error, per_error = t.calculate_errors(
                         ave_speed, dict_lane1['speed'])
                     draw.result(frame, ave_speed, abs_error, per_error,
-                                lane1_tracking.closest_blob['id'], (350, 120))
+                                lane1_tracking.tracked_blobs['id'], (350, 120))
 
             except (TypeError, KeyError):
                 pass
@@ -151,15 +151,15 @@ while True:
         if lane2_detection.detected:
             lane2_tracking.tracking(lane2_detection.center, frame_time)
             try:
-                if len(lane2_tracking.closest_blob['trail']) > config.MIN_CENTRAL_POINTS:
-                    lane2_tracking.closest_blob['speed'].insert(0, t.calculate_speed(
-                        lane2_tracking.closest_blob['trail'], FPS, config.CF_LANE2))
+                if len(lane2_tracking.tracked_blobs['trail']) > config.MIN_CENTRAL_POINTS:
+                    lane2_tracking.tracked_blobs['speed'].insert(0, t.calculate_speed(
+                        lane2_tracking.tracked_blobs['trail'], FPS, config.CF_LANE2))
                     ave_speed = t.calculate_avg_speed(
-                        lane2_tracking.closest_blob['speed'])
+                        lane2_tracking.tracked_blobs['speed'])
                     abs_error, per_error = t.calculate_errors(
                         ave_speed, dict_lane2['speed'])
                     draw.result(frame, ave_speed, abs_error, per_error,
-                                lane2_tracking.closest_blob['id'], (830, 120))
+                                lane2_tracking.tracked_blobs['id'], (830, 120))
 
             except (TypeError, KeyError):
                 pass
@@ -179,15 +179,15 @@ while True:
         if lane3_detection.detected:
             lane3_tracking.tracking(lane3_detection.center, frame_time)
             try:
-                if len(lane3_tracking.closest_blob['trail']) > config.MIN_CENTRAL_POINTS:
-                    lane3_tracking.closest_blob['speed'].insert(0, t.calculate_speed(
-                        lane3_tracking.closest_blob['trail'], FPS, config.CF_LANE3))
+                if len(lane3_tracking.tracked_blobs['trail']) > config.MIN_CENTRAL_POINTS:
+                    lane3_tracking.tracked_blobs['speed'].insert(0, t.calculate_speed(
+                        lane3_tracking.tracked_blobs['trail'], FPS, config.CF_LANE3))
                     ave_speed = t.calculate_avg_speed(
-                        lane3_tracking.closest_blob['speed'])
+                        lane3_tracking.tracked_blobs['speed'])
                     abs_error, per_error = t.calculate_errors(
                         ave_speed, dict_lane3['speed'])
                     draw.result(frame, ave_speed, abs_error, per_error,
-                                lane3_tracking.closest_blob['id'], (1350, 120))
+                                lane3_tracking.tracked_blobs['id'], (1350, 120))
 
             except (TypeError, KeyError):
                 pass
