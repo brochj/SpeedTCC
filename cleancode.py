@@ -5,24 +5,26 @@ Created on Sat Sep 12 10:02:46 2020
 @author: broch
 """
 
-import time
-import uuid
+from sys import exit
+import cv2
+import datetime
 import numpy as np
 import os
-import cv2
-import functions as t
+import time
+import uuid
+# Created modules
 from functions import r
-import datetime
+from image_processing import ImageProcessing
+from tracking import Tracking
+from vehicle_detection import VehicleDetection
 import colors
 import config
-from image_processing import ImageProcessing
-import xml_processing
-from tracking import Tracking
 import drawings as draw
-from sys import exit
+import functions as t
+import xml_processing
 
 if config.RESIZE_RATIO > 1:
-    exit('ERRO: AJUSTE O RESIZE_RATIO')
+    exit('ERROR: O RESIZE_RATIO não pode ser maior que 1')
 
 cap = cv2.VideoCapture(config.VIDEO_FILE)
 FPS = 30.15  # cap.get(cv2.CAP_PROP_FPS)
@@ -116,114 +118,85 @@ while True:
         lane1 = ImageProcessing(frame_lane1,
                                 bgsMOG, KERNEL_ERODE, KERNEL_DILATE)
 
-        for i in range(len(lane1.contours)):
-            if cv2.contourArea(lane1.contours[i]) > r(config.MIN_AREA_FOR_DETEC):
+        lane1_detection = VehicleDetection(lane1)
+        lane1_detection.detection()
 
-                (x, y, w, h) = cv2.boundingRect(lane1.hull[i])
-                center = (int(x + w/2), int(y + h/2))
-                # CONDIÇÕES PARA CONTINUAR COM TRACKING
-                if w < r(340) and h < r(340):  # ponto que da pra mudar
-                    continue
-                # Área de medição do Tracking
-                if center[1] > r(config.BOTTOM_LIMIT_TRACK) or center[1] < r(config.UPPER_LIMIT_TRACK):
-                    continue
+        if lane1_detection.detected:
+            lane1_tracking.tracking(lane1_detection.center, frame_time)
+            try:
+                if len(lane1_tracking.closest_blob['trail']) > config.MIN_CENTRAL_POINTS:
+                    lane1_tracking.closest_blob['speed'].insert(0, t.calculate_speed(
+                        lane1_tracking.closest_blob['trail'], FPS, config.CF_LANE1))
+                    ave_speed = t.calculate_avg_speed(
+                        lane1_tracking.closest_blob['speed'])
+                    abs_error, per_error = t.calculate_errors(
+                        ave_speed, dict_lane1['speed'])
+                    draw.result(frame, ave_speed, abs_error, per_error,
+                                lane1_tracking.closest_blob['id'], (350, 120))
 
-                draw.car_rectangle(center, frame, frame_lane1, x, y, w, h)
+            except (TypeError, KeyError):
+                pass
 
-                # ################## TRACKING #################################
-                lane1_tracking.tracking(center, frame_time)
+            draw.car_rectangle(lane1_detection.center, frame, frame_lane1, lane1_detection.x,
+                               lane1_detection.y, lane1_detection.w, lane1_detection.h)
 
-                try:
-                    if len(lane1_tracking.closest_blob['trail']) > config.MIN_CENTRAL_POINTS:
-                        lane1_tracking.closest_blob['speed'].insert(0, t.calculate_speed(
-                            lane1_tracking.closest_blob['trail'], FPS, config.CF_LANE1))
-                        ave_speed = t.calculate_avg_speed(
-                            lane1_tracking.closest_blob['speed'])
-                        abs_error, per_error = t.calculate_errors(
-                            ave_speed, dict_lane1['speed'])
-                        draw.result(frame, ave_speed, abs_error, per_error,
-                                    lane1_tracking.closest_blob['id'], (350, 120))
-
-                except (TypeError, KeyError):
-                    pass
-
-                # ################# END FAIXA 1  ##############################
+            # ################# END FAIXA 1  ##############################
 
         lane2 = ImageProcessing(frame_lane2,
                                 bgsMOG, KERNEL_ERODE_L2, KERNEL_DILATE_L2)
 
-        for i in range(len(lane2.contours)):
-            if cv2.contourArea(lane2.contours[i]) > r(config.MIN_AREA_FOR_DETEC):
+        lane2_detection = VehicleDetection(lane2)
+        lane2_detection.detection()
 
-                (x_L2, y_L2, w_L2, h_L2) = cv2.boundingRect(lane2.hull[i])
-                center_L2 = (int(x_L2 + w_L2/2), int(y_L2 + h_L2/2))
+        if lane2_detection.detected:
+            lane2_tracking.tracking(lane2_detection.center, frame_time)
+            try:
+                if len(lane2_tracking.closest_blob['trail']) > config.MIN_CENTRAL_POINTS:
+                    lane2_tracking.closest_blob['speed'].insert(0, t.calculate_speed(
+                        lane2_tracking.closest_blob['trail'], FPS, config.CF_LANE2))
+                    ave_speed = t.calculate_avg_speed(
+                        lane2_tracking.closest_blob['speed'])
+                    abs_error, per_error = t.calculate_errors(
+                        ave_speed, dict_lane2['speed'])
+                    draw.result(frame, ave_speed, abs_error, per_error,
+                                lane2_tracking.closest_blob['id'], (830, 120))
 
-                if w_L2 < r(340) and h_L2 < r(340):  # ponto que da pra mudar
-                    continue
-                # Área de medição do Tracking
-                if center_L2[1] > r(config.BOTTOM_LIMIT_TRACK_L2) or center_L2[1] < r(config.UPPER_LIMIT_TRACK_L2):
-                    continue
+            except (TypeError, KeyError):
+                pass
 
-                draw.car_rectangle(center_L2, frame, frame_lane2,
-                                   x_L2, y_L2, w_L2, h_L2, left_padding=600)
+            draw.car_rectangle(lane2_detection.center, frame, frame_lane2, lane2_detection.x,
+                               lane2_detection.y, lane2_detection.w, lane2_detection.h, left_padding=600)
 
-                # ################## TRACKING #################################
-                lane2_tracking.tracking(center_L2, frame_time)
-                try:
-                    if len(lane2_tracking.closest_blob['trail']) > config.MIN_CENTRAL_POINTS:
-                        lane2_tracking.closest_blob['speed'].insert(0, t.calculate_speed(
-                            lane2_tracking.closest_blob['trail'], FPS, config.CF_LANE2))
-                        ave_speed = t.calculate_avg_speed(
-                            lane2_tracking.closest_blob['speed'])
-                        abs_error, per_error = t.calculate_errors(
-                            ave_speed, dict_lane2['speed'])
-                        draw.result(frame, ave_speed, abs_error, per_error,
-                                    lane2_tracking.closest_blob['id'], (830, 120))
-
-                except (TypeError, KeyError):
-                    pass
-
-                # ################# END TRACKING ##############################
-                # ################# END FAIXA 2  ##############################
+            # ################# END TRACKING ##############################
+            # ################# END FAIXA 2  ##############################
 
         lane3 = ImageProcessing(frame_lane3, bgsMOG,
                                 KERNEL_ERODE_L3, KERNEL_DILATE_L3)
 
-        # draw contours_L3 and hull points
-        for i in range(len(lane3.contours)):
-            if cv2.contourArea(lane3.contours[i]) > r(config.MIN_AREA_FOR_DETEC):
-                # draw ith contour
+        lane3_detection = VehicleDetection(lane3)
+        lane3_detection.detection()
 
-                (x_L3, y_L3, w_L3, h_L3) = cv2.boundingRect(lane3.hull[i])
-                center_L3 = (int(x_L3 + w_L3/2), int(y_L3 + h_L3/2))
+        if lane3_detection.detected:
+            lane3_tracking.tracking(lane3_detection.center, frame_time)
+            try:
+                if len(lane3_tracking.closest_blob['trail']) > config.MIN_CENTRAL_POINTS:
+                    lane3_tracking.closest_blob['speed'].insert(0, t.calculate_speed(
+                        lane3_tracking.closest_blob['trail'], FPS, config.CF_LANE3))
+                    ave_speed = t.calculate_avg_speed(
+                        lane3_tracking.closest_blob['speed'])
+                    abs_error, per_error = t.calculate_errors(
+                        ave_speed, dict_lane3['speed'])
+                    draw.result(frame, ave_speed, abs_error, per_error,
+                                lane3_tracking.closest_blob['id'], (1350, 120))
 
-                if w_L3 < r(340) and h_L3 < r(340):  # ponto que da pra mudar
-                    continue
-                # Área de medição do Tracking
-                if center_L3[1] > r(config.BOTTOM_LIMIT_TRACK_L3) or center_L3[1] < r(config.UPPER_LIMIT_TRACK_L3):
-                    continue
+            except (TypeError, KeyError):
+                pass
 
-                draw.car_rectangle(center_L3, frame, frame_lane3,
-                                   x_L3, y_L3, w_L3, h_L3, left_padding=1270)
+            draw.car_rectangle(lane3_detection.center, frame, frame_lane3, lane3_detection.x,
+                               lane3_detection.y, lane3_detection.w, lane3_detection.h, left_padding=1270)
 
-                # ################## TRACKING #################################
-                lane3_tracking.tracking(center_L3, frame_time)
-                try:
-                    if len(lane3_tracking.closest_blob['trail']) > config.MIN_CENTRAL_POINTS:
-                        lane3_tracking.closest_blob['speed'].insert(0, t.calculate_speed(
-                            lane3_tracking.closest_blob['trail'], FPS, config.CF_LANE3))
-                        ave_speed = t.calculate_avg_speed(
-                            lane3_tracking.closest_blob['speed'])
-                        abs_error, per_error = t.calculate_errors(
-                            ave_speed, dict_lane3['speed'])
-                        draw.result(frame, ave_speed, abs_error, per_error,
-                                    lane3_tracking.closest_blob['id'], (1350, 120))
-
-                except (TypeError, KeyError):
-                    pass
-
-                # ################# END TRACKING ##############################
-                # ################# END FAIXA 3  ##############################
+            # ################# END TRACKING ##############################
+            # ################# END FAIXA 3  ##############################
 
         # Remove timeout trails
         lane1_tracking.remove_expired_track("lane 1", frame_time)
