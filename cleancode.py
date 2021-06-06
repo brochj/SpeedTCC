@@ -60,9 +60,9 @@ KERNEL_ERODE_L3 = np.ones((r(12), r(12)), np.uint8)  # Default (r(12), r(12))
 # Default (r(100), r(320))
 KERNEL_DILATE_L3 = np.ones((r(100), r(320)), np.uint8)
 
-lane1_tracking = Tracking()
-lane2_tracking = Tracking()
-lane3_tracking = Tracking()
+lane1_tracking = Tracking('lane 1')
+lane2_tracking = Tracking('lane 2')
+lane3_tracking = Tracking('lane 3')
 
 
 while True:
@@ -199,9 +199,9 @@ while True:
             # ################# END FAIXA 3  ##############################
 
         # Remove timeout trails
-        lane1_tracking.remove_expired_track("lane 1", frame_time)
-        lane2_tracking.remove_expired_track("lane 2", frame_time)
-        lane3_tracking.remove_expired_track("lane 3", frame_time)
+        lane1_tracking.remove_expired_track(frame_time)
+        lane2_tracking.remove_expired_track(frame_time)
+        lane3_tracking.remove_expired_track(frame_time)
 
         # Draw center points (center of rectangle)
         draw.blobs(frame_lane1, lane1_tracking.tracked_blobs)

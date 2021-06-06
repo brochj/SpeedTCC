@@ -69,10 +69,14 @@ def blobs(frame, tracked_blobs):
             next(b, None)
             return zip(a, b)
 
-        for blob in tracked_blobs:  # Desenha os pontos centrais
-            for (a, b) in pairwise(blob['trail']):
+        # for blob in tracked_blobs:  # Desenha os pontos centrais
+        try:
+            for (a, b) in pairwise(tracked_blobs['trail']):
                 cv2.line(frame, a, b, colors.GREEN, 3)
                 cv2.circle(frame, a, 5, colors.RED, -1)
+        except KeyError:
+            # tracked_blobs is an empty dict -> tracked_blobs = {}
+            pass
 
 
 def result(frame, avg_speed, abs_error, pct_error, id_car, position):
