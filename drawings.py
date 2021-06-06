@@ -48,7 +48,13 @@ def tracking_area(frame):
                  (r(1920), r(config.BOTTOM_LIMIT_TRACK)), colors.WHITE, 2)
 
 
-def car_rectangle(center, frame, frame_lane, x, y, w, h, left_padding=0):
+def car_rectangle(frame, frame_lane, lane_detection, left_padding=0):
+    center = lane_detection.center
+    x = lane_detection.x
+    y = lane_detection.y
+    w = lane_detection.w
+    h = lane_detection.h
+
     if config.SHOW_CAR_RECTANGLE:
         if center[1] > r(config.UPPER_LIMIT_TRACK):
             cv2.rectangle(frame_lane, (x, y), (x + w, y + h), colors.GREEN, 2)
@@ -79,7 +85,13 @@ def blobs(frame, tracked_blobs):
             pass
 
 
-def result(frame, avg_speed, abs_error, pct_error, id_car, position):
+def result(frame, vehicle_speed, id_car, position):
+    if not vehicle_speed.avg_speed:
+        return
+    avg_speed = vehicle_speed.avg_speed
+    abs_error = vehicle_speed.abs_error
+    pct_error = vehicle_speed.pct_error
+
     if abs(abs_error) <= 3:
         color = colors.GREEN
     elif abs(abs_error) > 3 and abs(abs_error) <= 5:

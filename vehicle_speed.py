@@ -3,15 +3,14 @@ import cv2
 import numpy as np
 
 from functions import r
-
 import config
 
 
 class VehicleSpeed:
     def __init__(self):
-        self.abs_error = None
-        self.pct_error = None
-        self.avg_speed = None
+        self.abs_error = 0
+        self.pct_error = 0
+        self.avg_speed = 0
 
     def calculate_speed(self, trails, fps, correction_factor):
         med_area_meter = 3.9  # metros (Valor estimado)
@@ -37,13 +36,14 @@ class VehicleSpeed:
             print('Erro dentro de calculate_errors()')
             print(e)
 
-    def calc_speed(self, lane_tracking, dict_lane):
+    def calc_speed(self, lane_tracking, measured_speed_xml):
         try:
-            if len(lane_tracking.closest_blob['trail']) > config.MIN_CENTRAL_POINTS:
-                lane_tracking.closest_blob['speed'].insert(0, self.calculate_speed(
-                    lane_tracking.closest_blob['trail'], config.FPS, config.CF_LANE3))
-                self.calculate_avg_speed(lane_tracking.closest_blob['speed'])
-                self.calculate_errors(self.avg_speed, dict_lane['speed'])
+            if len(lane_tracking.tracked_blobs['trail']) > config.MIN_CENTRAL_POINTS:
+                lane_tracking.tracked_blobs['speed'].insert(0, self.calculate_speed(
+                    lane_tracking.tracked_blobs['trail'], config.FPS, config.CF_LANE3))
+                self.calculate_avg_speed(lane_tracking.tracked_blobs['speed'])
+                self.calculate_errors(
+                    self.avg_speed, measured_speed_xml['speed'])
 
         except (TypeError, KeyError):
             pass

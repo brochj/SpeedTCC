@@ -57,36 +57,6 @@ def histogram_equalization(frame_gray):
     return hist_equalization
 
 
-#### SPEED FUNCTIONS ########################################################################
-def calculate_speed(trails, fps, correction_factor):
-
-    med_area_meter = 3.9  # metros (Valor estimado)
-    med_area_pixel = r(485)
-    qntd_frames = 11  # len(trails)  # default 11
-    dist_pixel = cv2.norm(trails[0], trails[10])  # Sem usar Regressão linear
-    dist_meter = dist_pixel*(med_area_meter/med_area_pixel)
-    speed = (dist_meter*3.6*correction_factor)/(qntd_frames*(1/fps))
-    return round(speed, 1)
-
-
-def calculate_avg_speed(speed_array):
-    return np.mean(speed_array)
-
-
-def calculate_errors(calculated_speed, measured_speed):
-    try:
-        abs_error = calculated_speed - float(measured_speed)
-        per_error = (
-            abs(calculated_speed - float(measured_speed))/float(measured_speed))*100
-        return abs_error, per_error
-    except Exception as e:
-        print('Erro dentro de calculate_errors()')
-        print(e)
-
-
-##### END - SPEED FUNTIONS #####################################################
-
-
 def show_results_on_screen(frame, frameCount, ave_speed, lane, blob, total_cars, RESIZE_RATIO, VIDEO,
                            dict_lane1, dict_lane2, dict_lane3, SAVE_FRAME_F1, SAVE_FRAME_F2, SAVE_FRAME_F3):
     def r(numero):  # Faz o ajuste de escala das posições de textos e retangulos
@@ -276,4 +246,4 @@ def perspective(frame, lane):
 
 
 if __name__ == '__main__':
-    print('arquivo ERRADO')
+    print('Arquivo Errado')

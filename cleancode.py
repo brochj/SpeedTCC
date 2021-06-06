@@ -17,6 +17,7 @@ from functions import r
 from image_processing import ImageProcessing
 from tracking import Tracking
 from vehicle_detection import VehicleDetection
+from vehicle_speed import VehicleSpeed
 import colors
 import config
 import drawings as draw
@@ -24,7 +25,7 @@ import functions as t
 import xml_processing
 
 if config.RESIZE_RATIO > 1:
-    exit('ERROR: O RESIZE_RATIO não pode ser maior que 1')
+    exit('ERROR: The RESIZE_RATIO cannot be greater than 1')
 
 cap = cv2.VideoCapture(config.VIDEO_FILE)
 FPS = config.FPS  # cap.get(cv2.CAP_PROP_FPS)
@@ -36,9 +37,6 @@ bgsMOG = cv2.createBackgroundSubtractorMOG2(
 dict_lane1 = {}  # Armazena os valores de "speed, frame_start, frame_end" da FAIXA 1
 dict_lane2 = {}  # Armazena os valores de "speed, frame_start, frame_end" da FAIXA 2
 dict_lane3 = {}  # Armazena os valores de "speed, frame_start, frame_end" da FAIXA 3
-tracked_blobs = []  # Lista que salva os dicionários dos tracked_blobs
-tracked_blobs_lane2 = []  # Lista que salva os dicionários dos tracked_blobs
-tracked_blobs_lane3 = []
 
 frame_count = 0  # Armazena a contagem de frames processados do video
 process_times = []
@@ -119,84 +117,52 @@ while True:
                                 bgsMOG, KERNEL_ERODE, KERNEL_DILATE)
 
         lane1_detection = VehicleDetection(lane1)
+        lane1_vehicle_speed = VehicleSpeed()
+
         lane1_detection.detection()
 
         if lane1_detection.detected:
             lane1_tracking.tracking(lane1_detection.center, frame_time)
-            try:
-                if len(lane1_tracking.tracked_blobs['trail']) > config.MIN_CENTRAL_POINTS:
-                    lane1_tracking.tracked_blobs['speed'].insert(0, t.calculate_speed(
-                        lane1_tracking.tracked_blobs['trail'], FPS, config.CF_LANE1))
-                    ave_speed = t.calculate_avg_speed(
-                        lane1_tracking.tracked_blobs['speed'])
-                    abs_error, per_error = t.calculate_errors(
-                        ave_speed, dict_lane1['speed'])
-                    draw.result(frame, ave_speed, abs_error, per_error,
-                                lane1_tracking.tracked_blobs['id'], (350, 120))
+            lane1_vehicle_speed.calc_speed(lane1_tracking, dict_lane1)
 
-            except (TypeError, KeyError):
-                pass
-
-            draw.car_rectangle(lane1_detection.center, frame, frame_lane1, lane1_detection.x,
-                               lane1_detection.y, lane1_detection.w, lane1_detection.h)
-
-            # ################# END FAIXA 1  ##############################
+            draw.result(frame, lane1_vehicle_speed,
+                        lane1_tracking.tracked_blobs['id'], (350, 120))
+            draw.car_rectangle(frame, frame_lane1, lane1_detection)
+            # ################# END LANE 1  ##############################
 
         lane2 = ImageProcessing(frame_lane2,
                                 bgsMOG, KERNEL_ERODE_L2, KERNEL_DILATE_L2)
 
         lane2_detection = VehicleDetection(lane2)
+        lane2_vehicle_speed = VehicleSpeed()
+
         lane2_detection.detection()
 
         if lane2_detection.detected:
             lane2_tracking.tracking(lane2_detection.center, frame_time)
-            try:
-                if len(lane2_tracking.tracked_blobs['trail']) > config.MIN_CENTRAL_POINTS:
-                    lane2_tracking.tracked_blobs['speed'].insert(0, t.calculate_speed(
-                        lane2_tracking.tracked_blobs['trail'], FPS, config.CF_LANE2))
-                    ave_speed = t.calculate_avg_speed(
-                        lane2_tracking.tracked_blobs['speed'])
-                    abs_error, per_error = t.calculate_errors(
-                        ave_speed, dict_lane2['speed'])
-                    draw.result(frame, ave_speed, abs_error, per_error,
-                                lane2_tracking.tracked_blobs['id'], (830, 120))
+            lane2_vehicle_speed.calc_speed(lane2_tracking, dict_lane2)
 
-            except (TypeError, KeyError):
-                pass
-
-            draw.car_rectangle(lane2_detection.center, frame, frame_lane2, lane2_detection.x,
-                               lane2_detection.y, lane2_detection.w, lane2_detection.h, left_padding=600)
-
-            # ################# END TRACKING ##############################
-            # ################# END FAIXA 2  ##############################
+            draw.result(frame, lane2_vehicle_speed,
+                        lane2_tracking.tracked_blobs['id'], (830, 120))
+            draw.car_rectangle(frame, frame_lane2, lane2_detection, 600)
+            # ################# END LANE 2  ##############################
 
         lane3 = ImageProcessing(frame_lane3, bgsMOG,
                                 KERNEL_ERODE_L3, KERNEL_DILATE_L3)
 
         lane3_detection = VehicleDetection(lane3)
+        lane3_vehicle_speed = VehicleSpeed()
+
         lane3_detection.detection()
 
         if lane3_detection.detected:
             lane3_tracking.tracking(lane3_detection.center, frame_time)
-            try:
-                if len(lane3_tracking.tracked_blobs['trail']) > config.MIN_CENTRAL_POINTS:
-                    lane3_tracking.tracked_blobs['speed'].insert(0, t.calculate_speed(
-                        lane3_tracking.tracked_blobs['trail'], FPS, config.CF_LANE3))
-                    ave_speed = t.calculate_avg_speed(
-                        lane3_tracking.tracked_blobs['speed'])
-                    abs_error, per_error = t.calculate_errors(
-                        ave_speed, dict_lane3['speed'])
-                    draw.result(frame, ave_speed, abs_error, per_error,
-                                lane3_tracking.tracked_blobs['id'], (1350, 120))
+            lane3_vehicle_speed.calc_speed(lane3_tracking, dict_lane3)
 
-            except (TypeError, KeyError):
-                pass
-
-            draw.car_rectangle(lane3_detection.center, frame, frame_lane3, lane3_detection.x,
-                               lane3_detection.y, lane3_detection.w, lane3_detection.h, left_padding=1270)
-
-            # ################# END TRACKING ##############################
-            # ################# END FAIXA 3  ##############################
+            draw.result(frame, lane3_vehicle_speed,
+                        lane3_tracking.tracked_blobs['id'], (1350, 120))
+            draw.car_rectangle(frame, frame_lane3, lane3_detection, 1270)
+            # ################# END LANE 3  ##############################
 
         # Remove timeout trails
         lane1_tracking.remove_expired_track(frame_time)
