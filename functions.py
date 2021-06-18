@@ -125,75 +125,75 @@ def skip_video(frameCount, video, frame):
     if video == 1:
         if frameCount < 49:
             skip = True
-        if frameCount > 90 and frameCount < 96:
+        elif frameCount > 90 and frameCount < 96:
             skip = True
-        if frameCount > 130 and frameCount < 176:
+        elif frameCount > 130 and frameCount < 176:
             skip = True
-        if frameCount > 212 and frameCount < 235:
+        elif frameCount > 212 and frameCount < 235:
             skip = True
-        if frameCount > 336 and frameCount < 361:
+        elif frameCount > 336 and frameCount < 361:
             skip = True
-        if frameCount > 394 and frameCount < 425:
+        elif frameCount > 394 and frameCount < 425:
             skip = True  # Caminhão
-        if frameCount > 460 and frameCount < 467:
+        elif frameCount > 460 and frameCount < 467:
             skip = True
-        if frameCount > 499 and frameCount < 563:
+        elif frameCount > 499 and frameCount < 563:
             skip = True
-        if frameCount > 598 and frameCount < 614:
+        elif frameCount > 598 and frameCount < 614:
             skip = True
-        if frameCount > 644 and frameCount < 696:
+        elif frameCount > 644 and frameCount < 696:
             skip = True
-        if frameCount > 731 and frameCount < 739:
+        elif frameCount > 731 and frameCount < 739:
             skip = True
-        if frameCount > 781 and frameCount < 794:
+        elif frameCount > 781 and frameCount < 794:
             skip = True
-        if frameCount > 829 and frameCount < 857:
+        elif frameCount > 829 and frameCount < 857:
             skip = True
-        if frameCount > 856 and frameCount < 895:
+        elif frameCount > 856 and frameCount < 895:
             skip = True  # carro preto F3, da pra por (tava com erro altissimo)
-        if frameCount > 894 and frameCount < 925:
+        elif frameCount > 894 and frameCount < 925:
             skip = True
-        if frameCount > 958 and frameCount < 1054:
+        elif frameCount > 958 and frameCount < 1054:
             skip = True
-        if frameCount > 1053 and frameCount < 1101:
+        elif frameCount > 1053 and frameCount < 1101:
             skip = True  # Caminhão
-        if frameCount > 1100 and frameCount < 1140:
+        elif frameCount > 1100 and frameCount < 1140:
             skip = True
-        if frameCount > 1139 and frameCount < 1199:
+        elif frameCount > 1139 and frameCount < 1199:
             skip = True  # Carro parado
-        if frameCount > 1198 and frameCount < 2650:
+        elif frameCount > 1198 and frameCount < 2650:
             skip = True  # Carro baixa velocidade
-        if frameCount > 2689 and frameCount < 2715:
+        elif frameCount > 2689 and frameCount < 2715:
             skip = True
-        if frameCount > 2850 and frameCount < 2870:
+        elif frameCount > 2850 and frameCount < 2870:
             skip = True
-#        if frameCount > 3035 and frameCount < 3045: skip = True # carro taxi
-#        if frameCount > 3230 and frameCount < 3242: skip = True
-#        if frameCount > 3100 and frameCount < 3115: skip = True
-#        if frameCount > 2979 and frameCount < 3018: skip = True
-#        if frameCount > 3030 and frameCount < 3050: skip = True
-#        if frameCount > 3060 and frameCount < 3090: skip = True
-#        if frameCount > 3122 and frameCount < 3166: skip = True
-#        if frameCount > 3279 and frameCount < 3328: skip = True
-#        if frameCount > 3404 and frameCount < 3459: skip = True
-        if frameCount > 3550 and frameCount < 4800:
+#        elif frameCount > 3035 and frameCount < 3045: skip = True # carro taxi
+#        elif frameCount > 3230 and frameCount < 3242: skip = True
+#        elif frameCount > 3100 and frameCount < 3115: skip = True
+#        elif frameCount > 2979 and frameCount < 3018: skip = True
+#        elif frameCount > 3030 and frameCount < 3050: skip = True
+#        elif frameCount > 3060 and frameCount < 3090: skip = True
+#        elif frameCount > 3122 and frameCount < 3166: skip = True
+#        elif frameCount > 3279 and frameCount < 3328: skip = True
+#        elif frameCount > 3404 and frameCount < 3459: skip = True
+        elif frameCount > 3550 and frameCount < 4800:
             skip = True
-#        if frameCount > 5270 and frameCount < 5285: skip = True
-#        if frameCount > 5375 and frameCount < 5390: skip = True
-#        if frameCount > 5525 and frameCount < 5540: skip = True
-#        if frameCount > 5738 and frameCount < 5753: skip = True
-#        if frameCount > 5615 and frameCount < 5630: skip = True
-        if frameCount > 5322 and frameCount < 5352:
+#        elif frameCount > 5270 and frameCount < 5285: skip = True
+#        elif frameCount > 5375 and frameCount < 5390: skip = True
+#        elif frameCount > 5525 and frameCount < 5540: skip = True
+#        elif frameCount > 5738 and frameCount < 5753: skip = True
+#        elif frameCount > 5615 and frameCount < 5630: skip = True
+        elif frameCount > 5322 and frameCount < 5352:
             skip = True
-        if frameCount > 5401 and frameCount < 5507:
+        elif frameCount > 5401 and frameCount < 5507:
             skip = True  # caminhao
-        if frameCount > 5554 and frameCount < 5604:
+        elif frameCount > 5554 and frameCount < 5604:
             skip = True  # van no meio da faixa
-        if frameCount > 5667 and frameCount < 5698:
+        elif frameCount > 5667 and frameCount < 5698:
             skip = True
-        if frameCount > 5785 and frameCount < 5902:
+        elif frameCount > 5785 and frameCount < 5902:
             skip = True
-        if frameCount > 5934 and frameCount < 6918:
+        elif frameCount > 5934 and frameCount < 6918:
             skip = True  # Carro parado
     return skip
 

@@ -9,7 +9,7 @@ class VehicleDetection:
 
     def __init__(self, processed_image, tracking_instance=None):
         self.lane = processed_image
-        self.lane_tracking = tracking_instance
+        self.lane_tracking = tracking_instance  # TODO remover isso
         self.x = 0
         self.y = 0
         self.w = 0
