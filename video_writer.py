@@ -4,7 +4,7 @@ Created on Sat Sep 12 10:02:46 2020
 
 @author: broch
 
-Esse Arquivo é para tirar prints
+Esse arquivo é para salvar trechos em videos
 """
 
 from sys import exit
@@ -30,7 +30,77 @@ if config.RESIZE_RATIO > 1:
     exit('ERROR: The RESIZE_RATIO cannot be greater than 1')
 
 cap = cv2.VideoCapture(config.VIDEO_FILE)
-FPS = config.FPS  # cap.get(cv2.CAP_PROP_FPS)
+FPS = 25  # cap.get(cv2.CAP_PROP_FPS)
+WIDTH = int(r(cap.get(cv2.CAP_PROP_FRAME_WIDTH)))
+HEIGHT = int(r(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)))
+
+START = 100
+END = 200
+
+FOURCC = cv2.VideoWriter_fourcc('m', 'p', '4', 'v')
+
+# Video Writers
+frame_writer = cv2.VideoWriter(
+    'videos/frame_writer.mp4', FOURCC, FPS, (WIDTH, HEIGHT))
+final_frame_writer = cv2.VideoWriter(
+    'videos/final_frame_writer.avi', FOURCC, FPS, (WIDTH, HEIGHT))
+
+
+frame_gray_writer = cv2.VideoWriter(
+    'videos/frame_gray_writer.mp4', FOURCC, FPS, (WIDTH, HEIGHT), False)
+frame_roi_writer = cv2.VideoWriter(
+    'videos/frame_roi_writer.mp4', FOURCC, FPS, (WIDTH, HEIGHT), False)
+frame_hist_writer = cv2.VideoWriter(
+    'videos/frame_hist_writer.mp4', FOURCC, FPS, (WIDTH, HEIGHT), False)
+
+frame_perspective_1 = cv2.VideoWriter(
+    'videos/frame_perspective_1.mp4', FOURCC, FPS, (r(640), r(1080)), False)
+frame_perspective_2 = cv2.VideoWriter(
+    'videos/frame_perspective_2.mp4', FOURCC, FPS, (r(640), r(1080)), False)
+frame_perspective_3 = cv2.VideoWriter(
+    'videos/frame_perspective_3.mp4', FOURCC, FPS, (r(640), r(1080)), False)
+frame_perspective = cv2.VideoWriter(
+    'videos/frame_perspective.mp4', FOURCC, FPS, (r(1920), r(1080)), False)
+
+frame_bgs_1 = cv2.VideoWriter(
+    'videos/frame_bgs_1.mp4', FOURCC, FPS, (r(640), r(1080)), False)
+frame_bgs_2 = cv2.VideoWriter(
+    'videos/frame_bgs_2.mp4', FOURCC, FPS, (r(640), r(1080)), False)
+frame_bgs_3 = cv2.VideoWriter(
+    'videos/frame_bgs_3.mp4', FOURCC, FPS, (r(640), r(1080)), False)
+frame_bgs = cv2.VideoWriter(
+    'videos/frame_bgs.mp4', FOURCC, FPS, (r(1920), r(1080)), False)
+
+frame_eroded_1 = cv2.VideoWriter(
+    'videos/frame_eroded_1.mp4', FOURCC, FPS, (r(640), r(1080)), False)
+frame_eroded_2 = cv2.VideoWriter(
+    'videos/frame_eroded_2.mp4', FOURCC, FPS, (r(640), r(1080)), False)
+frame_eroded_3 = cv2.VideoWriter(
+    'videos/frame_eroded_3.mp4', FOURCC, FPS, (r(640), r(1080)), False)
+frame_eroded = cv2.VideoWriter(
+    'videos/frame_eroded.mp4', FOURCC, FPS, (r(1920), r(1080)), False)
+
+frame_dilated_1 = cv2.VideoWriter(
+    'videos/frame_dilated_1.mp4', FOURCC, FPS, (r(640), r(1080)), False)
+frame_dilated_2 = cv2.VideoWriter(
+    'videos/frame_dilated_2.mp4', FOURCC, FPS, (r(640), r(1080)), False)
+frame_dilated_3 = cv2.VideoWriter(
+    'videos/frame_dilated_3.mp4', FOURCC, FPS, (r(640), r(1080)), False)
+frame_dilated = cv2.VideoWriter(
+    'videos/frame_dilated.mp4', FOURCC, FPS, (r(1920), r(1080)), False)
+
+frame_contours_1 = cv2.VideoWriter(
+    'videos/frame_contours_1.mp4', FOURCC, FPS, (r(640), r(1080)), False)
+frame_contours_2 = cv2.VideoWriter(
+    'videos/frame_contours_2.mp4', FOURCC, FPS, (r(640), r(1080)), False)
+frame_contours_3 = cv2.VideoWriter(
+    'videos/frame_contours_3.mp4', FOURCC, FPS, (r(640), r(1080)), False)
+frame_contours = cv2.VideoWriter(
+    'videos/frame_contours.mp4', FOURCC, FPS, (r(1920), r(1080)), False)
+
+bgs_ero_dila = cv2.VideoWriter(
+    'videos/bgs_ero_dila.mp4', FOURCC, FPS, (r(1920), r(1080)), False)
+
 
 bgsMOG = cv2.createBackgroundSubtractorMOG2(
     history=10, varThreshold=50, detectShadows=0)
@@ -69,8 +139,6 @@ while True:
     ret, frame = t.get_frame(cap)
     frame_time = time.time()
 
-    if frame_count == 285:
-        cv2.imwrite('img/1frame_original.png', frame)
     if config.SKIP_VIDEO:
         skip = t.skip_video(frame_count, config.VIDEO, frame)
         if config.SEE_CUTTED_VIDEO:
@@ -87,25 +155,27 @@ while True:
                 continue
     start_frame_time = time.time()
     frameGray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    if frame_count == 285:
-        cv2.imwrite('img/2frameGray.png', frameGray)
+
+    if frame_count > START and frame_count < END:
+        frame_gray_writer.write(frameGray)
+
     t.region_of_interest(frameGray, config.RESIZE_RATIO)
-    if frame_count == 285:
-        cv2.imwrite('img/3region_of_interest.png', frameGray)
 
     hist = t.histogram_equalization(frameGray)
-    if frame_count == 285:
-        cv2.imwrite('img/4histogram_equalization.png', hist)
 
     frame_lane1 = t.perspective(hist, 1)
     frame_lane2 = t.perspective(hist, 2)
     frame_lane3 = t.perspective(hist, 3)
-    if frame_count == 285:
-        cv2.imwrite('img/5-lane1-histogram_equalization.png', frame_lane1)
-        cv2.imwrite('img/5-lane2-histogram_equalization.png', frame_lane2)
-        cv2.imwrite('img/5-lane3-histogram_equalization.png', frame_lane3)
-        cv2.imwrite('img/concatenate.png',
-                    np.concatenate((frame_lane1, frame_lane2, frame_lane3), axis=1))
+
+    if frame_count > START and frame_count < END:
+        frame_writer.write(frame)
+        frame_roi_writer.write(frameGray)
+        frame_hist_writer.write(hist)
+        frame_perspective_1.write(frame_lane1)
+        frame_perspective_2.write(frame_lane2)
+        frame_perspective_3.write(frame_lane3)
+        frame_perspective.write(np.concatenate(
+            (frame_lane1, frame_lane2, frame_lane3), axis=1))
 
     if config.SHOW_ROI:
         t.region_of_interest(frame, config.RESIZE_RATIO)
@@ -190,9 +260,37 @@ while True:
         draw.blobs(frame_lane2, lane2_tracking.tracked_blobs)
         draw.blobs(frame_lane3, lane3_tracking.tracked_blobs)
 
-        draw.avg_fps(frame, avg_fps)
+        # draw.avg_fps(frame, avg_fps)
 
         print(f'************** FIM DO FRAME {frame_count} **************')
+
+        if frame_count > START and frame_count < END:
+            frame_bgs_1.write(lane1.foreground_mask)
+            frame_bgs_2.write(lane2.foreground_mask)
+            frame_bgs_3.write(lane3.foreground_mask)
+            frame_bgs.write(np.concatenate(
+                (lane1.foreground_mask, lane2.foreground_mask, lane3.foreground_mask), axis=1))
+
+            frame_eroded_1.write(lane1.eroded_mask)
+            frame_eroded_2.write(lane2.eroded_mask)
+            frame_eroded_3.write(lane3.eroded_mask)
+            frame_eroded.write(np.concatenate(
+                (lane1.eroded_mask, lane2.eroded_mask, lane3.eroded_mask), axis=1))
+
+            frame_dilated_1.write(lane1.dilated_mask)
+            frame_dilated_2.write(lane2.dilated_mask)
+            frame_dilated_3.write(lane3.dilated_mask)
+            frame_dilated.write(np.concatenate(
+                (lane1.dilated_mask, lane2.dilated_mask, lane3.dilated_mask), axis=1))
+
+            frame_contours_1.write(lane1.draw_contours())
+            frame_contours_2.write(lane2.draw_contours())
+            frame_contours_3.write(lane3.draw_contours())
+            frame_contours.write(np.concatenate(
+                (lane1.draw_contours(), lane2.draw_contours(), lane3.draw_contours()), axis=1))
+
+            bgs_ero_dila.write(np.concatenate(
+                (lane3.foreground_mask, lane3.eroded_mask, lane3.dilated_mask), axis=1))
 
         # ########## MOSTRA OS VIDEOS  ########################################
         # cv2.imshow('fgmask', lane1.foreground_mask)
@@ -216,25 +314,8 @@ while True:
         # cv2.imshow('frame_lane3', frame_lane3)
         cv2.imshow('frame', frame)
 
-        # Salva imagens para por no Markdown do GITHUB
-        if frame_count == 285:
-            # cv2.imwrite('img/1frame_original.png', frame)
-            # cv2.imwrite('img/1frameGray.png', frameGray)
-            # cv2.imwrite('img/2hist.png', hist)
-            cv2.imwrite('img/6-lane1-fgmask.png', lane1.foreground_mask)
-            cv2.imwrite('img/7-lane1-erodedmask.png', lane1.eroded_mask)
-            cv2.imwrite('img/8-lane1-dilatedmask.png', lane1.dilated_mask)
-            cv2.imwrite('img/9-lane1-convexhull.png', lane1.draw_contours())
-
-            cv2.imwrite('img/6-lane2-fgmask.png', lane2.foreground_mask)
-            cv2.imwrite('img/7-lane2-erodedmask.png', lane2.eroded_mask)
-            cv2.imwrite('img/8-lane2-dilatedmask.png', lane2.dilated_mask)
-            cv2.imwrite('img/9-lane2-convexhull.png', lane2.draw_contours())
-
-            cv2.imwrite('img/6-lane3-fgmask.png', lane3.foreground_mask)
-            cv2.imwrite('img/7-lane3-erodedmask.png', lane3.eroded_mask)
-            cv2.imwrite('img/8-lane3-dilatedmask.png', lane3.dilated_mask)
-            cv2.imwrite('img/9-lane3-convexhull.png', lane3.draw_contours())
+        if frame_count > START and frame_count < END:
+            final_frame_writer.write(frame)
 
         frame_count += 1
 
@@ -254,4 +335,33 @@ while True:
 
 
 cap.release()
+# videos releases
+
+frame_writer.release()
+final_frame_writer.release()
+frame_gray_writer.release()
+frame_roi_writer.release()
+frame_hist_writer.release()
+frame_perspective_1.release()
+frame_perspective_2.release()
+frame_perspective_3.release()
+frame_perspective.release()
+frame_bgs_1.release()
+frame_bgs_2.release()
+frame_bgs_3.release()
+frame_bgs.release()
+frame_eroded_1.release()
+frame_eroded_2.release()
+frame_eroded_3.release()
+frame_eroded.release()
+frame_dilated_1.release()
+frame_dilated_2.release()
+frame_dilated_3.release()
+frame_dilated.release()
+frame_contours_1.release()
+frame_contours_2.release()
+frame_contours_3.release()
+frame_contours.release()
+bgs_ero_dila.release()
+
 cv2.destroyAllWindows()

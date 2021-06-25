@@ -1,2 +1,5 @@
 Dataset/
 .vscode/
+videos/
+
+__pycache__/
