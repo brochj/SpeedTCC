@@ -13,19 +13,24 @@ from functions import r
 
 
 class ImageProcessing:
-    def __init__(self, frame, background_subtractor, kernel_erode, kernel_dilate, resize_ratio=None):
-        self.resize_ratio = resize_ratio or config.RESIZE_RATIO
-        self.frame = frame
-        self.bg_subtractor = background_subtractor
-        self.kernel_erode = kernel_erode
-        self.kernel_dilate = kernel_dilate
+    def __init__(self, background_subtractor, kernel_erode, kernel_dilate):
+        self.frame = None
         self.foreground_mask = None
         self.eroded_mask = None
         self.dilated_mask = None
         self.contours = None
-        self.hierarchy = None
         self.hull = None
+        self.bg_subtractor = background_subtractor
+        self.kernel_erode = self.__create_kernel(kernel_erode)
+        self.kernel_dilate = self.__create_kernel(kernel_dilate)
 
+    def __create_kernel(self, size):
+        height = r(size[0])
+        width = r(size[1])
+        return np.ones((height, width), np.uint8)
+
+    def apply_morphological_operations(self, frame):
+        self.frame = frame
         self.apply_bg_subtractor()
         self.apply_erode()
         self.apply_dilate()
@@ -47,7 +52,7 @@ class ImageProcessing:
         return self.dilated_mask
 
     def apply_contourns(self):
-        self.contours, self.hierarchy = cv2.findContours(
+        self.contours, _ = cv2.findContours(
             self.dilated_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         return self.contours
 
@@ -57,11 +62,12 @@ class ImageProcessing:
             # creating convex hull object for each contour
             self.hull.append(cv2.convexHull(self.contours[i], False))
 
-    def convert_to_black_image(self, frame):
+    def __convert_to_black_image(self, frame):
         return np.zeros((frame.shape[0], frame.shape[1], 3), np.uint8)
 
     def draw_contours(self):
-        black_image = self.convert_to_black_image(self.frame)
+        # TODO fazer  __convert_to_black_image() no construtor
+        black_image = self.__convert_to_black_image(self.frame)
         return cv2.drawContours(black_image, self.hull, 0, colors.WHITE, -1, 8)
 
 

@@ -36,7 +36,7 @@ dict_lane1 = {}  # Armazena os valores de "speed, frame_start, frame_end" da FAI
 dict_lane2 = {}  # Armazena os valores de "speed, frame_start, frame_end" da FAIXA 2
 dict_lane3 = {}  # Armazena os valores de "speed, frame_start, frame_end" da FAIXA 3
 
-frame_count = 0  # Armazena a contagem de frames processados do video
+frame_count = 0
 process_times = []
 avg_fps = 0
 
@@ -45,23 +45,18 @@ now = datetime.datetime.now()
 # Dicionário que armazena todas as informações do xml
 vehicle = xml_processing.read_xml(config.XML_FILE, config.VIDEO)
 
-KERNEL_ERODE = np.ones((r(12), r(12)), np.uint8)
-KERNEL_DILATE = np.ones((r(120), r(400)), np.uint8)
-
-KERNEL_ERODE_L2 = np.ones((r(12), r(12)), np.uint8)
-KERNEL_DILATE_L2 = np.ones((r(100), r(400)), np.uint8)
-
-KERNEL_ERODE_L3 = np.ones((r(12), r(12)), np.uint8)
-KERNEL_DILATE_L3 = np.ones((r(100), r(320)), np.uint8)
-
-
-def create_kernel(height, width):
-    return np.ones((height, width), np.uint8)
-
+KERNEL_ERODE = (12, 12)
+KERNEL_DILATE_L1 = (120, 400)
+KERNEL_DILATE_L2 = (100, 400)
+KERNEL_DILATE_L3 = (100, 320)
 
 lane1_perspective = Perspective(lane=1)
 lane2_perspective = Perspective(lane=2)
 lane3_perspective = Perspective(lane=3)
+
+lane1 = ImageProcessing(bgsMOG, KERNEL_ERODE, KERNEL_DILATE_L1)
+lane2 = ImageProcessing(bgsMOG, KERNEL_ERODE, KERNEL_DILATE_L2)
+lane3 = ImageProcessing(bgsMOG, KERNEL_ERODE, KERNEL_DILATE_L3)
 
 lane1_tracking = Tracking(name='lane 1')
 lane2_tracking = Tracking(name='lane 2')
@@ -104,10 +99,8 @@ while True:
             draw.xml_speed_values(frame, dict_lane3['speed'], (1143, 43))
         except KeyError:
             pass
-        # TODO colocar isso no comeco
-        lane1 = ImageProcessing(frame_lane1,
-                                bgsMOG, KERNEL_ERODE, KERNEL_DILATE)
 
+        lane1.apply_morphological_operations(frame_lane1)
         lane1_detection = VehicleDetection(lane1)
         lane1_vehicle_speed = VehicleSpeed()
 
@@ -122,9 +115,7 @@ while True:
             draw.car_rectangle(frame, frame_lane1, lane1_detection)
             # ################# END LANE 1  ##############################
 
-        lane2 = ImageProcessing(frame_lane2,
-                                bgsMOG, KERNEL_ERODE_L2, KERNEL_DILATE_L2)
-
+        lane2.apply_morphological_operations(frame_lane2)
         lane2_detection = VehicleDetection(lane2)
         lane2_vehicle_speed = VehicleSpeed()
 
@@ -139,9 +130,7 @@ while True:
             draw.car_rectangle(frame, frame_lane2, lane2_detection, 600)
             # ################# END LANE 2  ##############################
 
-        lane3 = ImageProcessing(frame_lane3, bgsMOG,
-                                KERNEL_ERODE_L3, KERNEL_DILATE_L3)
-
+        lane3.apply_morphological_operations(frame_lane3)
         lane3_detection = VehicleDetection(lane3)
         lane3_vehicle_speed = VehicleSpeed()
 
