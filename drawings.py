@@ -11,9 +11,6 @@ import config
 import colors
 from functions import r
 
-# if SHOW_ROI:
-#     t.region_of_interest(frame, RESIZE_RATIO)
-
 
 def xml_speed_values(frame, speed, position):
     # Mostra no video os valores das velocidades do arquivo xml

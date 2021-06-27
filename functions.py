@@ -28,35 +28,6 @@ def get_frame(cap, resize_ratio=config.RESIZE_RATIO):
     return ret, frame
 
 
-def region_of_interest(frame, resize_ratio):
-    def r(numero):  # Faz o ajuste de escala
-        return int(numero*resize_ratio)
-    # Retângulo superior
-#    cv2.rectangle(frame, (0, 0), (r(1920), r(120)), colors.BLACK, -1)
-    # triângulo lado direito
-    pts = np.array([[r(1920), r(790)], [r(1290), 0], [r(1920), 0]], np.int32)
-    cv2.fillPoly(frame, [pts], colors.BLACK)
-    # triângulo lado esquerdo
-    pts3 = np.array([[0, r(620)], [r(270), 0], [0, 0]], np.int32)
-    cv2.fillPoly(frame, [pts3], colors.BLACK)
-    # Linha entre faixas 1 e 2
-    pts1 = np.array([[r(480), r(1080)], [r(560), r(0)],
-                     [r(640), r(0)], [r(570), r(1080)]], np.int32)
-    cv2.fillPoly(frame, [pts1], colors.BLACK)
-    # Linha entre faixas 2 e 3
-    pts7 = np.array([[r(1310), r(1080)], [r(900), r(0)],
-                     [r(990), r(0)], [r(1410), r(1080)]], np.int32)
-    cv2.fillPoly(frame, [pts7], colors.BLACK)
-    # Faixa 3
-    return frame
-
-
-def histogram_equalization(frame_gray):
-    clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
-    hist_equalization = clahe.apply(frame_gray)
-    return hist_equalization
-
-
 def show_results_on_screen(frame, frameCount, ave_speed, lane, blob, total_cars, RESIZE_RATIO, VIDEO,
                            dict_lane1, dict_lane2, dict_lane3, SAVE_FRAME_F1, SAVE_FRAME_F2, SAVE_FRAME_F3):
     def r(numero):  # Faz o ajuste de escala das posições de textos e retangulos
@@ -243,6 +214,14 @@ def perspective(frame, lane):
         H, mask_crop = cv2.findHomography(points, target_pts, cv2.RANSAC)
         warped_frame = cv2.warpPerspective(frame, H, (width, height))
         return warped_frame
+
+
+def should_skip_this(frame_count):
+    if config.SKIP_VIDEO:
+        skip = skip_video(frame_count, config.VIDEO, frame_count)
+        if skip:
+            return True
+        return False
 
 
 if __name__ == '__main__':

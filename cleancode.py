@@ -14,6 +14,7 @@ import time
 import uuid
 # Created modules
 from functions import r
+from pre_processing import PreProcessing
 from image_processing import ImageProcessing
 from tracking import Tracking
 from vehicle_detection import VehicleDetection
@@ -24,11 +25,7 @@ import drawings as draw
 import functions as t
 import xml_processing
 
-if config.RESIZE_RATIO > 1:
-    exit('ERROR: The RESIZE_RATIO cannot be greater than 1')
-
 cap = cv2.VideoCapture(config.VIDEO_FILE)
-FPS = config.FPS  # cap.get(cv2.CAP_PROP_FPS)
 
 bgsMOG = cv2.createBackgroundSubtractorMOG2(
     history=10, varThreshold=50, detectShadows=0)
@@ -47,16 +44,19 @@ now = datetime.datetime.now()
 # Dicionário que armazena todas as informações do xml
 vehicle = xml_processing.read_xml(config.XML_FILE, config.VIDEO)
 
-KERNEL_ERODE = np.ones((r(12), r(12)), np.uint8)  # Default (r(12), r(12))
-KERNEL_DILATE = np.ones((r(120), r(400)), np.uint8)  # Default (r(120), r(400))
+KERNEL_ERODE = np.ones((r(12), r(12)), np.uint8)
+KERNEL_DILATE = np.ones((r(120), r(400)), np.uint8)
 
-KERNEL_ERODE_L2 = np.ones((r(12), r(12)), np.uint8)  # Default (r(8), r(8))
-# Default (r(100), r(400))
+KERNEL_ERODE_L2 = np.ones((r(12), r(12)), np.uint8)
 KERNEL_DILATE_L2 = np.ones((r(100), r(400)), np.uint8)
 
-KERNEL_ERODE_L3 = np.ones((r(12), r(12)), np.uint8)  # Default (r(12), r(12))
-# Default (r(100), r(320))
+KERNEL_ERODE_L3 = np.ones((r(12), r(12)), np.uint8)
 KERNEL_DILATE_L3 = np.ones((r(100), r(320)), np.uint8)
+
+
+def create_kernel(height, width):
+    return np.ones((height, width), np.uint8)
+
 
 lane1_tracking = Tracking('lane 1')
 lane2_tracking = Tracking('lane 2')
@@ -67,32 +67,19 @@ while True:
     ret, frame = t.get_frame(cap)
     frame_time = time.time()
 
-    if config.SKIP_VIDEO:
-        skip = t.skip_video(frame_count, config.VIDEO, frame)
-        if config.SEE_CUTTED_VIDEO:
-            if not skip:
-                frame_count += 1
-                if frame_count == config.CLOSE_VIDEO:  # fecha o video
-                    break
-                continue
-        else:
-            if skip:
-                frame_count += 1
-                if frame_count == config.CLOSE_VIDEO:  # fecha o video
-                    break
-                continue
+    if t.should_skip_this(frame_count):
+        frame_count += 1
+        continue
+
     start_frame_time = time.time()
-    frameGray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    t.region_of_interest(frameGray, config.RESIZE_RATIO)
+    frame_gray = PreProcessing.frame_to_grayscale(frame)
+    frame_roi = PreProcessing.apply_region_of_interest(frame_gray)
+    frame_hist = PreProcessing.apply_histogram_equalization(frame_roi)
 
-    hist = t.histogram_equalization(frameGray)
+    frame_lane1 = t.perspective(frame_hist, 1)
+    frame_lane2 = t.perspective(frame_hist, 2)
+    frame_lane3 = t.perspective(frame_hist, 3)
 
-    frame_lane1 = t.perspective(hist, 1)
-    frame_lane2 = t.perspective(hist, 2)
-    frame_lane3 = t.perspective(hist, 3)
-
-    if config.SHOW_ROI:
-        t.region_of_interest(frame, config.RESIZE_RATIO)
     draw.tracking_area(frame)
     draw.frame_count(frame, frame_count, vehicle['videoframes'])
 
