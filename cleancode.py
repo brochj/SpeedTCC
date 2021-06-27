@@ -19,6 +19,7 @@ from image_processing import ImageProcessing
 from tracking import Tracking
 from vehicle_detection import VehicleDetection
 from vehicle_speed import VehicleSpeed
+from perspective import Perspective
 import colors
 import config
 import drawings as draw
@@ -58,9 +59,13 @@ def create_kernel(height, width):
     return np.ones((height, width), np.uint8)
 
 
-lane1_tracking = Tracking('lane 1')
-lane2_tracking = Tracking('lane 2')
-lane3_tracking = Tracking('lane 3')
+lane1_perspective = Perspective(lane=1)
+lane2_perspective = Perspective(lane=2)
+lane3_perspective = Perspective(lane=3)
+
+lane1_tracking = Tracking(name='lane 1')
+lane2_tracking = Tracking(name='lane 2')
+lane3_tracking = Tracking(name='lane 3')
 
 
 while True:
@@ -76,9 +81,9 @@ while True:
     frame_roi = PreProcessing.apply_region_of_interest(frame_gray)
     frame_hist = PreProcessing.apply_histogram_equalization(frame_roi)
 
-    frame_lane1 = t.perspective(frame_hist, 1)
-    frame_lane2 = t.perspective(frame_hist, 2)
-    frame_lane3 = t.perspective(frame_hist, 3)
+    frame_lane1 = lane1_perspective.apply_perspective(frame_hist)
+    frame_lane2 = lane2_perspective.apply_perspective(frame_hist)
+    frame_lane3 = lane3_perspective.apply_perspective(frame_hist)
 
     draw.tracking_area(frame)
     draw.frame_count(frame, frame_count, vehicle['videoframes'])
@@ -99,7 +104,7 @@ while True:
             draw.xml_speed_values(frame, dict_lane3['speed'], (1143, 43))
         except KeyError:
             pass
-
+        # TODO colocar isso no comeco
         lane1 = ImageProcessing(frame_lane1,
                                 bgsMOG, KERNEL_ERODE, KERNEL_DILATE)
 
@@ -182,9 +187,9 @@ while True:
         # cv2.imshow('out_L2', lane2.draw_contours())
         # cv2.imshow('out_L3', lane3.draw_contours())
 
-        # cv2.imshow('frame_lane1', frame_lane1)
-        # cv2.imshow('frame_lane2', frame_lane2)
-        # cv2.imshow('frame_lane3', frame_lane3)
+        cv2.imshow('frame_lane1', frame_lane1)
+        cv2.imshow('frame_lane2', frame_lane2)
+        cv2.imshow('frame_lane3', frame_lane3)
         cv2.imshow('frame', frame)
 
         frame_count += 1

@@ -171,12 +171,12 @@ def skip_video(frameCount, video, frame):
 
 def perspective(frame, lane):
     if lane == 1:
-        points = np.array([[[r(-150), r(1080)], [r(480), r(1080)],
-                            [r(560), r(0)], [r(270), 0]]], np.int32)
-        pt4 = [r(35), 0]
-        pt3 = [r(610), 0]
-        pt2 = [r(640), r(1080)]
-        pt1 = [0, r(1080)]
+        points = np.array([(r(-150), r(1080)), (r(480), r(1080)),
+                           (r(560), r(0)), (r(270), 0)], np.int32)
+        pt4 = (r(35), 0)
+        pt3 = (r(610), 0)
+        pt2 = (r(640), r(1080))
+        pt1 = (0, r(1080))
 
         width = r(640)
         height = r(1080)
