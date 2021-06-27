@@ -187,9 +187,9 @@ while True:
         # cv2.imshow('out_L2', lane2.draw_contours())
         # cv2.imshow('out_L3', lane3.draw_contours())
 
-        cv2.imshow('frame_lane1', frame_lane1)
-        cv2.imshow('frame_lane2', frame_lane2)
-        cv2.imshow('frame_lane3', frame_lane3)
+        # cv2.imshow('frame_lane1', frame_lane1)
+        # cv2.imshow('frame_lane2', frame_lane2)
+        # cv2.imshow('frame_lane3', frame_lane3)
         cv2.imshow('frame', frame)
 
         frame_count += 1

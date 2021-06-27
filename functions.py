@@ -169,53 +169,6 @@ def skip_video(frameCount, video, frame):
     return skip
 
 
-def perspective(frame, lane):
-    if lane == 1:
-        points = np.array([(r(-150), r(1080)), (r(480), r(1080)),
-                           (r(560), r(0)), (r(270), 0)], np.int32)
-        pt4 = (r(35), 0)
-        pt3 = (r(610), 0)
-        pt2 = (r(640), r(1080))
-        pt1 = (0, r(1080))
-
-        width = r(640)
-        height = r(1080)
-        target_pts = np.array([pt1, pt2, pt3, pt4], np.float32)
-        H, mask_crop = cv2.findHomography(points, target_pts, cv2.RANSAC)
-        warped_frame = cv2.warpPerspective(frame, H, (width, height))
-        return warped_frame
-
-    elif lane == 2:
-        points = np.array([[[r(570), r(1080)],  [r(1310), r(1080)],
-                            [r(900), r(0)], [r(640), r(0)]]], np.int32)
-        pt4 = [r(50), 0]
-        pt3 = [r(570), 0]
-        pt2 = [r(640), r(1080)]
-        pt1 = [0, r(1080)]
-
-        width = r(640)  # 640
-        height = r(1080)
-        target_pts = np.array([pt1, pt2, pt3, pt4], np.float32)
-        H, mask_crop = cv2.findHomography(points, target_pts, cv2.RANSAC)
-        warped_frame = cv2.warpPerspective(frame, H, (width, height))
-        return warped_frame
-
-    elif lane == 3:
-        points = np.array([[[r(1410), r(1080)], [r(2170), r(1080)],
-                            [r(1320), r(0)], [r(990), r(0)]]], np.int32)
-        pt4 = [r(15), 0]
-        pt3 = [r(670), 0]
-        pt2 = [r(640), r(1080)]
-        pt1 = [0, r(1080)]
-        # dimensoes da output image
-        width = r(640)
-        height = r(1080)
-        target_pts = np.array([pt1, pt2, pt3, pt4], np.float32)
-        H, mask_crop = cv2.findHomography(points, target_pts, cv2.RANSAC)
-        warped_frame = cv2.warpPerspective(frame, H, (width, height))
-        return warped_frame
-
-
 def should_skip_this(frame_count):
     if config.SKIP_VIDEO:
         skip = skip_video(frame_count, config.VIDEO, frame_count)

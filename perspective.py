@@ -60,6 +60,9 @@ class Perspective:
         self.origin = self.__create_points(self.origin)
         self.target = self.__create_points(self.target)
 
+        self.homography_matrix = self.__find_homography_matrix(
+            self.origin, self.target)
+
     def __select_points(self, lane):
         if lane == 1:
             self.origin = self.lane1["origin"]
@@ -99,9 +102,5 @@ class Perspective:
         homography_matrix, _ = cv2.findHomography(origin, target, cv2.RANSAC)
         return homography_matrix
 
-    def __warp_perspective(self, frame, homography_matrix):
-        return cv2.warpPerspective(frame, homography_matrix, self.output_dimensions)
-
     def apply_perspective(self, frame):
-        H_matrix = self.__find_homography_matrix(self.origin, self.target)
-        return self.__warp_perspective(frame, H_matrix)
+        return cv2.warpPerspective(frame, self.homography_matrix, self.output_dimensions)
