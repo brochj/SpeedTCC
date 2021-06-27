@@ -58,10 +58,17 @@ lane1 = ImageProcessing(bgsMOG, KERNEL_ERODE, KERNEL_DILATE_L1)
 lane2 = ImageProcessing(bgsMOG, KERNEL_ERODE, KERNEL_DILATE_L2)
 lane3 = ImageProcessing(bgsMOG, KERNEL_ERODE, KERNEL_DILATE_L3)
 
+# lane1_detection = VehicleDetection()
+# lane2_detection = VehicleDetection()
+# lane3_detection = VehicleDetection()
+
 lane1_tracking = Tracking(name='lane 1')
 lane2_tracking = Tracking(name='lane 2')
 lane3_tracking = Tracking(name='lane 3')
 
+# lane1_vehicle_speed = VehicleSpeed()
+# lane2_vehicle_speed = VehicleSpeed()
+# lane3_vehicle_speed = VehicleSpeed()
 
 while True:
     ret, frame = t.get_frame(cap)
@@ -101,10 +108,10 @@ while True:
             pass
 
         lane1.apply_morphological_operations(frame_lane1)
-        lane1_detection = VehicleDetection(lane1)
+        lane1_detection = VehicleDetection()
         lane1_vehicle_speed = VehicleSpeed()
 
-        lane1_detection.detection()
+        lane1_detection.detection(lane1)
 
         if lane1_detection.detected:
             lane1_tracking.tracking(lane1_detection.center, frame_time)
@@ -116,10 +123,10 @@ while True:
             # ################# END LANE 1  ##############################
 
         lane2.apply_morphological_operations(frame_lane2)
-        lane2_detection = VehicleDetection(lane2)
+        lane2_detection = VehicleDetection()
         lane2_vehicle_speed = VehicleSpeed()
 
-        lane2_detection.detection()
+        lane2_detection.detection(lane2)
 
         if lane2_detection.detected:
             lane2_tracking.tracking(lane2_detection.center, frame_time)
@@ -131,10 +138,10 @@ while True:
             # ################# END LANE 2  ##############################
 
         lane3.apply_morphological_operations(frame_lane3)
-        lane3_detection = VehicleDetection(lane3)
+        lane3_detection = VehicleDetection()
         lane3_vehicle_speed = VehicleSpeed()
 
-        lane3_detection.detection()
+        lane3_detection.detection(lane3)
 
         if lane3_detection.detected:
             lane3_tracking.tracking(lane3_detection.center, frame_time)
