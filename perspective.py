@@ -63,6 +63,9 @@ class Perspective:
         self.homography_matrix = self.__find_homography_matrix(
             self.origin, self.target)
 
+    def __resize_output_dimensions(self, size):
+        self.output_dimensions = (r(size[0]), r(size[1]))
+
     def __select_points(self, lane):
         if lane == 1:
             self.origin = self.lane1["origin"]
@@ -73,9 +76,6 @@ class Perspective:
         if lane == 3:
             self.origin = self.lane3["origin"]
             self.target = self.lane3["target"]
-
-    def __resize_output_dimensions(self, size):
-        self.output_dimensions = (r(size[0]), r(size[1]))
 
     def __resize_points(self, points):
         points["bottom_left"] = (
