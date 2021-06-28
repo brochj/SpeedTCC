@@ -7,35 +7,42 @@ import config
 
 
 class VehicleSpeed:
-    def __init__(self):
-        self.abs_error = 0
-        self.pct_error = 0
-        self.avg_speed = 0
+    def __init__(self, correction_factor):
+        self.correction_factor = correction_factor
+        self.abs_error = None
+        self.pct_error = None
+        self.avg_speed = None
         self.lane_tracking = None
         self.measured_speed_xml = None
         self.vehicle_speeds = {
             'speeds': [],
         }
 
-    def reset_values(self):
-        self.abs_error = 0
-        self.pct_error = 0
-        self.avg_speed = 0
-        self.lane_tracking = None
-        self.measured_speed_xml = None
-        self.vehicle_speeds = {
-            'speeds': [],
-        }
+        self.pixel_size_in_meters = self.__calc_pixel_size_in_meters()
+        self.delta_t = self.__calc_delta_t()
 
-    def calculate_speed(self, trails, correction_factor):
-        med_area_meter = 3.9  # metros (Valor estimado)
-        med_area_pixel = r(485)
-        qntd_frames = 11  # len(trails)  # default 11
-        # Sem usar Regressão linear
-        dist_pixel = cv2.norm(trails[0], trails[10])
-        dist_meter = dist_pixel*(med_area_meter/med_area_pixel)
-        speed = (dist_meter*3.6*correction_factor)/(qntd_frames*(1/config.FPS))
+    def __calc_pixel_size_in_meters(self):
+        MED_AREA_METER = 3.9  # meters (estimated value)
+        MED_AREA_PIXEL = r(485)
+        return (MED_AREA_METER/MED_AREA_PIXEL)
+
+    def __calc_delta_t(self):
+        FRAME_QUANTITY = 11
+        return (FRAME_QUANTITY * (1/config.FPS))
+
+    def calculate_speed(self, trail):
+        distance_in_pixel = self.__calc_distance_in_pixel(trail)
+        distance_in_meters = distance_in_pixel * self.pixel_size_in_meters
+        speed = self.__calc_delta_s(distance_in_meters) / self.delta_t
         return round(speed, 1)
+
+    def __calc_distance_in_pixel(self, trail):
+        last_point = trail[0]
+        first_point = trail[10]
+        return cv2.norm(last_point, first_point)
+
+    def __calc_delta_s(self, distance_in_meters):
+        return (distance_in_meters*3.6*self.correction_factor)
 
     def calculate_avg_speed(self, speeds):
         self.avg_speed = np.mean(speeds)
@@ -64,7 +71,7 @@ class VehicleSpeed:
         self.measured_speed_xml = measured_speed_xml.get('speed')
         if len(lane_tracking.tracked_blobs['trail']) > config.MIN_CENTRAL_POINTS:
             speed = self.calculate_speed(
-                lane_tracking.tracked_blobs['trail'], config.CF_LANE3)
+                lane_tracking.tracked_blobs['trail'])
             lane_tracking.tracked_blobs['speed'].insert(0, speed)
             print('vehicle_speeds: ', self.vehicle_speeds)
             self.calculate_avg_speed(lane_tracking.tracked_blobs['speed'])
@@ -73,3 +80,13 @@ class VehicleSpeed:
             self.calc_abs_error()
             self.calc_pct_error()
             self.update_values()
+
+    def reset_values(self):
+        self.abs_error = None
+        self.pct_error = None
+        self.avg_speed = None
+        self.lane_tracking = None
+        self.measured_speed_xml = None
+        self.vehicle_speeds = {
+            'speeds': [],
+        }

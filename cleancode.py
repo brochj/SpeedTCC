@@ -66,9 +66,9 @@ lane1_tracking = Tracking(name='lane 1')
 lane2_tracking = Tracking(name='lane 2')
 lane3_tracking = Tracking(name='lane 3')
 
-# lane1_vehicle_speed = VehicleSpeed()
-lane2_vehicle_speed = VehicleSpeed()
-lane3_vehicle_speed = VehicleSpeed()
+lane1_vehicle_speed = VehicleSpeed(config.CF_LANE1)
+lane2_vehicle_speed = VehicleSpeed(config.CF_LANE2)
+lane3_vehicle_speed = VehicleSpeed(config.CF_LANE3)
 
 while True:
     ret, frame = t.get_frame(cap)
@@ -109,7 +109,7 @@ while True:
 
         lane1.apply_morphological_operations(frame_lane1)
         lane1_detection = VehicleDetection()
-        lane1_vehicle_speed = VehicleSpeed()
+        # lane1_vehicle_speed = VehicleSpeed()
 
         # lane1_detection.detection(lane1)
 
