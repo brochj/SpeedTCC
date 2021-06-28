@@ -67,8 +67,8 @@ lane2_tracking = Tracking(name='lane 2')
 lane3_tracking = Tracking(name='lane 3')
 
 # lane1_vehicle_speed = VehicleSpeed()
-# lane2_vehicle_speed = VehicleSpeed()
-# lane3_vehicle_speed = VehicleSpeed()
+lane2_vehicle_speed = VehicleSpeed()
+lane3_vehicle_speed = VehicleSpeed()
 
 while True:
     ret, frame = t.get_frame(cap)
@@ -111,20 +111,23 @@ while True:
         lane1_detection = VehicleDetection()
         lane1_vehicle_speed = VehicleSpeed()
 
-        lane1_detection.detection(lane1)
+        # lane1_detection.detection(lane1)
 
-        if lane1_detection.detected:
-            lane1_tracking.tracking(lane1_detection.center, frame_time)
-            lane1_vehicle_speed.calc_speed(lane1_tracking, dict_lane1)
+        # if lane1_detection.detected:
+        #     lane1_tracking.tracking(lane1_detection.center, frame_time)
+        #     if lane1_tracking.is_there_minimum_points():
+        #         speed = lane1_vehicle_speed.calc_speed(
+        #             lane1_tracking, dict_lane1)
+        #         lane1_tracking.tracked_blobs['speed'].insert(0, speed)
 
-            draw.result(frame, lane1_vehicle_speed,
-                        lane1_tracking.tracked_blobs['id'], (350, 120))
-            draw.car_rectangle(frame, frame_lane1, lane1_detection)
-            # ################# END LANE 1  ##############################
+        #     draw.result(frame, lane1_vehicle_speed,
+        #                 lane1_tracking.tracked_blobs['id'], (350, 120))
+        #     draw.car_rectangle(frame, frame_lane1, lane1_detection)
+        # ################# END LANE 1  ##############################
 
         lane2.apply_morphological_operations(frame_lane2)
         lane2_detection = VehicleDetection()
-        lane2_vehicle_speed = VehicleSpeed()
+        # lane2_vehicle_speed = VehicleSpeed()
 
         lane2_detection.detection(lane2)
 
@@ -135,11 +138,11 @@ while True:
             draw.result(frame, lane2_vehicle_speed,
                         lane2_tracking.tracked_blobs['id'], (830, 120))
             draw.car_rectangle(frame, frame_lane2, lane2_detection, 600)
-            # ################# END LANE 2  ##############################
+        # ################# END LANE 2  ##############################
 
         lane3.apply_morphological_operations(frame_lane3)
         lane3_detection = VehicleDetection()
-        lane3_vehicle_speed = VehicleSpeed()
+        # lane3_vehicle_speed = VehicleSpeed()
 
         lane3_detection.detection(lane3)
 
@@ -153,9 +156,9 @@ while True:
             # ################# END LANE 3  ##############################
 
         # Remove timeout trails
-        lane1_tracking.remove_expired_track(frame_time)
-        lane2_tracking.remove_expired_track(frame_time)
-        lane3_tracking.remove_expired_track(frame_time)
+        lane1_tracking.remove_expired_track(frame_time, lane1_vehicle_speed)
+        lane2_tracking.remove_expired_track(frame_time, lane2_vehicle_speed)
+        lane3_tracking.remove_expired_track(frame_time, lane3_vehicle_speed)
 
         # Draw center points (center of rectangle)
         draw.blobs(frame_lane1, lane1_tracking.tracked_blobs)
@@ -185,7 +188,7 @@ while True:
 
         # cv2.imshow('frame_lane1', frame_lane1)
         # cv2.imshow('frame_lane2', frame_lane2)
-        # cv2.imshow('frame_lane3', frame_lane3)
+        cv2.imshow('frame_lane3', frame_lane3)
         cv2.imshow('frame', frame)
 
         frame_count += 1
