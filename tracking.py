@@ -73,3 +73,7 @@ class Tracking:
                     self.name, self.tracked_blobs['id']))
                 self.tracked_blobs = {}
                 vehicle_speed.reset_values()
+
+
+if __name__ == '__main__':
+    raise Exception('Wrong File')

@@ -110,3 +110,7 @@ def result(frame, vehicle_speed, id_car, position):
                 2, .6, color, thickness=1, lineType=2)  # erro percentual
     cv2.putText(frame, f'id: {id_car}', positions[3],
                 2, .6, color, thickness=1, lineType=2)
+
+
+if __name__ == '__main__':
+    raise Exception('Wrong File')

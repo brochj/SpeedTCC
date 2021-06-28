@@ -90,3 +90,7 @@ class VehicleSpeed:
         self.vehicle_speeds = {
             'speeds': [],
         }
+
+
+if __name__ == '__main__':
+    raise Exception('Wrong File')

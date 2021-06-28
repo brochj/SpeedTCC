@@ -41,3 +41,7 @@ class PreProcessing:
         clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
         hist_equalization = clahe.apply(frame_gray)
         return hist_equalization
+
+
+if __name__ == '__main__':
+    raise Exception('Wrong File')

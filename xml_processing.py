@@ -64,3 +64,7 @@ def update_info_xml(frameCount, vehicle, dict_lane1, dict_lane2, dict_lane3):
                 save_value(dict_lane3)
     except KeyError:
         pass
+
+
+if __name__ == '__main__':
+    raise Exception('Wrong File')

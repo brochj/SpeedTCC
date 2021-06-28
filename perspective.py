@@ -104,3 +104,7 @@ class Perspective:
 
     def apply_perspective(self, frame):
         return cv2.warpPerspective(frame, self.homography_matrix, self.output_dimensions)
+
+
+if __name__ == '__main__':
+    raise Exception('Wrong File')

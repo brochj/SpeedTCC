@@ -62,14 +62,13 @@ class ImageProcessing:
             # creating convex hull object for each contour
             self.hull.append(cv2.convexHull(self.contours[i], False))
 
-    def __convert_to_black_image(self, frame):
-        return np.zeros((frame.shape[0], frame.shape[1], 3), np.uint8)
-
     def draw_contours(self):
-        # TODO fazer  __convert_to_black_image() no construtor
         black_image = self.__convert_to_black_image(self.frame)
         return cv2.drawContours(black_image, self.hull, 0, colors.WHITE, -1, 8)
 
+    def __convert_to_black_image(self, frame):
+        return np.zeros((frame.shape[0], frame.shape[1], 3), np.uint8)
+
 
 if __name__ == '__main__':
-    print('arquivo ERRADO')
+    raise Exception('Wrong File')

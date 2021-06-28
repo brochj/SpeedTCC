@@ -51,3 +51,7 @@ class VehicleDetection:
         is_below_tracking_area = self.center[1] > r(self.bottom_limit)
         is_above_tracking_area = self.center[1] < r(self.upper_limit)
         return is_below_tracking_area or is_above_tracking_area
+
+
+if __name__ == '__main__':
+    raise Exception('Wrong File')
