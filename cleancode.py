@@ -107,8 +107,11 @@ while True:
         except KeyError:
             pass
 
-        lane1.apply_morphological_operations(frame_lane1)
         lane1_detection = VehicleDetection()
+        lane2_detection = VehicleDetection()
+        lane3_detection = VehicleDetection()
+
+        lane1.apply_morphological_operations(frame_lane1)
         # lane1_vehicle_speed = VehicleSpeed()
 
         # lane1_detection.detection(lane1)
@@ -126,7 +129,6 @@ while True:
         # ################# END LANE 1  ##############################
 
         lane2.apply_morphological_operations(frame_lane2)
-        lane2_detection = VehicleDetection()
         # lane2_vehicle_speed = VehicleSpeed()
 
         lane2_detection.detection(lane2)
@@ -141,9 +143,8 @@ while True:
         # ################# END LANE 2  ##############################
 
         lane3.apply_morphological_operations(frame_lane3)
-        lane3_detection = VehicleDetection()
-        # lane3_vehicle_speed = VehicleSpeed()
 
+        # lane3_vehicle_speed = VehicleSpeed()
         lane3_detection.detection(lane3)
 
         if lane3_detection.detected:
