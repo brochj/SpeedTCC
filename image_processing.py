@@ -43,17 +43,20 @@ class ImageProcessing:
 
     def apply_erode(self):
         self.eroded_mask = cv2.erode(
-            self.foreground_mask, self.kernel_erode, iterations=1)
+            self.foreground_mask, self.kernel_erode, iterations=1
+        )
         return self.eroded_mask
 
     def apply_dilate(self):
         self.dilated_mask = cv2.dilate(
-            self.eroded_mask, self.kernel_dilate, iterations=1)
+            self.eroded_mask, self.kernel_dilate, iterations=1
+        )
         return self.dilated_mask
 
     def apply_contourns(self):
         self.contours, _ = cv2.findContours(
-            self.dilated_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            self.dilated_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
+        )
         return self.contours
 
     def apply_convex_hull(self):
@@ -70,5 +73,5 @@ class ImageProcessing:
         return np.zeros((frame.shape[0], frame.shape[1], 3), np.uint8)
 
 
-if __name__ == '__main__':
-    raise Exception('Wrong File')
+if __name__ == "__main__":
+    raise Exception("Wrong File")

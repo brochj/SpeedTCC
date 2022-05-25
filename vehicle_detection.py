@@ -1,4 +1,3 @@
-
 import cv2
 from functions import r
 import config
@@ -6,6 +5,17 @@ import config
 
 class VehicleDetection:
     def __init__(self, bottom_limit=None, upper_limit=None):
+        self.bottom_limit = bottom_limit or config.BOTTOM_LIMIT_TRACK
+        self.upper_limit = upper_limit or config.UPPER_LIMIT_TRACK
+        self.lane = None
+        self.x = 0
+        self.y = 0
+        self.w = 0
+        self.h = 0
+        self.center = 0
+        self.detected = False
+
+    def reset(self, bottom_limit=None, upper_limit=None):
         self.bottom_limit = bottom_limit or config.BOTTOM_LIMIT_TRACK
         self.upper_limit = upper_limit or config.UPPER_LIMIT_TRACK
         self.lane = None
@@ -42,7 +52,7 @@ class VehicleDetection:
         (self.x, self.y, self.w, self.h) = cv2.boundingRect(hull)
 
     def __create_center_point(self):
-        self.center = (int(self.x + self.w/2), int(self.y + self.h/2))
+        self.center = (int(self.x + self.w / 2), int(self.y + self.h / 2))
 
     def __is_not_large_enough(self):
         return self.w < r(340) and self.h < r(340)
@@ -53,5 +63,5 @@ class VehicleDetection:
         return is_below_tracking_area or is_above_tracking_area
 
 
-if __name__ == '__main__':
-    raise Exception('Wrong File')
+if __name__ == "__main__":
+    raise Exception("Wrong File")

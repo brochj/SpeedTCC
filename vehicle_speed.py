@@ -1,4 +1,3 @@
-
 import cv2
 import numpy as np
 
@@ -15,7 +14,7 @@ class VehicleSpeed:
         self.lane_tracking = None
         self.measured_speed_xml = None
         self.vehicle_speeds = {
-            'speeds': [],
+            "speeds": [],
         }
 
         self.pixel_size_in_meters = self.__calc_pixel_size_in_meters()
@@ -24,11 +23,11 @@ class VehicleSpeed:
     def __calc_pixel_size_in_meters(self):
         MED_AREA_METER = 3.9  # meters (estimated value)
         MED_AREA_PIXEL = r(485)
-        return (MED_AREA_METER/MED_AREA_PIXEL)
+        return MED_AREA_METER / MED_AREA_PIXEL
 
     def __calc_delta_t(self):
         FRAME_QUANTITY = 11
-        return (FRAME_QUANTITY * (1/config.FPS))
+        return FRAME_QUANTITY * (1 / config.FPS)
 
     def calculate_speed(self, trail):
         distance_in_pixel = self.__calc_distance_in_pixel(trail)
@@ -42,7 +41,7 @@ class VehicleSpeed:
         return cv2.norm(last_point, first_point)
 
     def __calc_delta_s(self, distance_in_meters):
-        return (distance_in_meters*3.6*self.correction_factor)
+        return distance_in_meters * 3.6 * self.correction_factor
 
     def calculate_avg_speed(self, speeds):
         self.avg_speed = np.mean(speeds)
@@ -55,26 +54,27 @@ class VehicleSpeed:
     def calc_pct_error(self):
         numerator = abs(self.avg_speed - float(self.measured_speed_xml))
         denominator = float(self.measured_speed_xml)
-        self.pct_error = (numerator/denominator)*100
+        self.pct_error = (numerator / denominator) * 100
         self.pct_error = round(self.pct_error, 2)
 
     def update_values(self):
         self.vehicle_speeds = {
-            'avg_speed': self.avg_speed,
-            'abs_error': self.abs_error,
-            'pct_error': self.pct_error,
-            'measured_speed_xml': self.measured_speed_xml,
+            "avg_speed": self.avg_speed,
+            "abs_error": self.abs_error,
+            "pct_error": self.pct_error,
+            "measured_speed_xml": self.measured_speed_xml,
         }
 
     def calc_speed(self, lane_tracking, measured_speed_xml):
         self.lane_tracking = lane_tracking
-        self.measured_speed_xml = measured_speed_xml.get('speed')
-        if len(lane_tracking.tracked_blobs['trail']) > config.MIN_CENTRAL_POINTS:
-            speed = self.calculate_speed(
-                lane_tracking.tracked_blobs['trail'])
-            lane_tracking.tracked_blobs['speed'].insert(0, speed)
-            print('vehicle_speeds: ', self.vehicle_speeds)
-            self.calculate_avg_speed(lane_tracking.tracked_blobs['speed'])
+        self.measured_speed_xml = measured_speed_xml.get("speed")
+        if not self.measured_speed_xml:
+            return
+        if len(lane_tracking.tracked_blobs["trail"]) > config.MIN_CENTRAL_POINTS:
+            speed = self.calculate_speed(lane_tracking.tracked_blobs["trail"])
+            lane_tracking.tracked_blobs["speed"].insert(0, speed)
+            print("vehicle_speeds: ", self.vehicle_speeds)
+            self.calculate_avg_speed(lane_tracking.tracked_blobs["speed"])
             # self.vehicle_speeds['speeds'].insert(0, speed)
             # self.calculate_avg_speed(self.vehicle_speeds['speeds'])
             self.calc_abs_error()
@@ -88,9 +88,9 @@ class VehicleSpeed:
         self.lane_tracking = None
         self.measured_speed_xml = None
         self.vehicle_speeds = {
-            'speeds': [],
+            "speeds": [],
         }
 
 
-if __name__ == '__main__':
-    raise Exception('Wrong File')
+if __name__ == "__main__":
+    raise Exception("Wrong File")

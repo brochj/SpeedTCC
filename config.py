@@ -1,15 +1,15 @@
-
 VIDEO = 1
-VIDEO_FILE = './Dataset/video{}.mp4'.format(VIDEO)
-XML_FILE = './Dataset/video{}.xml'.format(VIDEO)
+VIDEO_FILE = "./Dataset/video{}.mp4".format(VIDEO)
+XML_FILE = "./Dataset/video{}.xml".format(VIDEO)
 
 FPS = 30.15
 
-CLOSE_VIDEO = 500  # 2950 #5934  # 1-6917 # 5-36253
+CLOSE_VIDEO = 950  # 2950 #5934  # 1-6917 # 5-36253
 
 SKIP_VIDEO = True
 
-RESIZE_RATIO = .33333  # 0.7697  720p=.6667 480p=.4445 360p=.33333 240p=.22222 144p=.13333
+# RESIZE_RATIO 0.7697  720p=.6667 480p=.4445 360p=.33333 240p=.22222 144p=.13333
+RESIZE_RATIO = 0.33333
 
 # Faixa 1
 BOTTOM_LIMIT_TRACK = 910  # 850  # Default 900

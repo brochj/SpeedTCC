@@ -2,7 +2,7 @@ Dataset/
 .vscode/
 videos/
 
-__pycache__/
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
