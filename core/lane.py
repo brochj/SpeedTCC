@@ -1,8 +1,8 @@
-from perspective import Perspective
-from image_processing import ImageProcessing
-from tracking import Tracking
-from vehicle_speed import VehicleSpeed
-from vehicle_detection import VehicleDetection
+from core.perspective import Perspective
+from core.image_processing import ImageProcessing
+from core.tracking import Tracking
+from core.vehicle_speed import VehicleSpeed
+from core.vehicle_detection import VehicleDetection
 import lib.drawings as draw
 
 Objects = dict[
