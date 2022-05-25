@@ -29,13 +29,6 @@ from core.perspective import Perspective
 from core.lane import Lane
 
 
-cap = cv2.VideoCapture(config.VIDEO_FILE)
-
-bgsMOG = cv2.createBackgroundSubtractorMOG2(
-    history=10, varThreshold=50, detectShadows=0
-)
-
-# Variant Values
 dict_lane1 = {}  # Armazena os valores de "speed, frame_start, frame_end" da FAIXA 2
 dict_lane2 = {}  # Armazena os valores de "speed, frame_start, frame_end" da FAIXA 2
 dict_lane3 = {}  # Armazena os valores de "speed, frame_start, frame_end" da FAIXA 3
@@ -43,6 +36,13 @@ dict_lane3 = {}  # Armazena os valores de "speed, frame_start, frame_end" da FAI
 frame_count = 0
 process_times = []
 avg_fps = 0
+
+cap = cv2.VideoCapture(config.VIDEO_FILE)
+
+bgsMOG = cv2.createBackgroundSubtractorMOG2(
+    history=10, varThreshold=50, detectShadows=0
+)
+
 
 # Dicionário que armazena todas as informações do xml
 vehicle = xml_processing.read_xml(config.XML_FILE, config.VIDEO)
@@ -115,7 +115,7 @@ while True:
 
         print(f"************** END OF FRAME {frame_count} **************")
 
-        # ########## MOSTRA OS VIDEOS  ########################################
+        # ########## Show the frames  ########################################
 
         # cv2.imshow("lane1.fgmask", lane1.image_processing.foreground_mask)
         # cv2.imshow("lane1.erodedmask", lane1.image_processing.eroded_mask)
@@ -133,7 +133,7 @@ while True:
         # cv2.imshow("lane2.draw_contours", lane2.draw_contours())
         # cv2.imshow("lane3.draw_contours", lane3.draw_contours())
 
-        # cv2.imshow("lane1.frame", lane1.frame)
+        cv2.imshow("lane1.frame", lane1.frame)
         cv2.imshow("lane2.frame", lane2.frame)
         cv2.imshow("lane3.frame", lane3.frame)
         cv2.imshow("frame", frame)
