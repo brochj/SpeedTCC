@@ -7,7 +7,7 @@ Created on Sat Sep 12 14:50:08 2020
 import cv2
 import numpy as np
 
-import colors
+import lib.colors as colors
 import configs.config as config
 from lib.functions import r
 

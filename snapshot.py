@@ -21,7 +21,7 @@ from image_processing import ImageProcessing
 from tracking import Tracking
 from vehicle_detection import VehicleDetection
 from vehicle_speed import VehicleSpeed
-import colors
+import lib.colors as colors
 import configs.config as config
 import drawings as draw
 import lib.functions as t

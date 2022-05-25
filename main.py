@@ -21,7 +21,7 @@ from tracking import Tracking
 from vehicle_detection import VehicleDetection
 from vehicle_speed import VehicleSpeed
 from perspective import Perspective
-import colors
+import lib.colors as colors
 import configs.config as config
 import drawings as draw
 import lib.functions as t

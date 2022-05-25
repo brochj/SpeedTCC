@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-import colors
+import lib.colors as colors
 from copy import deepcopy
 import configs.config as config
 

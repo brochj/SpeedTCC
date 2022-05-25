@@ -8,7 +8,7 @@ import cv2
 import itertools as it
 
 import configs.config as config
-import colors
+import lib.colors as colors
 from lib.functions import r
 
 
