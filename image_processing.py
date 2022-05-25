@@ -8,7 +8,7 @@ import cv2
 import numpy as np
 
 import colors
-import config
+import configs.config as config
 from functions import r
 
 

@@ -11,48 +11,79 @@ import itertools as it
 import colors
 import matplotlib.pyplot as plt
 import cv2
-import config
+import configs.config as config
 
 
 def r(number):  # Faz o ajuste de escala
-    return int(number*config.RESIZE_RATIO)
+    return int(number * config.RESIZE_RATIO)
 
 
 def get_frame(cap, resize_ratio=config.RESIZE_RATIO):
-    #" Grabs a frame from the video vcture and resizes it. "
+    # " Grabs a frame from the video vcture and resizes it. "
     ret, frame = cap.read()
     if ret:
         (h, w) = frame.shape[:2]
-        frame = cv2.resize(frame, (int(w*resize_ratio),
-                                   int(h*resize_ratio)), interpolation=cv2.INTER_CUBIC)
+        frame = cv2.resize(
+            frame,
+            (int(w * resize_ratio), int(h * resize_ratio)),
+            interpolation=cv2.INTER_CUBIC,
+        )
     return ret, frame
 
 
-def show_results_on_screen(frame, frameCount, ave_speed, lane, blob, total_cars, RESIZE_RATIO, VIDEO,
-                           dict_lane1, dict_lane2, dict_lane3, SAVE_FRAME_F1, SAVE_FRAME_F2, SAVE_FRAME_F3):
+def show_results_on_screen(
+    frame,
+    frameCount,
+    ave_speed,
+    lane,
+    blob,
+    total_cars,
+    RESIZE_RATIO,
+    VIDEO,
+    dict_lane1,
+    dict_lane2,
+    dict_lane3,
+    SAVE_FRAME_F1,
+    SAVE_FRAME_F2,
+    SAVE_FRAME_F3,
+):
     def r(numero):  # Faz o ajuste de escala das posições de textos e retangulos
-        return int(numero*RESIZE_RATIO)
+        return int(numero * RESIZE_RATIO)
+
     color = colors.WHITE
     if lane == 1:
         dict_lane = dict_lane1
-        positions = [(r(350), r(120)), (r(550), r(120)),
-                     (r(550), r(180)), (r(550), r(230))]
+        positions = [
+            (r(350), r(120)),
+            (r(550), r(120)),
+            (r(550), r(180)),
+            (r(550), r(230)),
+        ]
     if lane == 2:
         dict_lane = dict_lane2
-        positions = [(r(830), r(120)), (r(1030), r(120)),
-                     (r(1030), r(180)), (r(1030), r(230))]
+        positions = [
+            (r(830), r(120)),
+            (r(1030), r(120)),
+            (r(1030), r(180)),
+            (r(1030), r(230)),
+        ]
     if lane == 3:
         dict_lane = dict_lane3
-        positions = [(r(1350), r(120)), (r(1550), r(120)),
-                     (r(1550), r(180)), (r(1550), r(230))]
+        positions = [
+            (r(1350), r(120)),
+            (r(1550), r(120)),
+            (r(1550), r(180)),
+            (r(1550), r(230)),
+        ]
 
-#    cv2.putText(frame, str(float("{0:.2f}".format(ave_speed))), (blob['trail'][0][0] + r(57), blob['trail'][0][1] + r(143)),
-#                cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, colors.YELLOW, thickness=1, lineType=2)
+    #    cv2.putText(frame, str(float("{0:.2f}".format(ave_speed))), (blob['trail'][0][0] + r(57), blob['trail'][0][1] + r(143)),
+    #                cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, colors.YELLOW, thickness=1, lineType=2)
     # Texto da que fica embaixo da velocidade real
     try:
-        dif_lane = ave_speed - float(dict_lane['speed'])
+        dif_lane = ave_speed - float(dict_lane["speed"])
         error_lane = (
-            abs(ave_speed - float(dict_lane['speed']))/float(dict_lane['speed']))*100
+            abs(ave_speed - float(dict_lane["speed"])) / float(dict_lane["speed"])
+        ) * 100
     except:
         pass
     try:
@@ -65,28 +96,74 @@ def show_results_on_screen(frame, frameCount, ave_speed, lane, blob, total_cars,
         elif abs(dif_lane) > 10:
             color = colors.RED
 
-        cv2.putText(frame, str(float("{0:.2f}".format(ave_speed))), positions[0],
-                    2, .6, color, thickness=1, lineType=2)  # Velocidade Medida
-        cv2.putText(frame, str(float("{0:.2f} ".format(dif_lane))), positions[1],
-                    2, .6, color, thickness=1, lineType=2)  # erro absoluto
-        cv2.putText(frame, str(float("{0:.2f}".format(error_lane)))+'%', positions[2],
-                    2, .6, color, thickness=1, lineType=2)  # erro percentual
-        cv2.putText(frame, 'Carro ' + str(total_cars['lane_{}'.format(lane)]), positions[3],
-                    2, .6, color, thickness=1, lineType=2)
+        cv2.putText(
+            frame,
+            str(float("{0:.2f}".format(ave_speed))),
+            positions[0],
+            2,
+            0.6,
+            color,
+            thickness=1,
+            lineType=2,
+        )  # Velocidade Medida
+        cv2.putText(
+            frame,
+            str(float("{0:.2f} ".format(dif_lane))),
+            positions[1],
+            2,
+            0.6,
+            color,
+            thickness=1,
+            lineType=2,
+        )  # erro absoluto
+        cv2.putText(
+            frame,
+            str(float("{0:.2f}".format(error_lane))) + "%",
+            positions[2],
+            2,
+            0.6,
+            color,
+            thickness=1,
+            lineType=2,
+        )  # erro percentual
+        cv2.putText(
+            frame,
+            "Carro " + str(total_cars["lane_{}".format(lane)]),
+            positions[3],
+            2,
+            0.6,
+            color,
+            thickness=1,
+            lineType=2,
+        )
     except:
         pass
 
     if SAVE_FRAME_F1 and lane == 1:
-        cv2.imwrite('img/novo/{}-{}_F1_Carro_{}.png'.format(VIDEO,
-                                                            frameCount, total_cars['lane_{}'.format(lane)]), frame)
+        cv2.imwrite(
+            "img/novo/{}-{}_F1_Carro_{}.png".format(
+                VIDEO, frameCount, total_cars["lane_{}".format(lane)]
+            ),
+            frame,
+        )
     if SAVE_FRAME_F2 and lane == 2:
-        cv2.imwrite('img/novo/{}-{}_F2_Carro_{}.png'.format(VIDEO,
-                                                            frameCount, total_cars['lane_{}'.format(lane)]), frame)
+        cv2.imwrite(
+            "img/novo/{}-{}_F2_Carro_{}.png".format(
+                VIDEO, frameCount, total_cars["lane_{}".format(lane)]
+            ),
+            frame,
+        )
     if SAVE_FRAME_F3 and lane == 3:
-        cv2.imwrite('img/novo/{}-{}_F3_Carro_{}.png'.format(VIDEO,
-                                                            frameCount, total_cars['lane_{}'.format(lane)]), frame)
+        cv2.imwrite(
+            "img/novo/{}-{}_F3_Carro_{}.png".format(
+                VIDEO, frameCount, total_cars["lane_{}".format(lane)]
+            ),
+            frame,
+        )
 
     # PRINTA FAIXA 2
+
+
 #    cv2.putText(frame, 'Faixa {}'.format(lane), (blob['trail'][0][0] - r(29), blob['trail'][0][1] + r(200)),
 #                cv2.FONT_HERSHEY_COMPLEX_SMALL, .8, colors.WHITE, thickness=1, lineType=2)
 
@@ -138,22 +215,22 @@ def skip_video(frameCount, video, frame):
             skip = True
         elif frameCount > 2850 and frameCount < 2870:
             skip = True
-#        elif frameCount > 3035 and frameCount < 3045: skip = True # carro taxi
-#        elif frameCount > 3230 and frameCount < 3242: skip = True
-#        elif frameCount > 3100 and frameCount < 3115: skip = True
-#        elif frameCount > 2979 and frameCount < 3018: skip = True
-#        elif frameCount > 3030 and frameCount < 3050: skip = True
-#        elif frameCount > 3060 and frameCount < 3090: skip = True
-#        elif frameCount > 3122 and frameCount < 3166: skip = True
-#        elif frameCount > 3279 and frameCount < 3328: skip = True
-#        elif frameCount > 3404 and frameCount < 3459: skip = True
+        #        elif frameCount > 3035 and frameCount < 3045: skip = True # carro taxi
+        #        elif frameCount > 3230 and frameCount < 3242: skip = True
+        #        elif frameCount > 3100 and frameCount < 3115: skip = True
+        #        elif frameCount > 2979 and frameCount < 3018: skip = True
+        #        elif frameCount > 3030 and frameCount < 3050: skip = True
+        #        elif frameCount > 3060 and frameCount < 3090: skip = True
+        #        elif frameCount > 3122 and frameCount < 3166: skip = True
+        #        elif frameCount > 3279 and frameCount < 3328: skip = True
+        #        elif frameCount > 3404 and frameCount < 3459: skip = True
         elif frameCount > 3550 and frameCount < 4800:
             skip = True
-#        elif frameCount > 5270 and frameCount < 5285: skip = True
-#        elif frameCount > 5375 and frameCount < 5390: skip = True
-#        elif frameCount > 5525 and frameCount < 5540: skip = True
-#        elif frameCount > 5738 and frameCount < 5753: skip = True
-#        elif frameCount > 5615 and frameCount < 5630: skip = True
+        #        elif frameCount > 5270 and frameCount < 5285: skip = True
+        #        elif frameCount > 5375 and frameCount < 5390: skip = True
+        #        elif frameCount > 5525 and frameCount < 5540: skip = True
+        #        elif frameCount > 5738 and frameCount < 5753: skip = True
+        #        elif frameCount > 5615 and frameCount < 5630: skip = True
         elif frameCount > 5322 and frameCount < 5352:
             skip = True
         elif frameCount > 5401 and frameCount < 5507:
@@ -177,5 +254,5 @@ def should_skip_this(frame_count):
         return False
 
 
-if __name__ == '__main__':
-    print('Arquivo Errado')
+if __name__ == "__main__":
+    print("Arquivo Errado")

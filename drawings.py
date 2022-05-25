@@ -7,7 +7,7 @@ Created on Sat Sep 12 17:32:50 2020
 import cv2
 import itertools as it
 
-import config
+import configs.config as config
 import colors
 from functions import r
 

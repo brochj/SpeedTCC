@@ -21,7 +21,7 @@ from tracking import Tracking
 from vehicle_detection import VehicleDetection
 from vehicle_speed import VehicleSpeed
 import colors
-import config
+import configs.config as config
 import drawings as draw
 import functions as t
 import xml_processing

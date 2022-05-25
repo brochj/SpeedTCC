@@ -1,6 +1,6 @@
 import cv2
 from functions import r
-import config
+import configs.config as config
 
 
 class VehicleDetection:

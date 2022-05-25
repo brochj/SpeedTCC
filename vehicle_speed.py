@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 
 from functions import r
-import config
+import configs.config as config
 
 
 class VehicleSpeed:
