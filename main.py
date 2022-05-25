@@ -5,34 +5,29 @@ Created on Sat Sep 12 10:02:46 2020
 @author: broch
 """
 
-from sys import exit
 import cv2
-import datetime
 import numpy as np
-import os
 import time
-import uuid
 
-# Created modules
+# My Modules
+import lib.drawings as draw
+import lib.functions as t
+import lib.xml_processing as xml_processing
 from lib.functions import r
-from pre_processing import PreProcessing
+
+import configs.config as config
+import configs.lane1 as lane1_config
+import configs.lane2 as lane2_config
+import configs.lane3 as lane3_config
+
+from core.pre_processing import PreProcessing
 from core.image_processing import ImageProcessing
 from core.tracking import Tracking
 from core.vehicle_detection import VehicleDetection
 from core.vehicle_speed import VehicleSpeed
 from core.perspective import Perspective
-import lib.colors as colors
-import configs.config as config
-import lib.drawings as draw
-import lib.functions as t
-import xml_processing
-
-
 from core.lane import Lane
 
-import configs.lane1 as lane1_config
-import configs.lane2 as lane2_config
-import configs.lane3 as lane3_config
 
 cap = cv2.VideoCapture(config.VIDEO_FILE)
 

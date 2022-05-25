@@ -17,15 +17,15 @@ import uuid
 
 # Created modules
 from lib.functions import r
-from image_processing import ImageProcessing
-from tracking import Tracking
-from vehicle_detection import VehicleDetection
-from vehicle_speed import VehicleSpeed
+from core.image_processing import ImageProcessing
+from core.tracking import Tracking
+from core.vehicle_detection import VehicleDetection
+from core.vehicle_speed import VehicleSpeed
 import lib.colors as colors
 import configs.config as config
 import lib.drawings as draw
 import lib.functions as t
-import xml_processing
+import lib.xml_processing as xml_processing
 
 if config.RESIZE_RATIO > 1:
     exit("ERROR: The RESIZE_RATIO cannot be greater than 1")
