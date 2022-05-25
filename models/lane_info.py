@@ -3,7 +3,7 @@ from image_processing import ImageProcessing
 from tracking import Tracking
 from vehicle_speed import VehicleSpeed
 from vehicle_detection import VehicleDetection
-import drawings as draw
+import lib.drawings as draw
 
 Objects = dict[
     "perspective":Perspective,

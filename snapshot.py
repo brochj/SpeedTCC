@@ -23,7 +23,7 @@ from vehicle_detection import VehicleDetection
 from vehicle_speed import VehicleSpeed
 import lib.colors as colors
 import configs.config as config
-import drawings as draw
+import lib.drawings as draw
 import lib.functions as t
 import xml_processing
 
