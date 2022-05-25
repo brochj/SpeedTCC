@@ -9,13 +9,12 @@ import tccfunctions as t
 import datetime
 from shutil import copy2
 from sys import exit
-#import math
 # ########  CONSTANT VALUES ###################################################
 VIDEO = 1
-VIDEO_FILE = './Dataset/video{}.avi'.format(VIDEO)
+VIDEO_FILE = './Dataset/video{}.mp4'.format(VIDEO)
 XML_FILE = './Dataset/video{}.xml'.format(VIDEO)
 
-RESIZE_RATIO = .13333 #0.7697  720p=.6667 480p=.4445 360p=.33333 240p=.22222 144p=.13333
+RESIZE_RATIO = .22222 #0.7697  720p=.6667 480p=.4445 360p=.33333 240p=.22222 144p=.13333
 if RESIZE_RATIO > 1:
     exit('ERRO: AJUSTE O RESIZE_RATIO')
 CLOSE_VIDEO = 5934 #2950 #5934  # 1-6917 # 5-36253
@@ -27,10 +26,10 @@ SHOW_TRAIL = True
 SHOW_LINEAR_REGRESSION = True
 SHOW_CAR_RECTANGLE = True
 
-SHOW_REAL_SPEEDS = True
+SHOW_REAL_SPEEDS = False
 SHOW_FRAME_COUNT = True
 
-SKIP_VIDEO = True
+SKIP_VIDEO = False
 SEE_CUTTED_VIDEO = False  # ver partes retiradas, precisa de SKIP_VIDEO = True
 # ---- Tracking Values --------------------------------------------------------
 # The maximum distance a blob centroid is allowed to move in order to
@@ -60,7 +59,7 @@ CF_LANE1 = 2.10 #2.10  # default 2.5869977 # Correction Factor
 CF_LANE2 = 2.32  # default 2.32    3.758897 
 CF_LANE3 = 2.3048378 # default 2.304837879578
 # ----  Save Results Values ---------------------------------------------------
-SAVE_RESULTS = True  # Salva os Gráficos
+SAVE_RESULTS = False  # Salva os Gráficos
 SAVE_FRAME_F1 = False  # Faixa 1
 SAVE_FRAME_F2 = False  # Faixa 2
 SAVE_FRAME_F3 = False  # Faixa 3
@@ -86,7 +85,6 @@ prev_speed = 1.0
 
 frameCount = 0  # Armazena a contagem de frames processados do video
 out = 0  # Armazena o frame com os contornos desenhados
-#final_ave_speed = 0
 ave_speed = 0
 
 results_lane1 = {}
@@ -104,21 +102,11 @@ process_times = []
 def r(numero):
     return int(numero*RESIZE_RATIO)
 
-def crop(img):
-    return img[30:370, 205:620]
-
 def calculate_speed(trails, fps):
     med_area_meter = 3.9  # metros (Valor estimado)
     med_area_pixel = r(485)
     qntd_frames =  11 #len(trails)  # default 11
-#    initial_pt, final_pt = t.linearRegression(trails, qntd_frames)  # Usando Regressão Linear
-#    dist_pixel = cv2.norm(final_pt, initial_pt)
-#    dist_pixel = cv2.norm(trails[0], trails[len(trails)-1])  # Sem usar Regressão linear
     dist_pixel = cv2.norm(trails[0], trails[10])  # Sem usar Regressão linear
-#    if SHOW_LINEAR_REGRESSION:
-#        cv2.line(frame, initial_pt, final_pt, t.ORANGE, 5)
-#    cv2.line(frame,trails[0],trails[10], t.GREEN, 2)
-#    cv2.imwrite('img/regressao1_{}.png'.format(frameCount), frame)
     dist_meter = dist_pixel*(med_area_meter/med_area_pixel)
     speed = (dist_meter*3.6*cf)/(qntd_frames*(1/fps))
     return speed
@@ -127,6 +115,7 @@ def calculate_speed(trails, fps):
 # ########## FIM  FUNÇÕES #####################################################
 now = datetime.datetime.now()
 DATE = f'video{VIDEO}_{now.day}-{now.month}-{now.year}_{now.hour}-{now.minute}-{now.second}'
+# if SAVE_RESULTS:
 if not os.path.exists(f"results/{DATE}"):
     os.makedirs(f"results/{DATE}/graficos/pdfs")
     os.makedirs(f"results/{DATE}/planilhas/")
@@ -197,7 +186,7 @@ while True:
         fgmask = bgsMOG.apply(frameGray, None, 0.01)
         erodedmask = cv2.erode(fgmask, KERNEL_ERODE, iterations=1)
         dilatedmask = cv2.dilate(erodedmask, KERNEL_DILATE, iterations=1)
-        _, contours, hierarchy = cv2.findContours(dilatedmask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        contours, hierarchy = cv2.findContours(dilatedmask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         #contornos =  cv2.drawContours(frame, contours, -1, BLUE, 2, 8, hierarchy)
         hull = []
         for i in range(len(contours)):  # calculate points for each contour
@@ -254,7 +243,6 @@ while True:
                         # Check if the distance is close enough to "lock on"
                         if distance < r(BLOB_LOCKON_DIST_PX_MAX) and distance > r(BLOB_LOCKON_DIST_PX_MIN):
                             closest_blob = close_blob
-                            continue # retirar depois
                             # If it's close enough, make sure the blob was moving in the expected direction
 #                            if close_blob['trail'][0][1] < center[1]:  # verifica se esta na dir up
 #                                continue
@@ -263,8 +251,6 @@ while True:
 #                                continue  # defalut break
 
                     if closest_blob:
-                        # If we found a blob to attach this blob to, we should
-                        # do some math to help us with speed detection
                         prev_center = closest_blob['trail'][0]
                         if center[1] < prev_center[1]:  # It's moving up
                             closest_blob['trail'].insert(0, center)  # Add point
@@ -305,15 +291,12 @@ while True:
                     tracked_blobs.append(b)  # Agora tracked_blobs não será False
                 # ################# END TRACKING ##############################
                 # ################# END FAIXA 3  ##############################
-                # #############################################################
-                # #############################################################
-                # #############################################################
 
 
         fgmask_lane2 = bgsMOG.apply(frame_lane2, None, 0.01)
         erodedmask_lane2 = cv2.erode(fgmask_lane2, KERNEL_ERODE_L2, iterations=1)
         dilatedmask_lane2 = cv2.dilate(erodedmask_lane2, KERNEL_DILATE_L2, iterations=1)
-        _, contours_L2, hierarchy = cv2.findContours(dilatedmask_lane2, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        contours_L2, hierarchy = cv2.findContours(dilatedmask_lane2, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
         #contornos =  cv2.drawContours(frame, contours, -1, BLUE, 2, 8, hierarchy)
         hull_L2 = []
@@ -372,7 +355,6 @@ while True:
                         # Check if the distance is close enough to "lock on"
                         if distance < r(BLOB_LOCKON_DIST_PX_MAX) and distance > r(BLOB_LOCKON_DIST_PX_MIN):
                             closest_blob_L2 = close_blob_L2
-#                            continue # retirar depois
                             # If it's close enough, make sure the blob was moving in the expected direction
                             if close_blob_L2['trail'][0][1] < center_L2[1]:  # verifica se esta na dir up
                                 continue
@@ -381,8 +363,6 @@ while True:
                                 continue  # defalut break
 
                     if closest_blob_L2:
-                        # If we found a blob to attach this blob to, we should
-                        # do some math to help us with speed detection
                         prev_center_L2 = closest_blob_L2['trail'][0]
                         if center_L2[1] < prev_center_L2[1]:  # It's moving up
                             closest_blob_L2['trail'].insert(0, center_L2)  # Add point
@@ -423,14 +403,11 @@ while True:
                     tracked_blobs_lane2.append(b2)  # Agora tracked_blobs não será False
                 # ################# END TRACKING ##############################
                 # ################# END FAIXA 2  ##############################
-                # #############################################################
-                # #############################################################
-                # #############################################################
 
         fgmask_L3 = bgsMOG.apply(frame_lane3, None, 0.01)
         erodedmask_L3 = cv2.erode(fgmask_L3, KERNEL_ERODE_L3, iterations=1)
         dilatedmask_L3 = cv2.dilate(erodedmask_L3, KERNEL_DILATE_L3, iterations=1)
-        _, contours_L3, hierarchy = cv2.findContours(dilatedmask_L3, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        contours_L3, hierarchy = cv2.findContours(dilatedmask_L3, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
         #contornos =  cv2.drawContours(frame, contours, -1, BLUE, 2, 8, hierarchy)
         hull_L3 = []
@@ -488,7 +465,6 @@ while True:
                         # Check if the distance is close enough to "lock on"
                         if distance < r(BLOB_LOCKON_DIST_PX_MAX) and distance > r(BLOB_LOCKON_DIST_PX_MIN):
                             closest_blob_L3 = close_blob_L3
-#                            continue # retirar depois
                             # If it's close enough, make sure the blob was moving in the expected direction
                             if close_blob_L3['trail'][0][1] < center_L3[1]:  # verifica se esta na dir up
                                 continue
@@ -497,8 +473,6 @@ while True:
                                 continue  # defalut break
 
                     if closest_blob_L3:
-                        # If we found a blob to attach this blob to, we should
-                        # do some math to help us with speed detection
                         prev_center_L3 = closest_blob_L3['trail'][0]
                         if center_L3[1] < prev_center_L3[1]:  # It's moving up
                             closest_blob_L3['trail'].insert(0, center_L3)  # Add point
@@ -551,7 +525,6 @@ while True:
                 if frame_time - tracked_blobs[i]['last_seen'] > BLOB_TRACK_TIMEOUT: # Deleta caso de timeout
                     print("Removing expired track {}".format(tracked_blobs[i]['id']))
 #                    prev_speed = ave_speed
-#                    final_ave_speed = 0.0
                     del tracked_blobs[i]
 
         if tracked_blobs_lane2:
@@ -560,7 +533,6 @@ while True:
                 if frame_time - tracked_blobs_lane2[i]['last_seen'] > BLOB_TRACK_TIMEOUT: # Deleta caso de timeout
                     print("Removing expired track {}".format(tracked_blobs_lane2[i]['id']))
 #                    prev_speed = ave_speed
-#                    final_ave_speed = 0.0
                     del tracked_blobs_lane2[i]
 
         if tracked_blobs_lane3:
@@ -569,100 +541,74 @@ while True:
                 if frame_time - tracked_blobs_lane3[i]['last_seen'] > BLOB_TRACK_TIMEOUT: # Deleta caso de timeout
                     print("Removing expired track {}".format(tracked_blobs_lane3[i]['id']))
 #                    prev_speed = ave_speed
-#                    final_ave_speed = 0.0
                     del tracked_blobs_lane3[i]
 
         # ################ PRINTA OS BLOBS ####################################
         for blob in tracked_blobs:  # Desenha os pontos centrais
             if SHOW_TRAIL:
-#                t.print_trail(blob['trail'], frame)
+                # t.print_trail(blob['trail'], frame)
                 t.print_trail(blob['trail'], frame_lane1)
 
         for blob2 in tracked_blobs_lane2:  # Desenha os pontos centrais
             if SHOW_TRAIL:
-#                t.print_trail(blob2['trail'], frame)
+                # t.print_trail(blob2['trail'], frame)
                 t.print_trail(blob2['trail'], frame_lane2)
                 
         for blob3 in tracked_blobs_lane3:  # Desenha os pontos centrais
             if SHOW_TRAIL:
-#                t.print_trail(blob3['trail'], frame)
+                # t.print_trail(blob3['trail'], frame)
                 t.print_trail(blob3['trail'], frame_lane3)
 
             if blob['speed'] and blob['speed'][0] != 0:
                 prev_len_speed.insert(0, len(blob['speed']))
-                # limpa prev_len_speed se estiver muito grande
-                # deixa no máx 20 valores
-                if len(prev_len_speed) > 20:
+                if len(prev_len_speed) > 20:  # deixa no máx 20 valores
                     while len(prev_len_speed) > 20:
-                        del prev_len_speed[19]
+                        del prev_len_speed[19] # limpa prev_len_speed se estiver muito grande
                 # remove zero elements on the speed list
                 blob['speed'] = [item for item in blob['speed'] if item != 0.0]
                 print('========= speed list =========', blob['speed'])
                 prev_speed = ave_speed
                 ave_speed = np.mean(blob['speed'])
-                print('========= prev_speed =========', float("{0:.5f}".format(prev_speed)))
-                print('========= ave_speed ==========', float("{0:.5f}".format(ave_speed)))
-#                print('========prev_final_ave_speed==', float("{0:.5f}".format(final_ave_speed)))
-#                if ave_speed == prev_speed and final_ave_speed != 1:
-#                    final_ave_speed = ave_speed
-#                    print('===== final_ave_speed =====', float("{0:.5f}".format(final_ave_speed)))
-#                    cv2.imwrite('img/{}speed_{}.png'.format(frameCount,final_ave_speed), frame)
+                print('========= prev_speed =========', float("{0:.2f}".format(prev_speed)))
+                print('========= ave_speed ==========', float("{0:.2f}".format(ave_speed)))
 
                 # ############### FIM PRINTA OS BLOBS  ########################
 
-
         print('*************************************************')
         
-#        cv2.line(frame, (, final_pt, t.ORANGE, 5)
-#        points = np.array([[[r(1410), r(1080)], [r(2170), r(1080)],
-#          [r(1320), r(0)], [r(990), r(0)]]])
-#        cv2.fillPoly(frame, points, t.RED)
-
-        
+       
         if SHOW_FRAME_COUNT:
             PERCE = str(int((100*frameCount)/vehicle['videoframes']))
             cv2.putText(frame, f'frame: {frameCount} {PERCE}%', (r(14), r(1071)), 0, .65, t.WHITE, 2)
         # ########## MOSTRA OS VIDEOS  ########################################
-#        cv2.imshow('equ', equ)
-#        cv2.imshow('res', res)
-#        cv2.imshow('fgmask', fgmask)
-#        cv2.imshow('erodedmask',erodedmask)
-#        cv2.imshow('dilatedmask', dilatedmask)
+       # cv2.imshow('equ', equ)
+       # cv2.imshow('res', res)
+       # cv2.imshow('fgmask', fgmask)
+       # cv2.imshow('erodedmask',erodedmask)
+       # cv2.imshow('dilatedmask', dilatedmask)
         
-#        cv2.imshow('fgmask_lane2', fgmask_lane2)
-#        cv2.imshow('erodedmask_lane2',erodedmask_lane2)
-#        cv2.imshow('dilatedmask_lane2', dilatedmask_lane2)
+       # cv2.imshow('fgmask_lane2', fgmask_lane2)
+       # cv2.imshow('erodedmask_lane2',erodedmask_lane2)
+       # cv2.imshow('dilatedmask_lane2', dilatedmask_lane2)
 
-#        cv2.imshow('fgmask_L3', fgmask_L3)
-#        cv2.imshow('erodedmask_L3',erodedmask_L3)
-#        cv2.imshow('dilatedmask_L3', dilatedmask_L3)
+       # cv2.imshow('fgmask_L3', fgmask_L3)
+       # cv2.imshow('erodedmask_L3',erodedmask_L3)
+       # cv2.imshow('dilatedmask_L3', dilatedmask_L3)
         
-#        cv2.imshow('contornos',contornos)
-#        cv2.imshow('out',out)
-#        cv2.imshow('out_L2',out_L2)
-#        cv2.imshow('out_L3',out_L3)
+       # cv2.imshow('contornos',contornos)
+        # cv2.imshow('out',out)
+        # cv2.imshow('out_L2',out_L2)
+        # cv2.imshow('out_L3',out_L3)
 
-#        cv2.imshow('res', res)
-#        cv2.imshow('frame_lane1', frame_lane1)
-#        cv2.imshow('frame_lane2', frame_lane2)
-#        cv2.imshow('frame_lane3', frame_lane3)
+       # cv2.imshow('res', res)
+        cv2.imshow('frame_lane1', frame_lane1)
+        cv2.imshow('frame_lane2', frame_lane2)
+        cv2.imshow('frame_lane3', frame_lane3)
         cv2.imshow('frame', frame)
-        
-#        final = np.hstack((erodedmask, dilatedmask))
-#        cv2.imshow('final', final)
-#        cv2.imshow('mask_eroded', np.concatenate((fgmask, dilatedmask),0))
-#        crop_img = outputFrame[70:320, 0:640]
-        if frameCount > 857 and frameCount < 894:
-##        if frameCount == 114:
-            cv2.imwrite('img/teste/{}.png'.format(frameCount), frame_lane3)
-            cv2.imwrite('img/teste/dilatedmask_L3_{}.png'.format(frameCount), dilatedmask_L3)
-            cv2.imwrite('img/teste/dilatedmask_L3_{}.png'.format(frameCount), dilatedmask_L3)
-            cv2.imwrite('img/teste/out_L3_{}.png'.format(frameCount), out_L3)
-#            cv2.imwrite('img/teste/L3_{}.png'.format(frameCount), np.hstack((erodedmask_L3, out_L3)))
+    
         frameCount += 1    # Conta a quantidade de Frames
         
         end_frame_time = time.time()
-#        process_times.append(process_end - process_start)
         process_times.append(end_frame_time - start_frame_time)
         
         if frameCount == CLOSE_VIDEO:  # fecha o video
@@ -766,14 +712,6 @@ if SAVE_RESULTS:
                    total_cars, len(total_abs_errors), DATE, 'total', VIDEO, '---', True,
                    list_3km_tot, list_5km_tot, list_maior5km_tot)
 
-
-#for i in range(len(abs_error_list)):
-#    if x[i] > 50 and x[i] < 54:
-#        x2.append(x[i])
-#        y2.append(y[i])
-        
-#    abs_error.append(round(x[i]-y[i], 4))
-#    erro_3km.append((3,-3))
 copy2('testes_homografica.py', f'results/{DATE}/')
 copy2('tccfunctions.py', f'results/{DATE}/')
 
