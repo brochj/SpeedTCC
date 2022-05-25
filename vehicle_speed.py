@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-from functions import r
+from lib.functions import r
 import configs.config as config
 
 

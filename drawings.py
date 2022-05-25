@@ -9,7 +9,7 @@ import itertools as it
 
 import configs.config as config
 import colors
-from functions import r
+from lib.functions import r
 
 
 def xml_speed_values(frame, speed, position):

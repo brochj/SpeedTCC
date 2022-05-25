@@ -14,7 +14,7 @@ import time
 import uuid
 
 # Created modules
-from functions import r
+from lib.functions import r
 from pre_processing import PreProcessing
 from image_processing import ImageProcessing
 from tracking import Tracking
@@ -24,7 +24,7 @@ from perspective import Perspective
 import colors
 import configs.config as config
 import drawings as draw
-import functions as t
+import lib.functions as t
 import xml_processing
 
 

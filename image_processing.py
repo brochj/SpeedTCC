@@ -9,7 +9,7 @@ import numpy as np
 
 import colors
 import configs.config as config
-from functions import r
+from lib.functions import r
 
 
 class ImageProcessing:

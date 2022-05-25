@@ -7,7 +7,7 @@ Created on Sat Sep 12 21:26:30 2020
 import cv2
 import uuid
 
-from functions import r
+from lib.functions import r
 import configs.config as config
 
 

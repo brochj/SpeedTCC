@@ -1,5 +1,5 @@
 import cv2
-from functions import r
+from lib.functions import r
 import configs.config as config
 
 

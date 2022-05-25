@@ -16,7 +16,7 @@ import time
 import uuid
 
 # Created modules
-from functions import r
+from lib.functions import r
 from image_processing import ImageProcessing
 from tracking import Tracking
 from vehicle_detection import VehicleDetection
@@ -24,7 +24,7 @@ from vehicle_speed import VehicleSpeed
 import colors
 import configs.config as config
 import drawings as draw
-import functions as t
+import lib.functions as t
 import xml_processing
 
 if config.RESIZE_RATIO > 1:
